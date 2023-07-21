@@ -1,5 +1,5 @@
 
-NAME	= webserv
+NAME		= webserv
 
 CXXFLAGS	= -Wall -Wextra -Werror \
 				-std=c++98 -MMD -MP
@@ -16,7 +16,7 @@ SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))
 OBJS_DIR	=	objs
 OBJS		=	$(addprefix $(OBJS_DIR)/, $(addsuffix .o, $(FILENAME)))
 
-DEPS			=	$(addprefix $(DEPS_DIR)/,$(addsuffix .d, $(FILENAME)))
+DEPS		=	$(addsuffix .d, $(FILENAME))
 
 .PHONY: all clean fclean re
 
