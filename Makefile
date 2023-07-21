@@ -24,14 +24,14 @@ all: $(NAME)
 
 -include $(DEPS)
 
-$(NAME): $(OBJS_DIR) $(OBJS)
-	@$(CXX) $(OBJS) $(OUTPUT_OPTION)
+$(NAME): $(OBJS)
+	@$(CXX) $< $(OUTPUT_OPTION)
 	@echo "\033[32mComplete✅"
 
 $(OBJS_DIR):
 	@mkdir $(OBJS_DIR)
 
-$(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp
+$(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp $(OBJS_DIR)
 	@$(COMPILE.cpp) $< $(OUTPUT_OPTION)
 
 clean:
