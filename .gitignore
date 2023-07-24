@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# name
+webserv
+
+#directory
+objs
