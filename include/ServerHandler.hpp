@@ -6,6 +6,7 @@
 #include <sys/event.h>
 #include "Server.hpp"
 
+# define NEVENTS 8
 class ServerHandler
 {
 private:
