@@ -1,7 +1,10 @@
 #include "Client.hpp"
 
-Client::Client(int sock): sock(sock), server(NULL)
+Client::Client(int serv_sock): server(NULL)
 {
+	sock = accept(serv_sock, NULL, NULL);
+	if (sock == -1)
+		throw std::exception();
 	fcntl(sock, F_SETFL, O_NONBLOCK);
 }
 
@@ -39,6 +42,8 @@ void Client::recv_msg()
 	if (!server)
 		// find_server
 	ResponseBuilder rb(recv_buf, server->getLocationMap());
+	//???
+	//send_buf = rb->getResponse()->toString();
 }
 
 int Client::getSock() const
@@ -59,4 +64,11 @@ std::string Client::getRecvBuf() const
 void Client::setSendBuf(std::string send_buf)
 {
 	this->send_buf = send_buf;
+}
+
+bool Client::isSendable() const
+{
+	if (send_buf == "")
+		return false;
+	return true;
 }

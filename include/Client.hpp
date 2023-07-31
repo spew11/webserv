@@ -3,6 +3,7 @@
 
 # include <iostream>
 # include <exception>
+# include <sys/socket.h>
 
 # include "Server.hpp"
 # include "ResponseBuilder.hpp"
@@ -18,7 +19,7 @@ private:
 	std::string recv_buf;
 
 public:
-	Client(int sock);
+	Client(int serv_sock);
 	~Client();
 
 	void send_msg();
@@ -28,6 +29,7 @@ public:
 	Server *getServer() const;
 	std::string getRecvBuf() const;
 	void setSendBuf(std::string send_buf);
+	bool isSendable() const;
 };
 
 #endif
