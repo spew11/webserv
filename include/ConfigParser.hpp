@@ -8,6 +8,11 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <DerivTree.hpp>
+#include <ConfigUtils.hpp>
+
+class Config;
+
 using namespace std;
 
 class ConfigParser
@@ -17,6 +22,10 @@ private:
 
     void read( const string & file, string & buffer );
     void tokenize( const string & file, list<string> & list );
+    bool getDeriv( Derivative & );
+    void setTree( DerivTree * tree );
 public:
     ConfigParser( const string & file );
+
+    Config * get( void );
 };
