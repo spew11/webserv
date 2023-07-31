@@ -1,6 +1,7 @@
 #include "Server.hpp"
 
-Server::Server(uint32_t ip, uint16_t port, std::string domainName): ip(ip), port(port), domainName(domainName)
+Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames, 
+	std::map<std::string, LocationConfig> local): ip(ip), port(port), serverNames(serverNames), local(local)
 {
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock == -1)
@@ -22,6 +23,9 @@ Server::Server(uint32_t ip, uint16_t port, std::string domainName): ip(ip), port
         throw std::exception();
 }
 
+Server::Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames, 
+	std::map<std::string, LocationConfig> local): sock(sock), ip(ip), port(port), serverNames(serverNames) {}
+
 Server::~Server()
 {
     for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++)
@@ -30,11 +34,14 @@ Server::~Server()
     close(sock);
 }
 
-bool	Server::operator==(const std::string domainName)
+bool	Server::operator==(const std::string serverName)
 {
-    if (this->domainName == domainName)
-        return true;
-    return false;
+    for (std::vector<std::string>::iterator it = serverNames.begin(); it != serverNames.end(); it++)
+	{
+		if (*it == serverName)
+			return true;
+	}
+	return false;
 }
 
 void	Server::addClient(const Client* cli)
@@ -61,4 +68,14 @@ void	Server::delClient(const Client* cli)
         }
     }
     throw std::exception();
+}
+
+int		Server::getSock(void) const
+{
+	return sock;
+}
+
+std::map<std::string, LocationConfig> Server::getLocal() const
+{
+	return local;
 }
