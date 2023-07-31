@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 #include <DerivTree.hpp>
+#include <Modules.hpp>
 #include <ConfigUtils.hpp>
 
 class Config;

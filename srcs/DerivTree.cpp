@@ -7,3 +7,7 @@ DerivTree * DerivTree::addSubTree( const DerivTree & tree )
 	return &(subTree.back());
 }
 
+Module * DerivTree::createModule()
+{
+	return NULL;
+}

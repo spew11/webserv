@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Modules.hpp>
 #include <ConfigUtils.hpp>
 
 class DerivTree
@@ -13,6 +14,7 @@ public:
 
     DerivTree * addSubTree( const DerivTree & tree );
     const Derivative & getDeriv( void ) const { return this->deriv; }
+    Module * createModule();
 
     void print(int indent)
     {

@@ -14,6 +14,11 @@ Config * ConfigParser::get( void )
     // cout << "[Tree]" << endl;
     // mainDerivTree.print(0);
 
+    // 지시어트리를 이용해 모듈을 생성
+    Module * mainMod = mainDerivTree.createModule();
+    // cout << "\n[Modules]" << endl;
+    // mainMod->print(0);
+    
     return NULL;
 }
 
