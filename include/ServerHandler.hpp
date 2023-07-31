@@ -1,28 +1,30 @@
 #ifndef SERVERHANDLER_HPP
-# define SERVERHANDLER_HPP
+#define SERVERHANDLER_HPP
 
-# include <map>
-# include <vector>
-# include <sys/evnets.h>
+#include <vector>
+#include <map>
+#include <sys/event.h>
+#include "Server.hpp"
 
 class ServerHandler
 {
 private:
-	int	kq_fd;
+	// kqueue(), kevent() 관련 변수
+	int kq_fd;
+	std::vector<struct kevent> changeList; // kqueue 변동 이벤트 (추가 삭제 등)
+	struct kevent eventList[8];			   // kevent()에서 발생한 이벤트 리턴
 
-	std::map<int, Server*> servers;
-	std::vector<Client*> clients; //map으로 변경
+	std::multimap<int, Server *> servers; // sockfd, server
+	std::map<int, Clients *> clients;	  // sockfd, client
 
-	ConfigParser* configparser;
+	Config *config;
 
-    std::vector<struct kevent> changeList;
-    struct kevent eventList[8];
+	void change_events(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 
-    void change_events(std::vector<struct kevent change_list, uintptr_t ident, int16_t filter,
-	uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 public:
-	ServerHandler(ConfigParser* configparser);
+	ServerHandler(Config *config);
 	~ServerHandler();
-	loop();
-}
+	void loop();
+};
+
 #endif
