@@ -37,3 +37,8 @@ public:
     }
 };
 
+class MainModule : public Module
+{
+public:
+	MainModule( const Derivative & deriv ) : Module(deriv, NO_TYPE) {}
+};

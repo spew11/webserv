@@ -16,6 +16,7 @@ public:
     const Derivative & getDeriv( void ) const { return this->deriv; }
     Module * createModule();
 
+    Module * createMain();
     void print(int indent)
     {
         for (int i = 0; i < indent ; i++)
