@@ -8,7 +8,8 @@ CPPFLAGS	= -I ./include
 RM			= rm -rf
 
 FILENAME	=	\
-				main
+				main \
+				DerivTree \
 
 SRCS_DIR	=	srcs
 SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))
@@ -25,7 +26,7 @@ all: $(NAME)
 -include $(DEPS)
 
 $(NAME): $(OBJS)
-	@$(CXX) $< $(OUTPUT_OPTION)
+	@$(CXX) $^ $(OUTPUT_OPTION)
 	@echo "\033[32mComplete✅"
 
 $(OBJS_DIR):
