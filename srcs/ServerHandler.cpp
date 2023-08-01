@@ -13,7 +13,7 @@ ServerHandler::ServerHandler(Config* config):config(config)
 	for (std::vector<ServerConfig>::iterator it = servConf.begin(); it != servConf.end(); it++)
 	{
 		Server *tmp;
-		std::map<std::string, int>::iterator itIp = ip_fd.find();
+		std::map<std::string, int>::iterator itIp = ip_fd.find(it->getIP());
 		if (itIp == ip_fd.end()) //겹치는 ip 없을 때
 		{
 			*tmp = new Server(it->getIP(), it->getPort(), it->getServerNames());
