@@ -13,6 +13,8 @@ Module * DerivTree::createModule()
 		return createMain();
 	else if (deriv.name == "server")
 		return createServer();
+	else if (deriv.name == "location")
+		return createLocation();
 	else
 		; // throw
 		
@@ -70,6 +72,16 @@ Module * DerivTree::createServer()
 	// listen, server_name 이외에 지시어로 sub모듈을 생성한다.
 	for (int i = 0; i < subModDerivs.size(); i++)
 		m->addModule(subModDerivs[i]->createModule());
+
+	return m;
+}
+
+Module * DerivTree::createLocation()
+{
+	LocationModule * m = new LocationModule(deriv);
+
+	for (int i = 0; i < subTree.size(); i++)
+		m->addModule(subTree[i].createModule());
 
 	return m;
 }

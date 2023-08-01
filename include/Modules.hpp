@@ -119,3 +119,27 @@ public:
     }
 };
 
+class LocationModule : public Module
+{
+private:
+    string uri;
+public:
+    LocationModule( const Derivative & deriv ) : Module(deriv, NO_TYPE)
+    {
+        // check syntax
+        uri = deriv.arg[1];
+    }
+
+    const string & getUri( void ) const { return uri; }
+
+    virtual void print(int indent)
+    {
+        for (int i = 0; i < indent ; i++)
+            cout << " ";
+        cout << name << " -> uri(\"" << uri << "\")" << endl;
+
+        for (size_t i = 0; i < subMods.size(); i++)
+            subMods[i]->print(indent + 2);
+    }
+};
+
