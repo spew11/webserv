@@ -15,6 +15,8 @@ Module * DerivTree::createModule()
 		return createServer();
 	else if (deriv.name == "location")
 		return createLocation();
+	else if (deriv.name == "root")
+		return createRoot();
 	else
 		; // throw
 		
@@ -84,5 +86,10 @@ Module * DerivTree::createLocation()
 		m->addModule(subTree[i].createModule());
 
 	return m;
+}
+
+Module * DerivTree::createRoot()
+{
+	return (new RootModule(deriv));
 }
 

@@ -19,6 +19,7 @@ public:
     Module * createMain();
     Module * createServer();
     Module * createLocation();
+    Module * createRoot();
     void print(int indent)
     {
         for (int i = 0; i < indent ; i++)

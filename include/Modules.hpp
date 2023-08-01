@@ -143,3 +143,27 @@ public:
     }
 };
 
+class RootModule : public Module
+{
+private:
+    string root;
+public:
+    RootModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        // check syntax
+        root = deriv.arg[1];
+    }
+
+    const string & getRoot( void ) const { return root; }
+
+    virtual void print(int indent)
+    {
+        for (int i = 0; i < indent ; i++)
+            cout << " ";
+        cout << name << " -> uri(\"" << root << "\")" << endl;
+
+        for (size_t i = 0; i < subMods.size(); i++)
+            subMods[i]->print(indent + 2);
+    }
+};
+
