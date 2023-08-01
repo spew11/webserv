@@ -17,7 +17,7 @@ Client::~Client()
 
 void Client::send_msg()
 {
-	char *tmp = send_buf.c_str();
+	const char *tmp = send_buf.c_str();
 	ssize_t len = send(sock, tmp, strlen(tmp), MSG_DONTWAIT);
 	if (len == -1)
 		throw std::exception();
@@ -39,11 +39,11 @@ void Client::recv_msg()
 		else
 			throw std::exception();
 	}
-	if (!server)
-		// find_server
-	ResponseBuilder rb(recv_buf, server->getLocationMap());
-	//???
-	//send_buf = rb->getResponse()->toString();
+	// if (!server)
+	// 	// find_server
+	// ResponseBuilder rb(recv_buf, server->getLocationMap());
+	// //???
+	// //send_buf = rb->getResponse()->toString();
 }
 
 int Client::getSock() const

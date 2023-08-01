@@ -9,7 +9,6 @@ RM			= rm -rf
 
 FILENAME	=	\
 				main \
-				DerivTree \
 				ServerHandler \
 				Server \
 				Client

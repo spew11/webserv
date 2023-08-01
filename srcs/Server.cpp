@@ -1,7 +1,7 @@
 #include "Server.hpp"
 
-Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames, 
-	std::map<std::string, LocationConfig> local): ip(ip), port(port), serverNames(serverNames), local(local)
+Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames) //, std::map<std::string, LocationConfig> local): 
+	:ip(ip), port(port), serverNames(serverNames) //, local(local)
 {
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock == -1)
@@ -9,12 +9,12 @@ Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames,
     fcntl(sock, F_SETFL, O_NONBLOCK);
     
     struct sockaddr_in addr;
-    bzero(addr, sizeof(addr));
+    bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(ip);
-    addr.sin_addr.s_addr = htons(port);
+    addr.sin_addr.s_addr = htonl(this->ip);
+    addr.sin_addr.s_addr = htons(this->port);
     
-    int ret = bind(sock, (struct sockaddr*)addr, sizeof(addr));
+    int ret = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
     if (ret == -1)
         throw std::exception();
     
@@ -23,8 +23,8 @@ Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames,
         throw std::exception();
 }
 
-Server::Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames, 
-	std::map<std::string, LocationConfig> local): sock(sock), ip(ip), port(port), serverNames(serverNames) {}
+Server::Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames)//, std::map<std::string, LocationConfig> local)
+	: sock(sock), ip(ip), port(port), serverNames(serverNames) {} // , local(local)
 
 Server::~Server()
 {
@@ -44,7 +44,7 @@ bool	Server::operator==(const std::string serverName)
 	return false;
 }
 
-void	Server::addClient(const Client* cli)
+void	Server::addClient(Client* cli)
 {
     for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++)
     {
@@ -56,7 +56,7 @@ void	Server::addClient(const Client* cli)
     clients.push_back(cli);
 }
 
-void	Server::delClient(const Client* cli)
+void	Server::delClient(Client* cli)
 {
     for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++)
     {
@@ -64,7 +64,7 @@ void	Server::delClient(const Client* cli)
         {
             clients.erase(it);
             delete cli;
-            return
+            return;
         }
     }
     throw std::exception();
@@ -75,7 +75,7 @@ int		Server::getSock(void) const
 	return sock;
 }
 
-std::map<std::string, LocationConfig> Server::getLocal() const
-{
-	return local;
-}
+// std::map<std::string, LocationConfig> Server::getLocal() const
+// {
+// 	return local;
+// }
