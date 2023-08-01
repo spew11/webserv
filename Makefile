@@ -10,6 +10,9 @@ RM			= rm -rf
 FILENAME	=	\
 				main \
 				DerivTree \
+				ServerHandler \
+				Server \
+				Client
 
 SRCS_DIR	=	srcs
 SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))
