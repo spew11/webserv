@@ -1,7 +1,18 @@
 #include <iostream>
+#include "ServerHandler.hpp"
 
 int main(void)
 {
-	std::cout << "hello" << std::endl;
+	try
+	{
+		/* code */
+		ServerHandler sh;
+		sh.loop();
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << errno << ": " << strerror(errno) << '\n';
+	}
+	
 	return 0;
 }
