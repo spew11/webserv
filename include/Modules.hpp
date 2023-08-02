@@ -213,7 +213,7 @@ public:
     IndexModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
     {
         // check syntax
-        for (int i = 1; i < deriv.arg.size(); i++)
+        for (size_t i = 1; i < deriv.arg.size(); i++)
             indexes.push_back(deriv.arg[i]);
     }
 

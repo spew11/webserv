@@ -8,20 +8,20 @@ ServerHandler::ServerHandler(Config* config):config(config)
 		throw std::exception();
 
 	// Server 생성 및 changeList에 추가
-	const std::vector<ServerConfig> &servConf = config.getServConf();
-	std::map<std::string, int> ip_fd; //ip별 sd 저장
-	for (std::vector<ServerConfig>::iterator it = servConf.begin(); it != servConf.end(); it++)
+	const std::vector<ServerConfig> &servConf = config->getSrvConf();
+	std::map<uint32_t, int> ip_fd; //ip별 sd 저장
+	for (std::vector<ServerConfig>::const_iterator it = servConf.begin(); it != servConf.end(); it++)
 	{
 		Server *tmp;
-		std::map<std::string, int>::iterator itIp = ip_fd.find(it->getIP());
+		std::map<uint32_t, int>::iterator itIp = ip_fd.find(it->getIp());
 		if (itIp == ip_fd.end()) //겹치는 ip 없을 때
 		{
-			*tmp = new Server(it->getIP(), it->getPort(), it->getServerNames());
-			ip_fd[it->getIP()] = tmp->getSock();
+			tmp = new Server(it->getIp(), it->getPort(), it->getServerNames(), it->getLocationMap());
+			ip_fd[it->getIp()] = tmp->getSock();
 			change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
 		}
 		else //겹치는 ip 있을 때
-			*tmp = new Server(itIp->second, it->getIP(), it->getPort(), it->getServerNames());
+			tmp = new Server(itIp->second, it->getIp(), it->getPort(), it->getServerNames(), it->getLocationMap());
 		servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
 	}
 }

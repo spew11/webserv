@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 # include "Client.hpp"
+# include "ServerConfig.hpp"
 
 class Client;
 
@@ -21,16 +22,16 @@ private:
 	uint32_t	ip;
 	uint16_t	port;
 	std::vector<std::string>	serverNames;
-	std::map<std::string, LocationConfig> local;
+	ServerConfig::LocationMap local;
 
 	std::vector<Client*> clients;
 public:
-	Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames, std::map<std::string, LocationConfig> local);
-	Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames, std::map<std::string, LocationConfig> local);
+	Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames, ServerConfig::LocationMap local);
+	Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames, ServerConfig::LocationMap local);
 	~Server();
 
 	int		getSock(void) const;
-	std::map<std::string, LocationConfig> getLocal() const;
+	ServerConfig::LocationMap getLocal() const;
 	
 	bool	operator==(const std::string serverName);
 	void	addClient(Client* cli);
