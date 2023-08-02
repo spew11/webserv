@@ -6,6 +6,8 @@ Client::Client(int serv_sock): server(NULL)
 	if (sock == -1)
 		throw std::exception();
 	fcntl(sock, F_SETFL, O_NONBLOCK);
+
+	std::cout << "Connet: Client" << sock << std::endl;
 }
 
 Client::~Client()
@@ -28,17 +30,17 @@ void Client::recv_msg()
 {
 	char tmp[1024];
 
+	bzero(tmp, sizeof(char) * 1024);
 	recv_buf = "";
 	while (true)
 	{
 		ssize_t len = recv(sock, tmp, 1024, 0);
-		if (len == 1023)
+		if (len >= 0)
 			recv_buf += std::string(tmp);
-		else if (len >= 0)
-			break;
 		else
-			throw std::exception();
+			break;
 	}
+	std::cout << sock << ">> " << recv_buf << std::endl;
 	// if (!server)
 	// 	// find_server
 	// ResponseBuilder rb(recv_buf, server->getLocationMap());

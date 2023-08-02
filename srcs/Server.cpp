@@ -12,7 +12,7 @@ Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames)
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(this->ip);
-    addr.sin_addr.s_addr = htons(this->port);
+    addr.sin_port = htons(this->port);
     
     int ret = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
     if (ret == -1)
