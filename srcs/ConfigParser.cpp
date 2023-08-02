@@ -1,4 +1,5 @@
 #include <ConfigParser.hpp>
+#include <Config.hpp>
 
 ConfigParser::ConfigParser( const string & configFile )
 {
@@ -19,7 +20,12 @@ Config * ConfigParser::get( void )
     // cout << "\n[Modules]" << endl;
     // mainMod->print(0);
     
-    return NULL;
+    // 모듈을 Config객체에 저장
+    Config * config = new Config(mainMod);
+    cout << "\n[Config]" << endl;
+	config->print();
+
+    return config;
 }
 
 // 인자로 들어온 tree의 sub트리를 만든다.
