@@ -1,30 +1,30 @@
 #include "ServerHandler.hpp"
 
-// ServerHandler::ServerHandler(Config* config):config(config)
-// {
-// 	//kqueue() 생성
-// 	kq_fd = kqueue();
-// 	if (kq_fd == -1)
-// 		throw std::exception();
+ServerHandler::ServerHandler(Config* config):config(config)
+{
+	//kqueue() 생성
+	kq_fd = kqueue();
+	if (kq_fd == -1)
+		throw std::exception();
 
-	//Server 생성 및 changeList에 추가
-	// const std::vector<ServerConfig> &servConf = config.getServConf();
-	// std::map<std::string, int> ip_fd; //ip별 sd 저장
-	// for (std::vector<ServerConfig>::iterator it = servConf.begin(); it != servConf.end(); it++)
-	// {
-	// 	Server *tmp;
-	// 	std::map<std::string, int>::iterator itIp = ip_fd.find(it->getIP());
-	// 	if (itIp == ip_fd.end()) //겹치는 ip 없을 때
-	// 	{
-	// 		*tmp = new Server(it->getIP(), it->getPort(), it->getServerNames());
-	// 		ip_fd[it->getIP()] = tmp->getSock();
-	// 		change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-	// 	}
-	// 	else //겹치는 ip 있을 때
-	// 		*tmp = new Server(itIp->second, it->getIP(), it->getPort(), it->getServerNames());
-	// 	servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
-	// }
-// }
+	// Server 생성 및 changeList에 추가
+	const std::vector<ServerConfig> &servConf = config.getServConf();
+	std::map<std::string, int> ip_fd; //ip별 sd 저장
+	for (std::vector<ServerConfig>::iterator it = servConf.begin(); it != servConf.end(); it++)
+	{
+		Server *tmp;
+		std::map<std::string, int>::iterator itIp = ip_fd.find(it->getIP());
+		if (itIp == ip_fd.end()) //겹치는 ip 없을 때
+		{
+			*tmp = new Server(it->getIP(), it->getPort(), it->getServerNames());
+			ip_fd[it->getIP()] = tmp->getSock();
+			change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+		}
+		else //겹치는 ip 있을 때
+			*tmp = new Server(itIp->second, it->getIP(), it->getPort(), it->getServerNames());
+		servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
+	}
+}
 
 ServerHandler::~ServerHandler()
 {
@@ -91,16 +91,16 @@ void ServerHandler::change_events(uintptr_t ident, int16_t filter, uint16_t flag
 	changeList.push_back(tmp_event);
 }
 
-ServerHandler::ServerHandler()
-{
-	kq_fd = kqueue();
-	if (kq_fd == -1)
-		throw std::exception();
+// ServerHandler::ServerHandler()
+// {
+// 	kq_fd = kqueue();
+// 	if (kq_fd == -1)
+// 		throw std::exception();
 
-	uint32_t ip = INADDR_ANY; //inet_addr("127.0.0.1");
-	uint16_t port = 8080;
-	std::vector<std::string> servNames;
-	Server *tmp = new Server(ip, port, servNames);
-	change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-	servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
-}
+// 	uint32_t ip = INADDR_ANY; //inet_addr("127.0.0.1");
+// 	uint16_t port = 8080;
+// 	std::vector<std::string> servNames;
+// 	Server *tmp = new Server(ip, port, servNames);
+// 	change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+// 	servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
+// }

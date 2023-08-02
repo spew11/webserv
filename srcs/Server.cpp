@@ -1,7 +1,7 @@
 #include "Server.hpp"
 
-Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames) //, std::map<std::string, LocationConfig> local): 
-	:ip(ip), port(port), serverNames(serverNames) //, local(local)
+Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames, std::map<std::string, LocationConfig> local): 
+	:ip(ip), port(port), serverNames(serverNames), local(local)
 {
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock == -1)
@@ -23,8 +23,8 @@ Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames)
         throw std::exception();
 }
 
-Server::Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames)//, std::map<std::string, LocationConfig> local)
-	: sock(sock), ip(ip), port(port), serverNames(serverNames) {} // , local(local)
+Server::Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames, std::map<std::string, LocationConfig> local)
+	: sock(sock), ip(ip), port(port), serverNames(serverNames), local(local) {}
 
 Server::~Server()
 {
@@ -75,7 +75,7 @@ int		Server::getSock(void) const
 	return sock;
 }
 
-// std::map<std::string, LocationConfig> Server::getLocal() const
-// {
-// 	return local;
-// }
+std::map<std::string, LocationConfig> Server::getLocal() const
+{
+	return local;
+}

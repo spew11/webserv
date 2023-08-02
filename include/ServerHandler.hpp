@@ -20,12 +20,13 @@ private:
 	std::multimap<int, Server *> servers; // sockfd, server
 	std::map<int, Client *> clients;	  // sockfd, client
 
-	//Config *config;
+	Config *config;
 
 	void change_events(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 
 public:
-	ServerHandler(); //ServerHandler(Config *config);
+	// ServerHandler(); 
+	ServerHandler(Config *config);
 	~ServerHandler();
 	void loop();
 };
