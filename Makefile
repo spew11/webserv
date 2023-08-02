@@ -9,12 +9,15 @@ RM			= rm -rf
 
 FILENAME	=	\
 				main \
+				ServerHandler \
+				Server \
+				Client
 				DerivTree \
 				HttpMessage.cpp \
 				HttpRequestMessage.cpp \
 				HttpResponseMessage.cpp \
 				HttpResponseBuilder.cpp \
-				Utils.cpp \
+				Utils.cpp
 
 SRCS_DIR	=	srcs
 SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))

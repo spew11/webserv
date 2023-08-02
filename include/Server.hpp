@@ -4,13 +4,15 @@
 #include <iostream>
 #include <vector>
 #include <map>
-
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <exception>
+#include <unistd.h>
 
-# include "Client.h"
+# include "Client.hpp"
+
+class Client;
 
 class Server
 {
@@ -31,8 +33,8 @@ public:
 	std::map<std::string, LocationConfig> getLocal() const;
 	
 	bool	operator==(const std::string serverName);
-	void	addClient(const Client* cli);
-	void	delClient(const Client* cli);
+	void	addClient(Client* cli);
+	void	delClient(Client* cli);
 };
 
 #endif

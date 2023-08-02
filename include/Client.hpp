@@ -1,12 +1,12 @@
 #ifndef CLIENT_HPP
-# define CLINET_HPP
+# define CLIENT_HPP
 
 # include <iostream>
 # include <exception>
 # include <sys/socket.h>
 
 # include "Server.hpp"
-# include "ResponseBuilder.hpp"
+// # include "ResponseBuilder.hpp"
 
 class Server;
 

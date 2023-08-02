@@ -6,6 +6,8 @@ Client::Client(int serv_sock): server(NULL)
 	if (sock == -1)
 		throw std::exception();
 	fcntl(sock, F_SETFL, O_NONBLOCK);
+
+	std::cout << "Connet: Client" << sock << std::endl;
 }
 
 Client::~Client()
@@ -17,7 +19,7 @@ Client::~Client()
 
 void Client::send_msg()
 {
-	char *tmp = send_buf.c_str();
+	const char *tmp = send_buf.c_str();
 	ssize_t len = send(sock, tmp, strlen(tmp), MSG_DONTWAIT);
 	if (len == -1)
 		throw std::exception();
@@ -28,22 +30,22 @@ void Client::recv_msg()
 {
 	char tmp[1024];
 
+	bzero(tmp, sizeof(char) * 1024);
 	recv_buf = "";
 	while (true)
 	{
 		ssize_t len = recv(sock, tmp, 1024, 0);
-		if (len == 1023)
+		if (len >= 0)
 			recv_buf += std::string(tmp);
-		else if (len >= 0)
-			break;
 		else
-			throw std::exception();
+			break;
 	}
-	if (!server)
-		// find_server
-	ResponseBuilder rb(recv_buf, server->getLocationMap());
-	//???
-	//send_buf = rb->getResponse()->toString();
+	std::cout << sock << ">> " << recv_buf << std::endl;
+	// if (!server)
+	// 	// find_server
+	// ResponseBuilder rb(recv_buf, server->getLocationMap());
+	// //???
+	// //send_buf = rb->getResponse()->toString();
 }
 
 int Client::getSock() const
