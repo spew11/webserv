@@ -22,6 +22,7 @@ public:
     Module * createRoot();
     Module * createTypes();
     Module * createIndex();
+    Module * createErrorPage();
 
     void print(int indent)
     {

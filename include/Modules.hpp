@@ -234,3 +234,42 @@ public:
     }
 };
 
+class ErrorPageModule : public Module
+{
+private:
+    vector<int> errCodes;
+    string uri;
+public:
+    ErrorPageModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        // check syntax
+        for (size_t i = 1; i < deriv.arg.size() - 1; i++)
+            errCodes.push_back(atoi(deriv.arg[i].c_str()));
+        
+        uri = deriv.arg.back();
+    }
+
+    bool isErrCode( int code ) const 
+    {
+        if (find(errCodes.begin(), errCodes.end(), code) != errCodes.end())
+            return true;
+
+        return false;
+    }
+
+    const string & getUri( void ) const { return uri; }
+
+    virtual void print(int indent)
+    {
+        for (int i = 0; i < indent ; i++)
+            cout << " ";
+        cout << name << " -> uri(\"" << uri << "\"), code(";
+
+        for (size_t i = 0; i < errCodes.size(); i++)
+            cout << errCodes[i] << ", ";
+        cout << ")" << endl;
+
+        for (size_t i = 0; i < subMods.size(); i++)
+            subMods[i]->print(indent + 2);
+    }
+};

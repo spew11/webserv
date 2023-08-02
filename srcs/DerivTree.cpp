@@ -21,6 +21,8 @@ Module * DerivTree::createModule()
 		return createTypes();
 	else if (deriv.name == "index")
 		return createIndex();
+	else if (deriv.name == "error_page")
+		return createErrorPage();
 	else
 		; // throw
 		
@@ -111,5 +113,10 @@ Module * DerivTree::createTypes()
 Module * DerivTree::createIndex()
 {
 	return new IndexModule(deriv);
+}
+
+Module * DerivTree::createErrorPage()
+{
+	return new ErrorPageModule(deriv);
 }
 
