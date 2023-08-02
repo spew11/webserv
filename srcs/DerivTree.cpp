@@ -17,6 +17,8 @@ Module * DerivTree::createModule()
 		return createLocation();
 	else if (deriv.name == "root")
 		return createRoot();
+	else if (deriv.name == "types")
+		return createTypes();
 	else
 		; // throw
 		
@@ -91,5 +93,16 @@ Module * DerivTree::createLocation()
 Module * DerivTree::createRoot()
 {
 	return (new RootModule(deriv));
+}
+
+Module * DerivTree::createTypes()
+{
+	vector<Derivative> subDerivs;
+
+	for (int i = 0; i < subTree.size(); i++) {
+		subDerivs.push_back(subTree[i].getDeriv());
+	}
+
+	return new TypesModule(deriv, subDerivs);
 }
 

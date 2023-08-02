@@ -3,7 +3,11 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <algorithm>
 #include <cstdlib>
+#include <stdint.h>
+#include <cstring>
+#include <cstdio>
 
 #include <ConfigUtils.hpp>
 
@@ -161,6 +165,40 @@ public:
         for (int i = 0; i < indent ; i++)
             cout << " ";
         cout << name << " -> uri(\"" << root << "\")" << endl;
+
+        for (size_t i = 0; i < subMods.size(); i++)
+            subMods[i]->print(indent + 2);
+    }
+};
+
+class TypesModule : public Module
+{
+private:
+    map<string, string> typesMap;
+public:
+    TypesModule( const Derivative & deriv, vector<Derivative> subDerivs )
+     : Module(deriv, LOC_MOD)
+    {
+        for (size_t i = 0; i < subDerivs.size(); i++) {
+            // check syntax
+            string type = subDerivs[i].arg[0];
+
+            for (size_t j = 1; j < subDerivs[i].arg.size(); j++) {
+                string extension = subDerivs[i].arg[j];
+
+                typesMap[extension] = type;
+            }
+        }
+    }
+
+    const map<string, string> & getTypesMap( void ) const { return typesMap; }
+
+    virtual void print(int indent)
+    {
+        for (int i = 0; i < indent ; i++)
+            cout << " ";
+        cout << name << " -> map(" << typesMap.begin()->first << ", "
+             << typesMap.begin()->second << ")" << endl;
 
         for (size_t i = 0; i < subMods.size(); i++)
             subMods[i]->print(indent + 2);
