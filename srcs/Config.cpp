@@ -14,12 +14,12 @@ Config::Config( Module *_mainMod ) : mainMod(_mainMod)
 			// check casting
 			srvConfs.push_back(ServerConfig(*srvMod));
 		}
-		else if (subMod->getName() == "worker_connections")
-		{
-			WorkerConnectionsModule *m = dynamic_cast<WorkerConnectionsModule *>(subMod);
-			// check casting
-			mainConf.workConnMod = m;
-		}
+		// else if (subMod->getName() == "worker_connections")
+		// {
+		// 	WorkerConnectionsModule *m = dynamic_cast<WorkerConnectionsModule *>(subMod);
+		// 	// check casting
+		// 	mainConf.workConnMod = m;
+		// }
 		
 	}
 }

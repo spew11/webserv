@@ -12,17 +12,17 @@ class ConfigParser;
 using namespace std;
 
 // 보류
-struct MainConfig
-{
-    WorkerConnectionsModule * workConnMod;
-};
+// struct MainConfig
+// {
+//     WorkerConnectionsModule * workConnMod;
+// };
 
 class Config
 {
 private:
     friend class ConfigParser;
     Module *    mainMod;
-    MainConfig  mainConf;
+    // MainConfig  mainConf;
     vector<ServerConfig> srvConfs;
 
     Config( Module * mainMod );

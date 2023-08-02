@@ -1,7 +1,7 @@
 
 NAME		= webserv
-
-CXXFLAGS	= -Wall -Wextra -Werror \
+# -Wall -Wextra -Werror
+CXXFLAGS	=  \
 				-std=c++98 -MMD -MP
 CPPFLAGS	= -I ./include
 
@@ -15,13 +15,13 @@ FILENAME	=	\
 				LocationConfig \
 				ServerHandler \
 				Server \
-				Client
+				Client \
 				DerivTree \
-				HttpMessage.cpp \
-				HttpRequestMessage.cpp \
-				HttpResponseMessage.cpp \
-				HttpResponseBuilder.cpp \
-				Utils.cpp
+				HttpMessage \
+				HttpRequestMessage \
+				HttpResponseMessage \
+				HttpResponseBuilder \
+				Utils
 
 SRCS_DIR	=	srcs
 SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))

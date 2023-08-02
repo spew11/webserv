@@ -1,6 +1,8 @@
 #include "HttpResponseBuilder.hpp"
+#include "ServerConfig.hpp"
+#include "LocationConfig.hpp"
 //locations 매개변수로 있어야됌
-HttpResponseBuilder::HttpResponseBuilder(const string &request, EnvironmentValues &envRepo)
+HttpResponseBuilder::HttpResponseBuilder(const string &request, EnvironmentValues &envRepo, const ServerConfig::LocationMap &locations)
 {
     HttpRequestMessage requestMessage(request);
     if (requestMessage.getChunkedFlag() == true) {
@@ -20,6 +22,11 @@ HttpResponseBuilder::HttpResponseBuilder(const string &request, EnvironmentValue
     envRepo.setPair("request_filename", requestFilename);
     //기타등등
     //지금은 그냥 주소를 직접 넣어줬지만, 나중에는 우진이의 locations 객체를 통해서 진짜 경로로 초기화할것임
+    const LocationConfig & config = locations.getLocConf(uri);
+
+    config.getRoot();
+    config.getIndexes();
+    config.getType("scriptname");
     resourcePath = "/Users/eunjilee/42Seoul/42cursus/webserv/resource/image.jpg";
 }
 
@@ -131,6 +138,7 @@ void HttpResponseBuilder::execute(MethodExecutor &methodExecutor)
     }
     responseMessage.setStatusCode(statusCode);
     responseMessage.setReasonPhrase(findReasonPhrase(statusCode));
+    //응답헤더를 박아..
 }
 
 string HttpResponseBuilder::getResourcePath() const

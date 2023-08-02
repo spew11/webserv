@@ -30,7 +30,7 @@ public:
             cout << " ";
         cout << deriv.name << endl;
 
-        for (int i = 0; i < subTree.size(); i++)
+        for (size_t i = 0; i < subTree.size(); i++)
             subTree[i].print(indent + 2);
     }
 };

@@ -7,6 +7,7 @@
 
 #include "Server.hpp"
 #include "Client.hpp"
+#include "Config.hpp"
 
 # define NEVENTS 8
 class ServerHandler
