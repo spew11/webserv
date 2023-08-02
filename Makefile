@@ -9,6 +9,10 @@ RM			= rm -rf
 
 FILENAME	=	\
 				main \
+				ConfigParser \
+				Config \
+				ServerConfig \
+				LocationConfig \
 				ServerHandler \
 				Server \
 				Client

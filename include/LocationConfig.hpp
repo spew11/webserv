@@ -1,0 +1,34 @@
+#pragma once
+
+#include <Modules.hpp>
+
+class LocationConfig
+{
+private:
+    RootModule *        rootMod;
+    IndexModule *       indexMod;
+    TypesModule *       typesMod;
+    vector<ErrorPageModule*> errorPageMods;
+public:
+    LocationConfig( void );
+
+    void addModules( const vector<Module*> & );
+
+    const string & getRoot( void ) const;
+    const vector<string> & getIndexes( void ) const;
+    const string & getType( const string & scriptName ) const;
+    bool isErrCode( int code ) const;
+    const string & getErrPage( int code ) const;
+
+    void print() const
+    {
+        if (rootMod)
+            rootMod->print(2);
+        if (indexMod)
+            indexMod->print(2);
+        if (typesMod)
+            typesMod->print(2);
+        if (errorPageMods.size())
+            errorPageMods[0]->print(2);
+    }
+};
