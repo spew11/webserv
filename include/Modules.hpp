@@ -205,3 +205,32 @@ public:
     }
 };
 
+class IndexModule : public Module
+{
+private:
+    vector<string> indexes;
+public:
+    IndexModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        // check syntax
+        for (int i = 1; i < deriv.arg.size(); i++)
+            indexes.push_back(deriv.arg[i]);
+    }
+
+    const vector<string> & getIndexes( void ) const { return indexes; }
+
+    virtual void print(int indent)
+    {
+        for (int i = 0; i < indent ; i++)
+            cout << " ";
+
+        cout << name << " -> file(";
+        for (size_t i = 0; i < indexes.size(); i++)
+            cout << indexes[i] << ", ";
+        cout << ")" << endl;
+
+        for (size_t i = 0; i < subMods.size(); i++)
+            subMods[i]->print(indent + 2);
+    }
+};
+

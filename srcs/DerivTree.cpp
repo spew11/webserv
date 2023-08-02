@@ -19,6 +19,8 @@ Module * DerivTree::createModule()
 		return createRoot();
 	else if (deriv.name == "types")
 		return createTypes();
+	else if (deriv.name == "index")
+		return createIndex();
 	else
 		; // throw
 		
@@ -104,5 +106,10 @@ Module * DerivTree::createTypes()
 	}
 
 	return new TypesModule(deriv, subDerivs);
+}
+
+Module * DerivTree::createIndex()
+{
+	return new IndexModule(deriv);
 }
 
