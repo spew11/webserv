@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Modules.hpp>
+#include <EnvironmentValues.hpp>
 
 class LocationConfig
 {
@@ -8,6 +9,8 @@ private:
     RootModule *        rootMod;
     IndexModule *       indexMod;
     TypesModule *       typesMod;
+    CgiModule *         cgiMod;
+    CgiParamsModule *   cgiParamsMod;
     vector<ErrorPageModule*> errorPageMods;
 public:
     LocationConfig( void );
@@ -19,6 +22,9 @@ public:
     const string & getType( const string & scriptName ) const;
     bool isErrCode( int code ) const;
     const string & getErrPage( int code ) const;
+    bool isCgi( void ) const;
+    const string & getCgiCmd( void ) const;
+    char ** getCgiParams( const EnvironmentValues & ) const;
 
     void print() const
     {
@@ -30,5 +36,9 @@ public:
             typesMod->print(2);
         if (errorPageMods.size())
             errorPageMods[0]->print(2);
+        if (cgiMod)
+            cgiMod->print(2);
+        if (cgiParamsMod)
+            cgiParamsMod->print(2);
     }
 };

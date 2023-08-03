@@ -50,7 +50,6 @@ public:
 class ServerModule : public Module
 {
 private:
-    friend class DerivTree;
     uint32_t  ip;
     int     port;
     vector<string> serverNames;
@@ -132,6 +131,8 @@ public:
     {
         // check syntax
         uri = deriv.arg[1];
+        if (uri.back() == '/')
+            uri.pop_back();
     }
 
     const string & getUri( void ) const { return uri; }
@@ -272,4 +273,35 @@ public:
         for (size_t i = 0; i < subMods.size(); i++)
             subMods[i]->print(indent + 2);
     }
+};
+
+class CgiModule : public Module
+{
+private:
+    string cgiCmd;
+public:
+    CgiModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        // check syntax
+        cgiCmd = deriv.arg[1];
+    }
+
+    const string & getCgiCmd( void ) const { return cgiCmd; }
+};
+
+class CgiParamsModule : public Module
+{
+private:
+    vector<pair<string, string> > params;
+public:
+    CgiParamsModule( const Derivative & deriv, const vector<Derivative> & subDerivs ) : Module(deriv, LOC_MOD)
+    {
+        for (int i = 0; i < subDerivs.size(); i++)
+        {
+            // check syntax
+            params.push_back(make_pair(subDerivs[i].arg[0], subDerivs[i].arg[1]));
+        }
+    }
+
+    const vector<pair<string, string> > & getParams( void ) const { return params; }
 };
