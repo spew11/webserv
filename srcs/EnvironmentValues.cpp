@@ -20,7 +20,6 @@ string EnvironmentValues::replace(const string &input) const
 
     while ((pos = result.find('$', pos)) != string::npos)
     {
-        cout << "res: " << result << endl;
         size_t endPos = result.find('$', pos + 1);
 
         if (endPos == string::npos)
