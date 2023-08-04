@@ -163,7 +163,7 @@ char ** LocationConfig::getCgiParams( const EnvironmentValues & env ) const
 		strcpy(paramArr[i], (key + "=" + value).c_str());
 	}
 
-	paramArr[params.size() + 1] = NULL;
+	paramArr[params.size()] = NULL;
 	
 	return paramArr;
 }
