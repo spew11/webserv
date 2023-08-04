@@ -153,7 +153,7 @@ char ** LocationConfig::getCgiParams( const EnvironmentValues & env ) const
 	for (int i = 0; i < params.size(); i++)
 	{
 		const string & key = params[i].first;
-		string value = env.replace(params[i].second);
+		string value = env.convert(params[i].second);
 
 		size_t keySize = params[i].first.size();
 		size_t valueSize = value.size();

@@ -13,7 +13,7 @@ class EnvironmentValues
     public:
         string getValue(const string &key) const;
         void setPair(const string &key, const string &value);
-        string replace(const string &input) const;
+        string convert(const string &input) const;
 };
 
 #endif
