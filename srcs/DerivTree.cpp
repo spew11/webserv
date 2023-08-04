@@ -31,6 +31,8 @@ Module * DerivTree::createModule()
 		return createAutoIndex();
 	else if (deriv.name == "client_max_body_size")
 		return createClienMaxBodySize();
+	else if (deriv.name == "accept_method")
+		return createAcceptMethod();
 	else
 		; // throw
 		
@@ -154,3 +156,8 @@ Module * DerivTree::createClienMaxBodySize()
 	return new ClientMaxBodySizeModule(deriv);
 }
 
+Module * DerivTree::createAcceptMethod()
+{
+	cout << "create\n";
+	return new AcceptMethodModule(deriv);
+}

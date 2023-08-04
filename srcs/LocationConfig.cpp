@@ -9,6 +9,7 @@ LocationConfig::LocationConfig( void )
 	cgiParamsMod = NULL;
 	autoIndexMod = NULL;
 	cliMaxBodyMod = NULL;
+	acceptMethodMod = NULL;
 	errorPageMods.clear();
 }
 
@@ -53,6 +54,10 @@ void LocationConfig::addModules( const vector<Module*> & modules )
 		else if (mod->getName() == "client_max_body_size")
 		{
 			cliMaxBodyMod = dynamic_cast<ClientMaxBodySizeModule *>(mod);
+		}	
+		else if (mod->getName() == "accept_method")
+		{
+			acceptMethodMod = dynamic_cast<AcceptMethodModule *>(mod);
 		}	
 	}
 }
@@ -179,3 +184,12 @@ int LocationConfig::getClientMaxBodySize( void ) const
 	return cliMaxBodyMod->getClientMaxBodySize();
 }
 
+const vector<string> & LocationConfig::getAcceptMethods( void ) const
+{
+	const static vector<string> defaultMethod = vector<string>(1, "GET");
+
+	if (acceptMethodMod == NULL)
+		return defaultMethod;
+
+	return acceptMethodMod->getAcceptMethods();
+}

@@ -27,6 +27,7 @@ public:
     Module * createCgiParams();
     Module * createAutoIndex();
     Module * createClienMaxBodySize();
+    Module * createAcceptMethod();
 
     void print(int indent)
     {

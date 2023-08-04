@@ -336,3 +336,19 @@ public:
     int getClientMaxBodySize( void ) const { return maxSize; }
 };
 
+class AcceptMethodModule : public Module
+{
+private:
+    vector<string> methods;
+public:
+    AcceptMethodModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        for (int i = 1; i < deriv.arg.size(); i++)
+        {
+            // check syntax
+            methods.push_back(deriv.arg[i]);
+        }
+    }
+
+    const vector<string> & getAcceptMethods( void ) const { return methods; }
+};
