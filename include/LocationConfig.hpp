@@ -12,6 +12,7 @@ private:
     CgiModule *         cgiMod;
     CgiParamsModule *   cgiParamsMod;
     AutoIndexModule *   autoIndexMod;
+    ClientMaxBodySizeModule * cliMaxBodyMod;
     vector<ErrorPageModule*> errorPageMods;
 public:
     LocationConfig( void );
@@ -26,6 +27,7 @@ public:
     bool isCgi( void ) const;
     const string & getCgiCmd( void ) const;
     bool isAutoIndex( void ) const;
+    int  getClientMaxBodySize( void ) const;
     char ** getCgiParams( const EnvironmentValues & ) const;
 
     void print() const

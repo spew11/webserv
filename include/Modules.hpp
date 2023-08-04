@@ -323,3 +323,16 @@ public:
     bool getAutoIndex( void ) const { return isAutoIndex; }
 };
 
+class ClientMaxBodySizeModule : public Module
+{
+private:
+    int maxSize;
+public:
+    ClientMaxBodySizeModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        maxSize = atoi(deriv.arg[1].c_str());
+    }
+
+    int getClientMaxBodySize( void ) const { return maxSize; }
+};
+

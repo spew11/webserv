@@ -27,6 +27,10 @@ Module * DerivTree::createModule()
 		return createCgi();
 	else if (deriv.name == "cgi_params")
 		return createCgiParams();
+	else if (deriv.name == "autoindex")
+		return createAutoIndex();
+	else if (deriv.name == "client_max_body_size")
+		return createClienMaxBodySize();
 	else
 		; // throw
 		
@@ -143,5 +147,10 @@ Module * DerivTree::createCgiParams()
 Module * DerivTree::createAutoIndex()
 {
 	return new AutoIndexModule(deriv);
+}
+
+Module * DerivTree::createClienMaxBodySize()
+{
+	return new ClientMaxBodySizeModule(deriv);
 }
 

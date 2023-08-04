@@ -8,6 +8,7 @@ LocationConfig::LocationConfig( void )
 	cgiMod = NULL;
 	cgiParamsMod = NULL;
 	autoIndexMod = NULL;
+	cliMaxBodyMod = NULL;
 	errorPageMods.clear();
 }
 
@@ -48,6 +49,10 @@ void LocationConfig::addModules( const vector<Module*> & modules )
 		else if (mod->getName() == "autoindex")
 		{
 			autoIndexMod = dynamic_cast<AutoIndexModule *>(mod);
+		}	
+		else if (mod->getName() == "client_max_body_size")
+		{
+			cliMaxBodyMod = dynamic_cast<ClientMaxBodySizeModule *>(mod);
 		}	
 	}
 }
@@ -164,5 +169,13 @@ bool LocationConfig::isAutoIndex( void ) const
 		return false;
 	
 	return autoIndexMod->getAutoIndex();
+}
+
+int LocationConfig::getClientMaxBodySize( void ) const
+{
+	if (cliMaxBodyMod == NULL)
+		return 1024;
+
+	return cliMaxBodyMod->getClientMaxBodySize();
 }
 
