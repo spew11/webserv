@@ -139,3 +139,9 @@ Module * DerivTree::createCgiParams()
 
 	return new CgiParamsModule(deriv, subDerivs);
 }
+
+Module * DerivTree::createAutoIndex()
+{
+	return new AutoIndexModule(deriv);
+}
+

@@ -25,6 +25,7 @@ public:
     Module * createErrorPage();
     Module * createCgi();
     Module * createCgiParams();
+    Module * createAutoIndex();
 
     void print(int indent)
     {

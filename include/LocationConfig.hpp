@@ -11,6 +11,7 @@ private:
     TypesModule *       typesMod;
     CgiModule *         cgiMod;
     CgiParamsModule *   cgiParamsMod;
+    AutoIndexModule *   autoIndexMod;
     vector<ErrorPageModule*> errorPageMods;
 public:
     LocationConfig( void );
@@ -24,6 +25,7 @@ public:
     const string & getErrPage( int code ) const;
     bool isCgi( void ) const;
     const string & getCgiCmd( void ) const;
+    bool isAutoIndex( void ) const;
     char ** getCgiParams( const EnvironmentValues & ) const;
 
     void print() const

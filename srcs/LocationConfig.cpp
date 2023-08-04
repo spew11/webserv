@@ -7,6 +7,7 @@ LocationConfig::LocationConfig( void )
 	typesMod = NULL;
 	cgiMod = NULL;
 	cgiParamsMod = NULL;
+	autoIndexMod = NULL;
 	errorPageMods.clear();
 }
 
@@ -44,6 +45,10 @@ void LocationConfig::addModules( const vector<Module*> & modules )
 		{
 			cgiParamsMod = dynamic_cast<CgiParamsModule *>(mod);
 		}
+		else if (mod->getName() == "autoindex")
+		{
+			autoIndexMod = dynamic_cast<AutoIndexModule *>(mod);
+		}	
 	}
 }
 
@@ -151,5 +156,13 @@ char ** LocationConfig::getCgiParams( const EnvironmentValues & env ) const
 	paramArr[params.size() + 1] = NULL;
 	
 	return paramArr;
+}
+
+bool LocationConfig::isAutoIndex( void ) const
+{
+	if (autoIndexMod == NULL)
+		return false;
+	
+	return autoIndexMod->getAutoIndex();
 }
 

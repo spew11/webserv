@@ -305,3 +305,21 @@ public:
 
     const vector<pair<string, string> > & getParams( void ) const { return params; }
 };
+
+class AutoIndexModule : public Module
+{
+private:
+    bool isAutoIndex;
+public:
+    AutoIndexModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        // check syntax
+        if (deriv.arg[1] == "on")
+            isAutoIndex = true;
+        else
+            isAutoIndex = false;
+    }
+
+    bool getAutoIndex( void ) const { return isAutoIndex; }
+};
+
