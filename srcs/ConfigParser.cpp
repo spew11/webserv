@@ -12,18 +12,12 @@ Config * ConfigParser::get( void )
     
     // 지시어들을 트리구조로 저장
     setTree(&mainDerivTree);
-    // cout << "[Tree]" << endl;
-    // mainDerivTree.print(0);
 
     // 지시어트리를 이용해 모듈을 생성
     Module * mainMod = mainDerivTree.createModule();
-    // cout << "\n[Modules]" << endl;
-    // mainMod->print(0);
     
     // 모듈을 Config객체에 저장
     Config * config = new Config(mainMod);
-    cout << "\n[Config]" << endl;
-	config->print();
 
     return config;
 }
