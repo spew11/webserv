@@ -1,6 +1,6 @@
 #include "ServerHandler.hpp"
 
-ServerHandler::ServerHandler(Config* config):config(config)
+ServerHandler::ServerHandler(Config* config): config(config)
 {
 	//kqueue() 생성
 	kq_fd = kqueue();
@@ -9,20 +9,19 @@ ServerHandler::ServerHandler(Config* config):config(config)
 
 	// Server 생성 및 changeList에 추가
 	const std::vector<ServerConfig> &servConf = config->getSrvConf();
-	std::map<uint32_t, int> ip_fd; //ip별 sd 저장
+	std::map<std::pair<uint32_t, uint16_t>, int> addr_fd; //<ip, port> - fd 매핑: 중복검사
 	for (std::vector<ServerConfig>::const_iterator it = servConf.begin(); it != servConf.end(); it++)
 	{
-		Server *tmp;
-		std::map<uint32_t, int>::iterator itIp = ip_fd.find(it->getIp());
-		if (itIp == ip_fd.end()) //겹치는 ip 없을 때
+		std::pair<uint32_t, uint16_t> addr(it->getIp(), it->getPort());
+		std::map<std::pair<uint32_t, uint16_t>, int>::iterator it2 = addr_fd.find(addr);
+		if (it2 != addr_fd.end()) // 중복 ip,port 존재 x
 		{
-			tmp = new Server(it->getIp(), it->getPort(), it->getServerNames(), it->getLocationMap());
-			ip_fd[it->getIp()] = tmp->getSock();
+			Server *tmp = new Server(*it);
+			servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
 			change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
 		}
-		else //겹치는 ip 있을 때
-			tmp = new Server(itIp->second, it->getIp(), it->getPort(), it->getServerNames(), it->getLocationMap());
-		servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
+		else //중복 ip,port 존재
+			servers[*it2].addConf(*it);
 	}
 }
 
@@ -90,17 +89,3 @@ void ServerHandler::change_events(uintptr_t ident, int16_t filter, uint16_t flag
 	EV_SET(&tmp_event, ident, filter, flags, fflags, data, udata);
 	changeList.push_back(tmp_event);
 }
-
-// ServerHandler::ServerHandler()
-// {
-// 	kq_fd = kqueue();
-// 	if (kq_fd == -1)
-// 		throw std::exception();
-
-// 	uint32_t ip = INADDR_ANY; //inet_addr("127.0.0.1");
-// 	uint16_t port = 8080;
-// 	std::vector<std::string> servNames;
-// 	Server *tmp = new Server(ip, port, servNames);
-// 	change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-// 	servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
-// }
