@@ -1,81 +1,44 @@
 #include "Server.hpp"
 
-Server::Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames, std::map<std::string, LocationConfig> local): 
-	:ip(ip), port(port), serverNames(serverNames), local(local)
+Server::Server(const ServerConfig &config) : ip(config.getIp()), port(config.getPort())
 {
-    sock = socket(PF_INET, SOCK_STREAM, 0);
-    if (sock == -1)
-        throw std::exception();
-    fcntl(sock, F_SETFL, O_NONBLOCK);
-    
-    struct sockaddr_in addr;
-    bzero(&addr, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(this->ip);
-    addr.sin_port = htons(this->port);
-    
-    int ret = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
-    if (ret == -1)
-        throw std::exception();
-    
-    ret = listen(sock, 5);
-    if (ret == -1)
-        throw std::exception();
-}
+	sock = socket(PF_INET, SOCK_STREAM, 0);
+	if (sock == -1)
+		throw std::exception();
+	fcntl(sock, F_SETFL, O_NONBLOCK);
 
-Server::Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames, std::map<std::string, LocationConfig> local)
-	: sock(sock), ip(ip), port(port), serverNames(serverNames), local(local) {}
+	struct sockaddr_in addr;
+	bzero(&addr, sizeof(addr));
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(ip);
+	addr.sin_port = htons(port);
+
+	int ret = ::bind(sock, (struct sockaddr *)&addr, sizeof(addr));
+	if (ret == -1)
+		throw std::exception();
+
+	ret = listen(sock, 5);
+	if (ret == -1)
+		throw std::exception();
+
+	configs.push_back(config);
+}
 
 Server::~Server()
 {
-    for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++)
-        delete *it;
-    clients.clear();
-    close(sock);
+	close(sock);
 }
 
-bool	Server::operator==(const std::string serverName)
-{
-    for (std::vector<std::string>::iterator it = serverNames.begin(); it != serverNames.end(); it++)
-	{
-		if (*it == serverName)
-			return true;
-	}
-	return false;
-}
-
-void	Server::addClient(Client* cli)
-{
-    for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++)
-    {
-        if (*it == cli)
-        {
-            throw std::exception();
-        }
-    }
-    clients.push_back(cli);
-}
-
-void	Server::delClient(Client* cli)
-{
-    for (std::vector<Client*>::iterator it = clients.begin(); it != clients.end(); it++)
-    {
-        if (*it == cli)
-        {
-            clients.erase(it);
-            delete cli;
-            return;
-        }
-    }
-    throw std::exception();
-}
-
-int		Server::getSock(void) const
+int Server::getSock(void) const
 {
 	return sock;
 }
 
-std::map<std::string, LocationConfig> Server::getLocal() const
+ServerConfig Server::getCofig(std::string host) const
 {
-	return local;
+	std::vector<ServerConfig>::const_iterator it = configs.begin();
+	for (; it != configs.end(); it++)
+		if (*it == host)
+			return *it;
+	return *(configs.begin());
 }

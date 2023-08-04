@@ -21,21 +21,14 @@ private:
 	int			sock;
 	uint32_t	ip;
 	uint16_t	port;
-	std::vector<std::string>	serverNames;
-	ServerConfig::LocationMap local;
+	std::vector<ServerConfig>	configs;
 
-	std::vector<Client*> clients;
 public:
-	Server(uint32_t ip, uint16_t port, std::vector<std::string> serverNames, ServerConfig::LocationMap local);
-	Server(int sock, uint32_t ip, uint16_t port, std::vector<std::string> serverNames, ServerConfig::LocationMap local);
+	Server(const ServerConfig &config);
 	~Server();
 
 	int		getSock(void) const;
-	ServerConfig::LocationMap getLocal() const;
-	
-	bool	operator==(const std::string serverName);
-	void	addClient(Client* cli);
-	void	delClient(Client* cli);
+	ServerConfig	getCofig(std::string host) const;
 };
 
 #endif
