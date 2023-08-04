@@ -23,6 +23,8 @@ public:
     Module * createTypes();
     Module * createIndex();
     Module * createErrorPage();
+    Module * createCgi();
+    Module * createCgiParams();
 
     void print(int indent)
     {

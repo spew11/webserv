@@ -23,6 +23,10 @@ Module * DerivTree::createModule()
 		return createIndex();
 	else if (deriv.name == "error_page")
 		return createErrorPage();
+	else if (deriv.name == "cgi")
+		return createCgi();
+	else if (deriv.name == "cgi_params")
+		return createCgiParams();
 	else
 		; // throw
 		
@@ -120,3 +124,18 @@ Module * DerivTree::createErrorPage()
 	return new ErrorPageModule(deriv);
 }
 
+Module * DerivTree::createCgi()
+{
+	return new CgiModule(deriv);
+}
+
+Module * DerivTree::createCgiParams()
+{
+	vector<Derivative> subDerivs;
+
+	for (int i = 0; i < subTree.size(); i++) {
+		subDerivs.push_back(subTree[i].getDeriv());
+	}
+
+	return new CgiParamsModule(deriv, subDerivs);
+}

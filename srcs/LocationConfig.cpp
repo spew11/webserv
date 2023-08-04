@@ -5,6 +5,8 @@ LocationConfig::LocationConfig( void )
 	rootMod = NULL;
 	indexMod = NULL;
 	typesMod = NULL;
+	cgiMod = NULL;
+	cgiParamsMod = NULL;
 	errorPageMods.clear();
 }
 
@@ -34,6 +36,14 @@ void LocationConfig::addModules( const vector<Module*> & modules )
             errorPageMods.push_back(dynamic_cast<ErrorPageModule *>(mod));
             // check casting
         }
+		else if (mod->getName() == "cgi")
+		{
+			cgiMod = dynamic_cast<CgiModule *>(mod);
+		}	
+		else if (mod->getName() == "cgi_params")
+		{
+			cgiParamsMod = dynamic_cast<CgiParamsModule *>(mod);
+		}
 	}
 }
 
@@ -98,5 +108,48 @@ const string & LocationConfig::getErrPage( int code ) const
 	}
 
 	return defaultErrPage;
+}
+
+bool LocationConfig::isCgi( void ) const
+{
+	if (cgiMod != NULL)
+		return true;
+	
+	return false;
+}
+
+const string & LocationConfig::getCgiCmd( void ) const
+{
+	static const string defaultCmd = "";
+
+	if (cgiMod != NULL)
+		return cgiMod->getCgiCmd();
+
+	return defaultCmd;
+}
+
+// mallllllllloc const를 붙여서 반환하는 방법은 모르겟음
+char ** LocationConfig::getCgiParams( const EnvironmentValues & env ) const 
+{
+	const vector<pair<string, string> > & params = cgiParamsMod->getParams();
+
+	char ** paramArr = new char*[params.size() + 1];
+
+	for (int i = 0; i < params.size(); i++)
+	{
+		const string & key = params[i].first;
+		string value = env.replace(params[i].second);
+
+		size_t keySize = params[i].first.size();
+		size_t valueSize = value.size();
+
+		paramArr[i] = new char[keySize + valueSize + 2];
+
+		strcpy(paramArr[i], (key + "=" + value).c_str());
+	}
+
+	paramArr[params.size() + 1] = NULL;
+	
+	return paramArr;
 }
 
