@@ -1,19 +1,22 @@
 #include "Client.hpp"
 
-Client::Client(int serv_sock): server(NULL)
+Client::Client(Server *server): server(server), hrb()
 {
-	sock = accept(serv_sock, NULL, NULL);
+	bzero(&addr, sizeof(addr));
+	sock = accept(server->getSock(), (struct sockaddr*)&addr, NULL);
 	if (sock == -1)
 		throw std::exception();
 	fcntl(sock, F_SETFL, O_NONBLOCK);
 
 	std::cout << "Connet: Client" << sock << std::endl;
+	env.setPair("$server_addr", server->getIP());
+	env.setPair("$server_port", server->getPort());
+	env.setPair("$remote_addr", inet_ntoa(addr.sin_addr));
+	env.setPair("$remote_port", addr.sin_port);
 }
 
 Client::~Client()
 {
-	if (server)
-		server->delClient(this);
 	close(sock);
 }
 
@@ -41,11 +44,6 @@ void Client::recv_msg()
 			break;
 	}
 	std::cout << sock << ">> " << recv_buf << std::endl;
-	// if (!server)
-	// 	// find_server
-	// ResponseBuilder rb(recv_buf, server->getLocationMap());
-	// //???
-	// //send_buf = rb->getResponse()->toString();
 }
 
 int Client::getSock() const
@@ -70,7 +68,18 @@ void Client::setSendBuf(std::string send_buf)
 
 bool Client::isSendable() const
 {
-	if (send_buf == "")
+	if (send_buf.empty())
 		return false;
 	return true;
+}
+
+void Client::communicate()
+{
+	recv_msg();
+	HttpRequestMessage request(send_buf);
+	//find location
+	//builder init
+	//builder needflag 체크
+	//send_buf = hrb.getResponse().toString();
+	send_msg();
 }

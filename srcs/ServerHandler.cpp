@@ -62,7 +62,7 @@ void	ServerHandler::loop()
 				std::map<int, Server*>::iterator it = servers.find(curEvent->ident);
 				if (it != servers.end()) //연결 요청: client 객체 생성 및  changeList에 추가
 				{
-					Client *cli = new Client(it->first);
+					Client *cli = new Client(it->second);
 					clients[cli->getSock()] = cli;
 					change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
 					change_events(cli->getSock(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);

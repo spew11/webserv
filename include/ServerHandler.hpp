@@ -19,7 +19,7 @@ private:
 	struct kevent eventList[8];			   // kevent()에서 발생한 이벤트 리턴
 
 	std::map<int, Server *> servers; // sockfd, server
-	std::map<int, Client *> clients;	  // sockfd, client
+	std::map<int, Client *> clients; // sockfd, client
 
 	Config *config;
 
