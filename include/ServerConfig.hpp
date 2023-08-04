@@ -15,7 +15,7 @@ public:
 
     public:
         void insert(const string &, const LocationConfig &);
-        const LocationConfig &getLocConf( string uri );
+        const LocationConfig &getLocConf( string uri ) const;
 
         void print()
         {
