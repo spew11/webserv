@@ -13,7 +13,7 @@ class HttpResponseMessage : public HttpMessage
         void setStatusCode(const int &statusCode);
         void setReasonPhrase(const string &reasonPhrase);
         void setBody(const string &body);
-        void addHeader(const string headerType, const string headerValue);
+        void addHeader(string headerType, string headerValue);
         string toString() const;
 };
 #endif

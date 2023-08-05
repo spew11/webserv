@@ -1,27 +1,28 @@
 #include "HttpResponseBuilder.hpp"
+#include "ServerConfig.hpp"
 
 void HttpResponseBuilder::initiate(const string & request, WebservValues &webservValues, const ServerConfig::LocationMap &locationMap)
 {
     clear();
     requestMessage = new HttpRequestMessage(request);
     responseMessage = new HttpResponseMessage();
-    if (requestMessage.getChunkedFlag()) {
-        requestBody = requestMessage.getBody();
+    if (requestMessage->getChunkedFlag()) {
+        requestBody = requestMessage->getBody();
     }
-    needMoreMessageFlag = requestMessage.getChunkedFlag();
-    needCgiFlag = locationConfig.isCgi());
-    *locationConfig = locationMap.getLocConf(requestMessage.getUri());
+    needMoreMessageFlag = requestMessage->getChunkedFlag();
+    needCgiFlag = locationConfig->isCgi();
+    *locationConfig = locationMap.getLocConf(requestMessage->getUri());
     initWebservValues();
 }
 
 void HttpResponseBuilder::initWebservValues()
 {
-    webservValues->insert("request_uri", requestMessage.getRequestUri());
-    webservValues->insert("uri", requestMessage.getUri());
-    webservValues->insert("document_uri", requestMessage.getUri());
+    webservValues->insert("request_uri", requestMessage->getRequestUri());
+    webservValues->insert("uri", requestMessage->getUri());
+    webservValues->insert("document_uri", requestMessage->getUri());
     
     // $request_filename 및 resourcePath 초기화
-    vector<string> indexes = locationConfig.getIndexes();
+    vector<string> indexes = locationConfig->getIndexes();
     struct stat statbuf;
     string tmpPath = locationConfig->getRoot() + requestMessage->getUri();
     if (stat(tmpPath.c_str(), &statbuf) < 0) {
@@ -30,33 +31,33 @@ void HttpResponseBuilder::initWebservValues()
         exit(1);
     }
     if(S_ISDIR(statbuf.st_mode)) { // regular 파일이 없을 때
-        webservValues->insert("request_filename", "");
         for (int i = 0; i < indexes.size(); i++) {
             string resourcePathTmp = tmpPath+indexes.at(i);
             if (access(resourcePathTmp.c_str(), F_OK) == 0) {
+                webservValues->insert("request_filename", "");
                 resourcePath = resourcePathTmp;
                 break;
             }
         }
     }
     else if (S_ISREG(statbuf.st_mode)) { // regular 파일이 있을 때
-        webservValues->insert("request_filename", requestMessage.getFilename());
+        webservValues->insert("request_filename", requestMessage->getFilename());
         resourcePath = tmpPath;
     }
     // $args 초기화
-    webservValues->insert("args", requestMessage.getArgs());
+    webservValues->insert("args", requestMessage->getArgs());
 
     // $query_string 초기화
-    webservValues->insert("query_string", requestMessage.getQueryString());
+    webservValues->insert("query_string", requestMessage->getQueryString());
 
     // $method 초기화
-    webservValues->insert("method", requestMessage.getHttpMethod());
+    webservValues->insert("method", requestMessage->getHttpMethod());
 
     // $host 초기화
-    webservValues->insert("host", requestMessage.getHeader("host"));
+    webservValues->insert("host", requestMessage->getHeader("host"));
 
     // $content-type 초기화
-    webservValues->insert("content_type", locationConfig.getType());
+    webservValues->insert("content_type", locationConfig->getType(requestMessage->getFilename()));
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)
@@ -92,10 +93,10 @@ void HttpResponseBuilder::build(const IMethodExecutor & methodExecutor)
             responseMessage->setBody(content);
         }
     }
-    else if(method == "POST") {
+    else if(httpMethod == "POST") {
         statusCode = methodExecutor.postMethod(resourcePath, requestBody);
     }
-    else if(method == "DELETE") {
+    else if(httpMethod == "DELETE") {
         statusCode = methodExecutor.deleteMethod(resourcePath);
     }
     responseMessage->setStatusCode(statusCode);
@@ -121,24 +122,24 @@ string HttpResponseBuilder::findReasonPhrase(const int &statusCode)
     return "Internal Server Error";
 }
 
-const HttpResponseMessage HttpResponseBuilder::getResponseMessage() const
+HttpResponseMessage HttpResponseBuilder::getResponseMessage() const
 {
-    return requestMessage;
+    return *responseMessage;
 }
 
-const HttpRequestMessage HttpResponseBuilder::getRequestMessage() const
+HttpRequestMessage HttpResponseBuilder::getRequestMessage() const
 {
-    return responseMessage;
+    return *requestMessage;
 }
 
-void HttpResponseBuilder::clear() const
+void HttpResponseBuilder::clear()
 {
     delete requestMessage;
     delete responseMessage;
     locationConfig = 0;
     webservValues = 0;
-    resourcePath = 0;
-    requestBody = 0;
+    resourcePath = "";
+    requestBody = "";
     needMoreMessageFlag = false;
     needCgiFlag = false;
 }

@@ -10,22 +10,22 @@ class HttpRequestMessage : public HttpMessage
         string requestTarget;
         void parseRequestMessage(const string &requestMessage);
         bool chunkedFlag;
-        void parseUri() const;
+        void parseUri();
 
         string requestUri;
         string uri;
-        string fileName;
+        string filename;
         string args;
         string queryString;
 
     public:
         HttpRequestMessage(const string &requestMessage);
-        string getMethod() const;
+        string getHttpMethod() const;
         string getRequestTarget() const;
         int getChunkedFlag() const;
         string getRequestUri() const;
         string getUri() const;
-        string getFileName() const;
+        string getFilename() const;
         string getArgs() const;
         string getQueryString() const;
 };

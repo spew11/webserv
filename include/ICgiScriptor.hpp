@@ -8,7 +8,8 @@ using namespace std;
 
 class ICgiScriptor
 {
-    //스크립터 인터페이스
+    public:
+        virtual void method() = 0; //임의로 작성해봄
 };
 
 #endif

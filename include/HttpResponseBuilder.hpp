@@ -16,8 +16,7 @@ class HttpResponseBuilder
     private:
         HttpRequestMessage *requestMessage;
         HttpResponseMessage *responseMessage;
-
-        const LocationConfig *locationConfig;
+        LocationConfig *locationConfig;
         WebservValues *webservValues;
 
         string resourcePath; // locations를 거쳐 찾은 진짜 경로
@@ -32,9 +31,9 @@ class HttpResponseBuilder
         string findReasonPhrase(const int &statusCode);
         bool getNeedMoreMessageFlag() const;
         bool getNeedCgiFlag() const;
-        const HttpResponseMessage getResponseMessage() const;
-        const HttpRequestMessage getRequestMessage() const;
+        HttpResponseMessage getResponseMessage() const;
+        HttpRequestMessage getRequestMessage() const;
         void initiate(const string & request, WebservValues & webservValues, const ServerConfig::LocationMap & locationMap);
-        void clear() const;
+        void clear();
 };
 #endif

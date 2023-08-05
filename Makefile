@@ -8,15 +8,17 @@ CPPFLAGS	= -I ./include
 RM			= rm -rf
 
 FILENAME	=	\
+ 				main \
+ 				ConfigParser \
+ 				Config \
+ 				ServerConfig \
+ 				LocationConfig \
+ 				ServerHandler \
+ 				Server \
+ 				Client \
+ 				DerivTree \
+				ResponseHeaderAdder \
 				main \
-				ConfigParser \
-				Config \
-				ServerConfig \
-				LocationConfig \
-				ServerHandler \
-				Server \
-				Client \
-				DerivTree \
                	HttpMessage \
 				HttpRequestMessage \
 				HttpResponseMessage \
@@ -26,10 +28,8 @@ FILENAME	=	\
 				CgiMethodExecutor \
 				DefaultMethodExecutor \
 				ExtendedResponseHeaderAdder \
-				ICgiScriptor \
-				IMethodExecutor \
-				PythonScriptor \
 				ResponseHeaderAdder \
+
 
 SRCS_DIR	=	srcs
 SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))

@@ -1,12 +1,12 @@
 #include "ExtendedResponseHeaderAdder.hpp"
 
-ExtendedResponseHeaderAdder::ExtendedResponseHeaderAdder(const HttpRequestMessage & requestMessage, \
-    HttpResponseMessage & responseMessage), const LocationConfig & locationConfig, const string & requestBody) \
-    : ResponseHeaderAdder(requestMessage, responseMessage, locationConfig, requestBody)
+ExtendedResponseHeaderAdder::ExtendedResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, const LocationConfig & locationConfig, const string & requestBody)
+    : ResponseHeaderAdder(requestMessage, responseMessage, locationConfig, requestBody) {}
 
 void ExtendedResponseHeaderAdder::executeAll()
 {
     ResponseHeaderAdder::executeAll();
+    addDateHeader();    
 }
 
 void ExtendedResponseHeaderAdder::addDateHeader()

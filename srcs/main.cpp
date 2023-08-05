@@ -4,7 +4,7 @@
 
 int main(void)
 {
-	/*try
+	try
 	{
 		ConfigParser parser("test");
 		ServerHandler sh(parser.get());
@@ -13,6 +13,6 @@ int main(void)
 	catch(const std::exception& e)
 	{
 		std::cerr << errno << ": " << strerror(errno) << '\n';
-	}*/
+	}
 	return 0;
 }

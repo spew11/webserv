@@ -6,8 +6,7 @@
 class ExtendedResponseHeaderAdder : ResponseHeaderAdder
 {
     public:
-        ExtendedResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage), \
-            const LocationConfig & locationConfig, const string & requestBody);
+        ExtendedResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, const LocationConfig &locationConfig, const string & requestBody);
         void executeAll();
         void addDateHeader();
 
