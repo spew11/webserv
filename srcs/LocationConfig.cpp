@@ -7,6 +7,9 @@ LocationConfig::LocationConfig( void )
 	typesMod = NULL;
 	cgiMod = NULL;
 	cgiParamsMod = NULL;
+	autoIndexMod = NULL;
+	cliMaxBodyMod = NULL;
+	acceptMethodMod = NULL;
 	errorPageMods.clear();
 }
 
@@ -44,6 +47,18 @@ void LocationConfig::addModules( const vector<Module*> & modules )
 		{
 			cgiParamsMod = dynamic_cast<CgiParamsModule *>(mod);
 		}
+		else if (mod->getName() == "autoindex")
+		{
+			autoIndexMod = dynamic_cast<AutoIndexModule *>(mod);
+		}	
+		else if (mod->getName() == "client_max_body_size")
+		{
+			cliMaxBodyMod = dynamic_cast<ClientMaxBodySizeModule *>(mod);
+		}	
+		else if (mod->getName() == "accept_method")
+		{
+			acceptMethodMod = dynamic_cast<AcceptMethodModule *>(mod);
+		}	
 	}
 }
 
@@ -138,7 +153,7 @@ char ** LocationConfig::getCgiParams( const EnvironmentValues & env ) const
 	for (int i = 0; i < params.size(); i++)
 	{
 		const string & key = params[i].first;
-		string value = env.replace(params[i].second);
+		string value = env.convert(params[i].second);
 
 		size_t keySize = params[i].first.size();
 		size_t valueSize = value.size();
@@ -148,8 +163,33 @@ char ** LocationConfig::getCgiParams( const EnvironmentValues & env ) const
 		strcpy(paramArr[i], (key + "=" + value).c_str());
 	}
 
-	paramArr[params.size() + 1] = NULL;
+	paramArr[params.size()] = NULL;
 	
 	return paramArr;
 }
 
+bool LocationConfig::isAutoIndex( void ) const
+{
+	if (autoIndexMod == NULL)
+		return false;
+	
+	return autoIndexMod->getAutoIndex();
+}
+
+int LocationConfig::getClientMaxBodySize( void ) const
+{
+	if (cliMaxBodyMod == NULL)
+		return 1024;
+
+	return cliMaxBodyMod->getClientMaxBodySize();
+}
+
+const vector<string> & LocationConfig::getAcceptMethods( void ) const
+{
+	const static vector<string> defaultMethod = vector<string>(1, "GET");
+
+	if (acceptMethodMod == NULL)
+		return defaultMethod;
+
+	return acceptMethodMod->getAcceptMethods();
+}

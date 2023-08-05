@@ -13,7 +13,7 @@ void EnvironmentValues::setPair(const string &key, const string &value)
     envList.insert(pair<string, string>(key, value));
 }
 
-string EnvironmentValues::replace(const string &input) const
+string EnvironmentValues::convert(const string &input) const
 {
     string result = input;
     size_t pos = 0;

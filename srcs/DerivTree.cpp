@@ -27,6 +27,12 @@ Module * DerivTree::createModule()
 		return createCgi();
 	else if (deriv.name == "cgi_params")
 		return createCgiParams();
+	else if (deriv.name == "autoindex")
+		return createAutoIndex();
+	else if (deriv.name == "client_max_body_size")
+		return createClienMaxBodySize();
+	else if (deriv.name == "accept_method")
+		return createAcceptMethod();
 	else
 		; // throw
 		
@@ -138,4 +144,20 @@ Module * DerivTree::createCgiParams()
 	}
 
 	return new CgiParamsModule(deriv, subDerivs);
+}
+
+Module * DerivTree::createAutoIndex()
+{
+	return new AutoIndexModule(deriv);
+}
+
+Module * DerivTree::createClienMaxBodySize()
+{
+	return new ClientMaxBodySizeModule(deriv);
+}
+
+Module * DerivTree::createAcceptMethod()
+{
+	cout << "create\n";
+	return new AcceptMethodModule(deriv);
 }

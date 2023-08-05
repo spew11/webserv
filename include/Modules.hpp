@@ -305,3 +305,50 @@ public:
 
     const vector<pair<string, string> > & getParams( void ) const { return params; }
 };
+
+class AutoIndexModule : public Module
+{
+private:
+    bool isAutoIndex;
+public:
+    AutoIndexModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        // check syntax
+        if (deriv.arg[1] == "on")
+            isAutoIndex = true;
+        else
+            isAutoIndex = false;
+    }
+
+    bool getAutoIndex( void ) const { return isAutoIndex; }
+};
+
+class ClientMaxBodySizeModule : public Module
+{
+private:
+    int maxSize;
+public:
+    ClientMaxBodySizeModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        maxSize = atoi(deriv.arg[1].c_str());
+    }
+
+    int getClientMaxBodySize( void ) const { return maxSize; }
+};
+
+class AcceptMethodModule : public Module
+{
+private:
+    vector<string> methods;
+public:
+    AcceptMethodModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
+    {
+        for (int i = 1; i < deriv.arg.size(); i++)
+        {
+            // check syntax
+            methods.push_back(deriv.arg[i]);
+        }
+    }
+
+    const vector<string> & getAcceptMethods( void ) const { return methods; }
+};
