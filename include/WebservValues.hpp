@@ -1,19 +1,19 @@
-#ifndef ENVIRONMENT_VALUES_HPP
-# define ENVIRONMENT_VALUES_HPP
+#ifndef WEBSERV_VALUES_HPP
+# define WEBSERV_VALUES_HPP
 # include <iostream>
 # include <string>
 # include <map>
 
 using namespace std;
 
-class EnvironmentValues
+class WebservValues
 {
     private:
         map<string, string> envList;
     public:
         string getValue(const string &key) const;
-        void setPair(const string &key, const string &value);
         string convert(const string &input) const;
+        void insert(const string &key, const string &value);
 };
 
 #endif

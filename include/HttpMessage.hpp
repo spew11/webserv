@@ -6,7 +6,8 @@
 
 using namespace std;
 
-class HttpMessage {
+class HttpMessage
+{
     protected:
         map<string, string> headers;
         string body;
@@ -15,5 +16,6 @@ class HttpMessage {
         string getBody() const;
         string getServerProtocol() const;
         map<string, string> getHeaders() const;
+        string getHeader(const string &headerType) const;
 };
 #endif

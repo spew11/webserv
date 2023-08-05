@@ -1,7 +1,7 @@
-#include "MethodExecutor.hpp"
+#include "DefaultMethodExecutor.hpp"
 #include <unistd.h>
 
-int MethodExecutor::getMethod(const string &resourcePath, string &content) const
+int DefaultMethodExecutor::getMethod(const string &resourcePath, string &content) const
 {
     int statusCode;
     ifstream file(resourcePath);
@@ -21,7 +21,7 @@ int MethodExecutor::getMethod(const string &resourcePath, string &content) const
     return statusCode;
 }
 
-int MethodExecutor::postMethod(const string &pathToSave, const string &content) const{
+int DefaultMethodExecutor::postMethod(const string &pathToSave, const string &content) const{
     int statusCode;
     ofstream file(pathToSave);
     if (file.is_open()) {
@@ -35,7 +35,7 @@ int MethodExecutor::postMethod(const string &pathToSave, const string &content) 
     return statusCode;
 }
 
-int MethodExecutor::deleteMethod(const string &resourcePath) const
+int DefaultMethodExecutor::deleteMethod(const string &resourcePath) const
 {
     int statusCode;
     int ret = remove(resourcePath.c_str());
