@@ -1,5 +1,5 @@
-#ifndef HTTP_REPONSE_MESSAGE_HPP
-#define HTTP_REPONSE_MESSAGE_HPP
+#ifndef HTTP_RESPONSE_MESSAGE_HPP
+#define HTTP_RESPONSE_MESSAGE_HPP
 #include "HttpMessage.hpp"
 
 class HttpResponseMessage : public HttpMessage
@@ -14,6 +14,6 @@ class HttpResponseMessage : public HttpMessage
         void setReasonPhrase(const string &reasonPhrase);
         void setBody(const string &body);
         void addHeader(const string headerType, const string headerValue);
-        //void toString();
+        string toString() const;
 };
 #endif

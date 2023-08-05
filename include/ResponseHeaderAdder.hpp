@@ -2,22 +2,24 @@
 # define RESPONSE_HEADER_ADDER_HPP
 # include <iostream>
 # include <string>
-# include "HttpRequestMessage.hpp"
-# include "HttpResponseMessage.hpp"
-
+# include "ResponseHeaderAdder.hpp"
+# include "ServerConfig.hpp"
 using namespace std;
 
-class ReponseHeaderAdder
+class ResponseHeaderAdder
 {
+    protected:
+        const HttpRequestMessage & requestMessage;
+        HttpResponseMessage & responseMessage;
+        const LocationConfig & locationConfig;
+        const string & requestBody;
     public:
-        virtual void execute(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessag);
-        void addCacheCotrolHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessag);
-        void addContentTypeHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessag);
-        void addContentLengthHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessag);
-        void addETagHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessag);
-        void addLastModifiedHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessag);
-        void addLocationHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessag);
-        void addAllowHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessag);
+        ResponseHeaderAdder(const HttpRequestMessage & requestMessage, const HttpResponseMessage & responseMessage), \
+            const LocationConfig & locationConfig, const string & requestBody)
+        virtual void executeAll();
+//        void addCacheControlHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage);
+        void addContentTypeHeader(const string & contentType);
+        void addContentLengthHeader(const string & requestBody);
 };
 
 #endif

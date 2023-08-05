@@ -3,10 +3,42 @@
 HttpRequestMessage::HttpRequestMessage(const string &requestMessage)
 {
     chunkedFlag = false;
-    requestMessageParser(requestMessage);
+    parseRequestMessage(requestMessage);
+
 }
 
-void HttpRequestMessage::requestMessageParser(const string &requestMessage)
+// <경로>;<파라미터>?<질의>#<프래그먼트> 경로조각은 없다고 가정
+void HttpRequestMessage::parseUri() const;
+{
+    // requestUri 초기화
+    requestUri = requestMessage.getUri();
+
+    // uri 초기화
+    size_t pos = requestUri.find_first_of(";?#");
+    if (pos == string::npos) {
+        uri = requestUri;
+    }
+    else {
+        uri = requestUri.substr(0, pos);
+    }
+
+    // fileName 초기화
+    fileName=substr(requestUri.find_last_of("/")+1, pos-requestUri.find_last_of("/")-1));
+
+    // $args 초기화
+    pos = requestUri.find(";");
+    if (pos != string::npos) {
+        webservValues.insert("args", requestUri.substr(pos+1, min(requestUri.find("?"), requestUri.length())-pos-1));
+    }
+
+    // $query_string 초기화
+    pos = requestUri.find("?");
+    if (pos != string::npos) {
+        queryString = requestUri.substr(pos+1, min(requestUri.find("#"), requestUri.length())-pos-1));
+    }
+}
+
+void HttpRequestMessage::parseRequestMessage(const string &requestMessage)
 {
     Utils utils;
     vector<string> list = utils.split(requestMessage, "\n\r");
@@ -62,7 +94,22 @@ void HttpRequestMessage::requestMessageParser(const string &requestMessage)
 
 string HttpRequestMessage::getMethod() const
 {
-    return method;
+    return httpMethod;
+}
+
+string HttpRequestMessage::getRequestTarget() const
+{
+    return requestTarget;
+}
+
+int HttpRequestMessage::getChunkedFlag() const
+{
+    return chunkedFlag;
+}
+
+string HttpRequestMessage::getRequestUri() const
+{
+    return requestUri;
 }
 
 string HttpRequestMessage::getUri() const
@@ -70,7 +117,17 @@ string HttpRequestMessage::getUri() const
     return uri;
 }
 
-int HttpRequestMessage::getChunkedFlag() const
+string HttpRequestMessage::getFileName() const
 {
-    return chunkedFlag;
+    return fileName;
+}
+
+string HttpRequestMessage::getArgs() const
+{
+    return args;
+}
+
+string HttpRequestMessage::getQueryString() const
+{
+    return queryString;
 }

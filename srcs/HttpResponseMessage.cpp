@@ -1,6 +1,5 @@
 #include "HttpResponseMessage.hpp"
 
-// void HttpResponseMessage::toString() const{}
 
 int HttpResponseMessage::getStatusCode() const
 {
@@ -30,4 +29,17 @@ void HttpResponseMessage::setBody(const string &body)
 void HttpResponseMessage::addHeader(const string headerType, const string headerValue)
 {
     headers.insert(headerType, headerValue);
+}
+
+string HttpResponseMessage::toString() const
+{
+    string response = getServerProtocol() + " " + getStatusCode() + "\r\n";
+    for (pair<string, string> &pair : headers) {
+        if (pair.first != "") {
+            response += pair.first + ": " + pair.second + "\r\n";
+        }
+    }
+    response += "\r\n";
+    response += getBody();
+    return response;
 }

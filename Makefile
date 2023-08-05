@@ -17,12 +17,19 @@ FILENAME	=	\
 				Server \
 				Client \
 				DerivTree \
-				HttpMessage \
+               	HttpMessage \
 				HttpRequestMessage \
 				HttpResponseMessage \
 				HttpResponseBuilder \
 				WebservValues \
-				Utils
+				Utils \
+				CgiMethodExecutor \
+				DefaultMethodExecutor \
+				ExtendedResponseHeaderAdder \
+				ICgiScriptor \
+				IMethodExecutor \
+				PythonScriptor \
+				ResponseHeaderAdder \
 
 SRCS_DIR	=	srcs
 SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))
