@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Modules.hpp>
-#include <EnvironmentValues.hpp>
+#include <WebservValues.hpp>
 
 class LocationConfig
 {
@@ -31,7 +31,7 @@ public:
     int  getClientMaxBodySize( void ) const;
     const vector<string> & getAcceptMethods( void ) const;
 
-    char ** getCgiParams( const EnvironmentValues & ) const;
+    char ** getCgiParams( const WebservValues & ) const;
 
     void print() const
     {
