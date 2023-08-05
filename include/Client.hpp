@@ -37,6 +37,9 @@ public:
 	std::string getRecvBuf() const;
 	void setSendBuf(std::string send_buf);
 	bool isSendable() const;
+
+private:
+	void makeResponse();
 };
 
 #endif

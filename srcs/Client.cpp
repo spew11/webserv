@@ -76,10 +76,37 @@ bool Client::isSendable() const
 void Client::communicate()
 {
 	recv_msg();
-	HttpRequestMessage request(send_buf);
-	//find location
-	//builder init
-	//builder needflag 체크
-	//send_buf = hrb.getResponse().toString();
-	send_msg();
+	if (hrb.getNeedMoreMessageFlag() == false)
+	{
+		HttpRequestMessage request(send_buf);
+		const ServerConfig::LocationMap lm = server->getLocationMap(request->getHost(), request->getUri());
+		hrb.init(request, lm, env);
+	}
+	else
+	{
+		hrb.addRequestMessage(recv_buf);
+	}
+	if (hrb.getNeedMoreMessageFlag() == true)
+	{
+		make_response();
+		send_buf = hrb.getResponse().toString();
+		hrb.clear();
+	}
+}
+
+void Client::makeResponse()
+{
+	IMethodExecutor *executor;
+	if (hrb.getNeedCgiFlag() == true)
+		executor = new CgiMethodExecutor(); //CGIsecriptor
+	else
+		executor = new DefaultMethodExecutor();
+
+	if (hrb.getMethod() == "GET")
+		executor.getMethod();
+	if (hrb.getMethod() == "POST")
+		executor.getMethod();
+	if (hrb.getMethod() == "DELETE")
+		executor.getMethod();
+	delete executor;
 }
