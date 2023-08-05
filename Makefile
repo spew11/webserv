@@ -21,6 +21,7 @@ FILENAME	=	\
 				HttpRequestMessage \
 				HttpResponseMessage \
 				HttpResponseBuilder \
+				WebservValues \
 				Utils
 
 SRCS_DIR	=	srcs

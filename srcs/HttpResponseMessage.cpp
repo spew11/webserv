@@ -26,3 +26,8 @@ void HttpResponseMessage::setBody(const string &body)
 {
     this->body = body;
 }
+
+void HttpResponseMessage::addHeader(const string headerType, const string headerValue)
+{
+    headers.insert(headerType, headerValue);
+}

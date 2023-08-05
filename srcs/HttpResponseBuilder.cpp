@@ -1,110 +1,92 @@
 #include "HttpResponseBuilder.hpp"
-#include "ServerConfig.hpp"
-#include "LocationConfig.hpp"
-//locations 매개변수로 있어야됌
-HttpResponseBuilder::HttpResponseBuilder(const string &request, EnvironmentValues &envRepo, const ServerConfig::LocationMap &locations)
+
+HttpResponseBuilder::HttpResponseBuilder(HttpRequestMessage & requestMessage, WebservValues &webservValues, const ServerConfig::LocationMap &locationMap)
+ : requestMessage(requestMessage), webservValues(webservValues)
 {
-    HttpRequestMessage requestMessage(request);
-    if (requestMessage.getChunkedFlag() == true) {
+    if (requestMessage.getChunkedFlag()) {
         requestBody = requestMessage.getBody();
     }
-    requestMessageList.push_back(HttpRequestMessage(requestMessage));
     needMoreMessageFlag = requestMessage.getChunkedFlag();
-    setEnvironmentValue();
-
-    //환경변수에 세팅해주기
-    envRepo.setPair("method", method);
-    envRepo.setPair("host", host);
-    envRepo.setPair("uri", uri);
-    envRepo.setPair("args", args);
-    envRepo.setPair("query_string", queryString);
-    envRepo.setPair("request_uri", requestUri);
-    envRepo.setPair("request_filename", requestFilename);
-    //기타등등
-    //지금은 그냥 주소를 직접 넣어줬지만, 나중에는 우진이의 locations 객체를 통해서 진짜 경로로 초기화할것임
-    const LocationConfig & config = locations.getLocConf(uri);
-
-    config.getRoot();
-    config.getIndexes();
-    config.getType("scriptname");
-    resourcePath = "/Users/eunjilee/42Seoul/42cursus/webserv/resource/image.jpg";
+    initWebservValuesFromRequestMessage(locationMap);
 }
 
-void HttpResponseBuilder::setEnvironmentValue()
+// <경로>;<파라미터>?<질의>#<프래그먼트> 경로조각은 없다고 가정
+void HttpResponseBuilder::initWebservValuesFromRequestMessage(const ServerConfig::LocationMap &locationMap)
 {
-    HttpRequestMessage requestMessage = requestMessageList.at(0); 
-    // <경로>;<파라미터>?<질의>#<프래그먼트> 경로조각은 없다고 가정
-    map<string, string> headers = requestMessage.getHeaders();
-    method = requestMessage.getMethod();
-    requestUri = requestMessage.getUri();
-    //host parsing
-    if (headers.find("Host") != headers.end()) {
-        host = headers.at("Host");
-    }
-    //uri parsing
+    string requestUri = requestMessage.getUri();
+    // $request_uri 초기화
+    webservValues.insert("request_uri", requestUri);
+    
+    // $uri 초기화
     size_t pos = requestUri.find_first_of(";?#");
     if (pos == string::npos) {
-        uri = requestUri;
+        webservValues.insert("uri", requestUri);
     }
     else {
-        uri = requestUri.substr(0, pos);
+        webservValues.insert("uri", requestUri.substr(0, pos));
     }
-    //requestFilename parsing
-    requestFilename = requestUri.substr(requestUri.find_last_of("/")+1, pos-requestUri.find_last_of("/")-1);
-    //args parsing
+
+    // $document_uri 초기화
+    webservValues.insert("document_uri", webservValues.getValue("document_uri"));
+    
+    // $request_filename 및 resourcePath 초기화
+    const LocationConfig & clientConfig = locationMap.getLocConf(webservValues.getValue("uri"));
+    vector<string> indexes = clientConfig.getIndexes();
+    struct stat statbuf;
+    string tmpPath = clientConfig.getRoot()+webservValues.getValue("uri");
+    if (stat(tmpPath.c_str(), &statbuf) < 0) {
+        cout << "stat error" << endl;
+        exit(1);
+    }
+    if(S_ISDIR(statbuf.st_mode)) { // regular 파일이 없을 때
+        webservValues.insert("request_filename", "");
+        for (int i = 0; i < indexes.size(); i++) {
+            string resourcePathTmp = tmpPath+indexes.at(i);
+            if (access(resourcePathTmp.c_str(), F_OK) == 0) {
+                resourcePath = resourcePathTmp;
+                break;
+            }
+        }
+    }
+    else if (S_ISREG(statbuf.st_mode)) { // regular 파일이 있을 때
+        webservValues.insert("request_filename", requestUri.substr(requestUri.find_last_of("/")+1, pos-requestUri.find_last_of("/")-1));
+        resourcePath = tmpPath;
+    }
+
+    // $args 초기화
     pos = requestUri.find(";");
     if (pos != string::npos) {
-        args = requestUri.substr(pos+1, min(requestUri.find("?"), requestUri.length())-pos-1);
+        webservValues.insert("args", requestUri.substr(pos+1, min(requestUri.find("?"), requestUri.length())-pos-1));
     }
-    //queryString parsing
+
+    // $query_string 초기화
     pos = requestUri.find("?");
     if (pos != string::npos) {
-        queryString = requestUri.substr(pos+1, min(requestUri.find("#"), requestUri.length())-pos-1);
+        webservValues.insert("query_string", requestUri.substr(pos+1, min(requestUri.find("#"), requestUri.length())-pos-1));
     }
-    //CGI 변수 쓸지말지 체크해야됌
+
+    // CGI 변수 쓸지말지 체크
+    /*if (clientConfig.isCGI()) {
+        needCgiFlag = true;
+    }*/
+
+    // $method 초기화
+    webservValues.insert("method", requestMessage.getMethod());
+
+    // $host 초기화
+    webservValues.insert("host", requestMessage.getHeader("host"));
+
+    // $content-type 초기화
+    webservValues.insert("content_type", clientConfig.getType());
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)
 {
-    HttpRequestMessage requestMessage(request);
-    requestMessageList.push_back(HttpRequestMessage(requestMessage));
-    needMoreMessageFlag = requestMessage.getChunkedFlag();
-    requestBody.append(requestMessage.getBody());
-}
-
-string HttpResponseBuilder::getMethod() const
-{
-    return method;
-}
-
-string HttpResponseBuilder::getHost() const
-{
-    return host;
-}
-
-string HttpResponseBuilder::getUri() const
-{
-    return uri;
-}
-
-string HttpResponseBuilder::getArgs() const
-{
-    return args;
-}
-
-string HttpResponseBuilder::getQueryString() const
-{
-    return queryString;
-}
-
-string HttpResponseBuilder::getRequestUri() const
-{
-    return requestUri;
-}
-
-string HttpResponseBuilder::getRequestFilename() const
-{
-    return requestFilename;
+    HttpRequestMessage newRequestMessage(request);
+    // 메소드체크! 이걸 내가 해야되나...??????
+    // if (newRequestMessage.getMethod() == requestMessage.getMethod())
+    needMoreMessageFlag = newRequestMessage.getChunkedFlag();
+    requestBody.append(newRequestMessage.getBody());
 }
 
 bool HttpResponseBuilder::getNeedMoreMessageFlag() const
@@ -117,10 +99,16 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
     return needCgiFlag;
 }
 
-void HttpResponseBuilder::execute(MethodExecutor &methodExecutor)
+void HttpResponseBuilder::addResponseHeaders()
 {
-    HttpRequestMessage requestMessage = requestMessageList.at(0);
+
+}
+
+void HttpResponseBuilder::build(const IMethodExecutor & methodExecutor)
+{
     int statusCode;
+    string method = requestMessage.getMethod();
+    
     if (method == "GET") {
         // 이전에 요청헤더타입 체크해야함. 정상이면 다음으로 넘어감
         string content;
@@ -138,7 +126,11 @@ void HttpResponseBuilder::execute(MethodExecutor &methodExecutor)
     }
     responseMessage.setStatusCode(statusCode);
     responseMessage.setReasonPhrase(findReasonPhrase(statusCode));
-    //응답헤더를 박아..
+    //응답헤더 넣기
+    int contentLength = responseMessage.getBody().length();
+    responseMessage.addHeader("Content-Length", contentLength);
+    responseMessage.addHeader("Content-Type", con)
+    //config.getType("scriptname"); 미메타입 찾아주는 메소드..
 }
 
 string HttpResponseBuilder::getResourcePath() const
@@ -146,7 +138,7 @@ string HttpResponseBuilder::getResourcePath() const
     return resourcePath;
 }
 
-string findReasonPhrase(const int &statusCode)
+string HttpResponseBuilder::findReasonPhrase(const int &statusCode)
 {
     //string reasonPrase;
     switch(statusCode) {

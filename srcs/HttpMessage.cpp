@@ -14,3 +14,11 @@ map<string, string> HttpMessage::getHeaders() const
 {
     return headers;
 }
+
+string HttpMessage::getHeader(const string & headerType) const
+{
+    if (headers.find(headerType) != headers.end()) {
+        return headers.at(headerType);
+    }
+    return "";
+}
