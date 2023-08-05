@@ -11,7 +11,7 @@ HttpResponseBuilder::HttpResponseBuilder(HttpRequestMessage & requestMessage, We
 }
 
 // <경로>;<파라미터>?<질의>#<프래그먼트> 경로조각은 없다고 가정
-void HttpResponseBuilder::initWebservValuesFromRequestMessage(const ServerConfig::LocationMap &locationMap)
+void HttpResponseBuilder::initWebservValues(const ServerConfig::LocationMap &locationMap)
 {
     string requestUri = requestMessage.getUri();
     // $request_uri 초기화
@@ -78,6 +78,7 @@ void HttpResponseBuilder::initWebservValuesFromRequestMessage(const ServerConfig
 
     // $content-type 초기화
     webservValues.insert("content_type", clientConfig.getType());
+    // 
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)

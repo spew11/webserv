@@ -15,12 +15,12 @@ class HttpResponseBuilder
     private:
         HttpResponseMessage responseMessage;
         HttpRequestMessage & requestMessage;
-        WebservValues  & webservValues;
+        WebservValues & webservValues;
         string resourcePath; // uri에서 locations를 거쳐 찾은 진짜 경로
         string requestBody;
         bool needMoreMessageFlag; 
         bool needCgiFlag;
-        void initWebservValuesFromRequestMessage(const ServerConfig::LocationMap &locationMap);
+        void initWebservValues(const ServerConfig::LocationMap &locationMap);
         void addResponseHeaders();
     public:
         void build(const IMethodExecutor & methodExecutor);
