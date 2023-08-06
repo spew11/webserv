@@ -8,7 +8,9 @@ using namespace std;
 
 class ICgiScriptor
 {
-    //스크립터 인터페이스
+public:
+	virtual ~ICgiScriptor() = 0;
+    virtual void run(const string &scriptFile) = 0;
 };
 
 #endif
