@@ -28,14 +28,4 @@ public:
     Module * createAutoIndex();
     Module * createClienMaxBodySize();
     Module * createAcceptMethod();
-
-    void print(int indent)
-    {
-        for (int i = 0; i < indent ; i++)
-            cout << " ";
-        cout << deriv.name << endl;
-
-        for (size_t i = 0; i < subTree.size(); i++)
-            subTree[i].print(indent + 2);
-    }
 };

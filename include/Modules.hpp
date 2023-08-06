@@ -29,16 +29,6 @@ public:
     const vector<Module*> & getSubMods( void ) const { return subMods; }
 
     void addModule( Module * m ) { subMods.push_back(m); }
-
-    virtual void print(int indent)
-    {
-        for (int i = 0; i < indent ; i++)
-            cout << " ";
-        cout << name << endl;
-
-        for (size_t i = 0; i < subMods.size(); i++)
-            subMods[i]->print(indent + 2);
-    }
 };
 
 class MainModule : public Module
@@ -58,19 +48,16 @@ private:
     {
         // check syntax
         size_t delimIdx = deriv.arg[1].find(':');
-        
 
         ip = ipToInt(deriv.arg[1].substr(0, delimIdx));
         port = atoi(deriv.arg[1].substr(delimIdx + 1).c_str());
     }
-
     void setServerName( const Derivative & deriv )
     {
         // check syntax
         for (size_t i = 1; i < deriv.arg.size(); i++)
             this->serverNames.push_back(deriv.arg[i]);
     }
-
     uint32_t ipToInt(const std::string& ip) {
     char ipCStr[16];
     std::strncpy(ipCStr, ip.c_str(), sizeof(ipCStr));
@@ -106,20 +93,6 @@ public:
     const uint32_t & getIp( void ) const { return ip; }
     const vector<string> & getServerNames( void ) const { return serverNames; }
     int getPort( void ) const { return port; }
-
-    virtual void print(int indent)
-    {
-        for (int i = 0; i < indent ; i++)
-            cout << " ";
-
-        cout << name << " -> ip(" << ip << "), port(" << port << "), name(";
-        for (size_t i = 0; i < serverNames.size(); i++)
-            cout << serverNames[i] << ", ";
-        cout << ")" << endl;
-
-        for (size_t i = 0; i < subMods.size(); i++)
-            subMods[i]->print(indent + 2);
-    }
 };
 
 class LocationModule : public Module
@@ -136,16 +109,6 @@ public:
     }
 
     const string & getUri( void ) const { return uri; }
-
-    virtual void print(int indent)
-    {
-        for (int i = 0; i < indent ; i++)
-            cout << " ";
-        cout << name << " -> uri(\"" << uri << "\")" << endl;
-
-        for (size_t i = 0; i < subMods.size(); i++)
-            subMods[i]->print(indent + 2);
-    }
 };
 
 class RootModule : public Module
@@ -160,16 +123,6 @@ public:
     }
 
     const string & getRoot( void ) const { return root; }
-
-    virtual void print(int indent)
-    {
-        for (int i = 0; i < indent ; i++)
-            cout << " ";
-        cout << name << " -> uri(\"" << root << "\")" << endl;
-
-        for (size_t i = 0; i < subMods.size(); i++)
-            subMods[i]->print(indent + 2);
-    }
 };
 
 class TypesModule : public Module
@@ -193,17 +146,6 @@ public:
     }
 
     const map<string, string> & getTypesMap( void ) const { return typesMap; }
-
-    virtual void print(int indent)
-    {
-        for (int i = 0; i < indent ; i++)
-            cout << " ";
-        cout << name << " -> map(" << typesMap.begin()->first << ", "
-             << typesMap.begin()->second << ")" << endl;
-
-        for (size_t i = 0; i < subMods.size(); i++)
-            subMods[i]->print(indent + 2);
-    }
 };
 
 class IndexModule : public Module
@@ -219,20 +161,6 @@ public:
     }
 
     const vector<string> & getIndexes( void ) const { return indexes; }
-
-    virtual void print(int indent)
-    {
-        for (int i = 0; i < indent ; i++)
-            cout << " ";
-
-        cout << name << " -> file(";
-        for (size_t i = 0; i < indexes.size(); i++)
-            cout << indexes[i] << ", ";
-        cout << ")" << endl;
-
-        for (size_t i = 0; i < subMods.size(); i++)
-            subMods[i]->print(indent + 2);
-    }
 };
 
 class ErrorPageModule : public Module
@@ -257,22 +185,7 @@ public:
 
         return false;
     }
-
     const string & getUri( void ) const { return uri; }
-
-    virtual void print(int indent)
-    {
-        for (int i = 0; i < indent ; i++)
-            cout << " ";
-        cout << name << " -> uri(\"" << uri << "\"), code(";
-
-        for (size_t i = 0; i < errCodes.size(); i++)
-            cout << errCodes[i] << ", ";
-        cout << ")" << endl;
-
-        for (size_t i = 0; i < subMods.size(); i++)
-            subMods[i]->print(indent + 2);
-    }
 };
 
 class CgiModule : public Module
