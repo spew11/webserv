@@ -79,8 +79,8 @@ void Client::communicate()
 	if (hrb.getNeedMoreMessageFlag() == false)
 	{
 		HttpRequestMessage request(send_buf);
-		const ServerConfig::LocationMap lm = server->getLocationMap(request->getHost(), request->getUri());
-		hrb.init(request, lm, env);
+		const ServerConfig::LocationMap lm = server->getLocationMap(request->getHeader("host"), request->getHeader("uri"));
+		hrb.initiate(request, env, lm);
 	}
 	else
 	{
@@ -98,15 +98,13 @@ void Client::makeResponse()
 {
 	IMethodExecutor *executor;
 	if (hrb.getNeedCgiFlag() == true)
-		executor = new CgiMethodExecutor(); //CGIsecriptor
+	{
+		ICgiScriptor *cgiScriptor = new PythonScriptor(lm.getCgiParams(env));
+		executor = new CgiMethodExecutor(cgiScriptor);
+	}
 	else
 		executor = new DefaultMethodExecutor();
 
-	if (hrb.getMethod() == "GET")
-		executor.getMethod();
-	if (hrb.getMethod() == "POST")
-		executor.getMethod();
-	if (hrb.getMethod() == "DELETE")
-		executor.getMethod();
+	hrb.build(executor);
 	delete executor;
 }
