@@ -9,10 +9,10 @@ Client::Client(Server *server): server(server), hrb()
 	fcntl(sock, F_SETFL, O_NONBLOCK);
 
 	std::cout << "Connet: Client" << sock << std::endl;
-	env.setPair("$server_addr", server->getIP());
-	env.setPair("$server_port", server->getPort());
-	env.setPair("$remote_addr", inet_ntoa(addr.sin_addr));
-	env.setPair("$remote_port", addr.sin_port);
+	webVal.insert("$server_addr", server->getIP());
+	webVal.insert("$server_port", server->getPort());
+	webVal.insert("$remote_addr", inet_ntoa(addr.sin_addr));
+	webVal.insert("$remote_port", addr.sin_port);
 }
 
 Client::~Client()
@@ -80,7 +80,7 @@ void Client::communicate()
 	{
 		HttpRequestMessage request(send_buf);
 		const ServerConfig::LocationMap lm = server->getConfig(request.getHeader("host"));
-		hrb.initiate(request, env, lm);
+		hrb.initiate(request, webVal, lm);
 	}
 	else
 	{
@@ -99,7 +99,7 @@ void Client::makeResponse()
 	IMethodExecutor *executor;
 	if (hrb.getNeedCgiFlag() == true)
 	{
-		ICgiScriptor *cgiScriptor = new PythonScriptor(lm.getCgiParams(env));
+		ICgiScriptor *cgiScriptor = new PythonScriptor(lm.getCgiParams(webVal));
 		executor = new CgiMethodExecutor(cgiScriptor);
 	}
 	else
