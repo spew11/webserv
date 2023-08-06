@@ -34,11 +34,11 @@ int Server::getSock(void) const
 	return sock;
 }
 
-ServerConfig Server::getCofig(std::string host) const
+ServerConfig::LocationMap Server::getConfig(std::string host) const
 {
 	std::vector<ServerConfig>::const_iterator it = configs.begin();
 	for (; it != configs.end(); it++)
 		if (*it == host)
 			return *it;
-	return *(configs.begin());
+	return (configs.begin())->getLocationMap();
 }

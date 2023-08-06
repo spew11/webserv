@@ -28,7 +28,7 @@ public:
 	~Server();
 
 	int		getSock(void) const;
-	ServerConfig	getCofig(std::string host) const;
+	ServerConfig::LocationMap	getConfig(std::string host) const;
 };
 
 #endif

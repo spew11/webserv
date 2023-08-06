@@ -79,7 +79,7 @@ void Client::communicate()
 	if (hrb.getNeedMoreMessageFlag() == false)
 	{
 		HttpRequestMessage request(send_buf);
-		const ServerConfig::LocationMap lm = server->getLocationMap(request->getHeader("host"), request->getHeader("uri"));
+		const ServerConfig::LocationMap lm = server->getConfig(request.getHeader("host"));
 		hrb.initiate(request, env, lm);
 	}
 	else
@@ -88,7 +88,7 @@ void Client::communicate()
 	}
 	if (hrb.getNeedMoreMessageFlag() == true)
 	{
-		make_response();
+		makeResponse();
 		send_buf = hrb.getResponse().toString();
 		hrb.clear();
 	}
