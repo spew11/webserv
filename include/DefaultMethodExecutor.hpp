@@ -1,13 +1,15 @@
-#ifndef METHOD_EXECUTOR_HPP
-# define METHOD_EXECUTOR_HPP
+#ifndef DEFAULT_METHOD_EXECUTOR_HPP
+# define DEFAULT_METHOD_EXECUTOR_HPP
 # include "HttpRequestMessage.hpp"
-# include "HttpResponseMessage.hpp" 
+# include "HttpResponseMessage.hpp"
+# include "IMethodExecutor.hpp"
 # include <iostream>
 # include <string>
 # include <fstream>
+
 using namespace std;
 
-class MethodExecutor
+class DefaultMethodExecutor : IMethodExecutor
 {
     private:
     public:

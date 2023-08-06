@@ -1,6 +1,6 @@
-#include "EnvironmentValues.hpp"
+#include "WebservValues.hpp"
 
-string EnvironmentValues::getValue(const string &key) const
+string WebservValues::getValue(const string &key) const
 {
     if (envList.find(key) != envList.end()) {
         return envList.at(key);
@@ -8,12 +8,12 @@ string EnvironmentValues::getValue(const string &key) const
     return "";
 }
 
-void EnvironmentValues::setPair(const string &key, const string &value)
+void WebservValues::insert(const string &key, const string &value)
 {
     envList.insert(pair<string, string>(key, value));
 }
 
-string EnvironmentValues::convert(const string &input) const
+string WebservValues::convert(const string &input) const
 {
     string result = input;
     size_t pos = 0;
