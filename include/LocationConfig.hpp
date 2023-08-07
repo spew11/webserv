@@ -32,20 +32,4 @@ public:
     const vector<string> & getAcceptMethods( void ) const;
 
     char ** getCgiParams( const WebservValues & ) const;
-
-    void print() const
-    {
-        if (rootMod)
-            rootMod->print(2);
-        if (indexMod)
-            indexMod->print(2);
-        if (typesMod)
-            typesMod->print(2);
-        if (errorPageMods.size())
-            errorPageMods[0]->print(2);
-        if (cgiMod)
-            cgiMod->print(2);
-        if (cgiParamsMod)
-            cgiParamsMod->print(2);
-    }
 };

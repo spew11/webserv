@@ -1,19 +1,22 @@
 #include "Client.hpp"
 
-Client::Client(int serv_sock): server(NULL)
+Client::Client(Server *server): server(server), hrb()
 {
-	sock = accept(serv_sock, NULL, NULL);
+	bzero(&addr, sizeof(addr));
+	sock = accept(server->getSock(), (struct sockaddr*)&addr, NULL);
 	if (sock == -1)
 		throw std::exception();
 	fcntl(sock, F_SETFL, O_NONBLOCK);
 
 	std::cout << "Connet: Client" << sock << std::endl;
+	webVal.insert("$server_addr", server->getIP());
+	webVal.insert("$server_port", server->getPort());
+	webVal.insert("$remote_addr", inet_ntoa(addr.sin_addr));
+	webVal.insert("$remote_port", addr.sin_port);
 }
 
 Client::~Client()
 {
-	if (server)
-		server->delClient(this);
 	close(sock);
 }
 
@@ -41,11 +44,6 @@ void Client::recv_msg()
 			break;
 	}
 	std::cout << sock << ">> " << recv_buf << std::endl;
-	// if (!server)
-	// 	// find_server
-	// ResponseBuilder rb(recv_buf, server->getLocationMap());
-	// //???
-	// //send_buf = rb->getResponse()->toString();
 }
 
 int Client::getSock() const
@@ -70,7 +68,43 @@ void Client::setSendBuf(std::string send_buf)
 
 bool Client::isSendable() const
 {
-	if (send_buf == "")
+	if (send_buf.empty())
 		return false;
 	return true;
+}
+
+void Client::communicate()
+{
+	recv_msg();
+	if (hrb.getNeedMoreMessageFlag() == false)
+	{
+		HttpRequestMessage request(send_buf);
+		const ServerConfig::LocationMap lm = server->getConfig(request.getHeader("host"));
+		hrb.initiate(request, webVal, lm);
+	}
+	else
+	{
+		hrb.addRequestMessage(recv_buf);
+	}
+	if (hrb.getNeedMoreMessageFlag() == true)
+	{
+		makeResponse();
+		send_buf = hrb.getResponse().toString();
+		hrb.clear();
+	}
+}
+
+void Client::makeResponse()
+{
+	IMethodExecutor *executor;
+	if (hrb.getNeedCgiFlag() == true)
+	{
+		ICgiScriptor *cgiScriptor = new PythonScriptor(lm.getCgiParams(webVal));
+		executor = new CgiMethodExecutor(cgiScriptor);
+	}
+	else
+		executor = new DefaultMethodExecutor();
+
+	hrb.build(executor);
+	delete executor;
 }
