@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class PythonScriptor : ICgiScriptor
+class PythonScriptor : public ICgiScriptor
 {
 
 };

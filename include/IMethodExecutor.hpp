@@ -9,8 +9,8 @@ using namespace std;
 class IMethodExecutor
 {
     public:
-        virtual int getMethod(const string &resourcePath, string &content) const = 0 ;
-        virtual int postMethod(const string &pathToSave, const string &content) const = 0;
+        virtual int getMethod(const string &resourcePath, string &response) = 0 ;
+        virtual int postMethod(const string &resourcePath, const string &request, string &response) = 0;
         virtual int deleteMethod(const string & resourcePath) const = 0;
 };
 #endif

@@ -25,7 +25,7 @@ class HttpResponseBuilder
         bool needCgiFlag;
         void initWebservValues();
     public:
-        void build(const IMethodExecutor & methodExecutor);
+        void build(IMethodExecutor & methodExecutor);
         void addRequestMessage(const string &request);
         string getResourcePath() const;
         string findReasonPhrase(const int &statusCode);

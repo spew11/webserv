@@ -1,5 +1,7 @@
 #include "HttpResponseBuilder.hpp"
 #include "ServerConfig.hpp"
+#include "CgiMethodExecutor.hpp"
+#include "DefaultMethodExecutor.hpp"
 
 void HttpResponseBuilder::initiate(const string & request, WebservValues &webservValues, const ServerConfig::LocationMap &locationMap)
 {
@@ -79,22 +81,22 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
     return needCgiFlag;
 }
 
-void HttpResponseBuilder::build(const IMethodExecutor & methodExecutor)
+void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
 {
     ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, *locationConfig, requestBody);
-
     int statusCode;
+
     string httpMethod = requestMessage->getHttpMethod();
     // 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임) (엔진엑스는 요청 들어오면 다 대응해주는 듯)
+    string response;
     if (httpMethod == "GET") {
-        string content;
-        statusCode = methodExecutor.getMethod(resourcePath, content);
+        statusCode = methodExecutor.getMethod(resourcePath, response);
         if (statusCode == 200) {
-            responseMessage->setBody(content);
+            responseMessage->setBody(response);
         }
     }
     else if(httpMethod == "POST") {
-        statusCode = methodExecutor.postMethod(resourcePath, requestBody);
+        statusCode = methodExecutor.postMethod(resourcePath, requestBody, response);
     }
     else if(httpMethod == "DELETE") {
         statusCode = methodExecutor.deleteMethod(resourcePath);
