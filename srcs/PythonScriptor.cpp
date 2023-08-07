@@ -14,7 +14,7 @@ void PythonScriptor::run(const string &scriptFile)
 	char *fileName = new char[scriptFile.size() + 1];
 	strlcpy(fileName, scriptFile.c_str(), scriptFile.size() + 1);
 	char *args[] = {cmd, fileName, NULL};
-	int ret = execve(cmd, args, env);
+	int ret = execve(cmd, args, env);k
 	if (ret == -1)
 		exit(1);
 }

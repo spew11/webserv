@@ -1,12 +1,12 @@
 #include "CgiMethodExecutor.hpp"
 
-CgiMethodExecutor::CgiMethodExecutor(ICgiScriptor *cgiScriptor): cgiScriptor(cgiScriptor)
+CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv): cgiEnv(cgiEnv)
 {
 	stdin_fd = dup(STDIN_FILENO);
 	stdout_fd = dup(STDOUT_FILENO);
 }
 
-int CgiMethodExecutor::getMethod(const string &resourcePath, string &content) const
+int CgiMethodExecutor::getMethod(const string &resourcePath, string &request) const
 {
 	int child_to_parent_pipe[2];
 
@@ -24,7 +24,12 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &content) co
 		dup2(child_to_parent_pipe[WRITE], STDOUT_FILENO);
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
-		cgiScriptor->run(resourcePath); //execve (scriptor 안ㅇ에 env 존재);
+
+		char **args = new char*[2];
+		args[0] = strdup(resourcePath.c_str());
+		args[1] = NULL;
+		execve(resourcePath.c_str(), args, cgiEnv);
+		exit(1);
 	}
 	else
 	{
@@ -44,7 +49,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &content) co
 	}
 }
 
-int CgiMethodExecutor::postMethod(const string &pathToSave, const string &content) const
+int CgiMethodExecutor::postMethod(const string &pathToSave, const string &content, string &response)
 {
 	int parent_to_child_pipe[2];
 	int child_to_parent_pipe[2];
@@ -66,7 +71,12 @@ int CgiMethodExecutor::postMethod(const string &pathToSave, const string &conten
 		close(parent_to_child_pipe[WRITE]);
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
-		cgiScriptor->run(pathToSave);
+		
+		char **args = new char*[2];
+		args[0] = strdup(resourcePath.c_str());
+		args[1] = NULL;
+		execve(resourcePath.c_str(), args, cgiEnv);
+		exit(1);
 	}
 	else
 	{
@@ -77,11 +87,11 @@ int CgiMethodExecutor::postMethod(const string &pathToSave, const string &conten
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		write_to_pipe(?); //where is body...?
+		write_to_pipe(content);
 
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
-		content = read_from_pipe();
+		response = read_from_pipe();
 		dup2(stdin_fd, STDIN_FILENO);
 		dup2(stdout_fd, STDOUT_FILENO);
 		if (exit_code == 0)
