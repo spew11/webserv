@@ -8,21 +8,28 @@ CPPFLAGS	= -I ./include
 RM			= rm -rf
 
 FILENAME	=	\
+ 				main \
+ 				ConfigParser \
+ 				Config \
+ 				ServerConfig \
+ 				LocationConfig \
+ 				ServerHandler \
+ 				Server \
+ 				Client \
+ 				DerivTree \
+				ResponseHeaderAdder \
 				main \
-				ConfigParser \
-				Config \
-				ServerConfig \
-				LocationConfig \
-				ServerHandler \
-				Server \
-				Client \
-				DerivTree \
-				HttpMessage \
+               	HttpMessage \
 				HttpRequestMessage \
 				HttpResponseMessage \
 				HttpResponseBuilder \
 				WebservValues \
-				Utils
+				Utils \
+				CgiMethodExecutor \
+				DefaultMethodExecutor \
+				ExtendedResponseHeaderAdder \
+				ResponseHeaderAdder \
+
 
 SRCS_DIR	=	srcs
 SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))

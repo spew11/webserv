@@ -6,7 +6,7 @@ CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv): cgiEnv(cgiEnv)
 	stdout_fd = dup(STDOUT_FILENO);
 }
 
-int CgiMethodExecutor::getMethod(const string &resourcePath, string &request) const
+int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 {
 	int child_to_parent_pipe[2];
 
@@ -49,7 +49,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &request) co
 	}
 }
 
-int CgiMethodExecutor::postMethod(const string &pathToSave, const string &content, string &response)
+int CgiMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response)
 {
 	int parent_to_child_pipe[2];
 	int child_to_parent_pipe[2];

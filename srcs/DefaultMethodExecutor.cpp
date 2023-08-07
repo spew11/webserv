@@ -1,13 +1,13 @@
 #include "DefaultMethodExecutor.hpp"
 #include <unistd.h>
 
-int DefaultMethodExecutor::getMethod(const string &resourcePath, string &content) const
+int DefaultMethodExecutor::getMethod(const string &resourcePath, string &response)
 {
     int statusCode;
     ifstream file(resourcePath);
     if (access(resourcePath.c_str(), F_OK) == 0) {
         if (file.is_open()) {
-            getline(file, content, '\0');
+            getline(file, response, '\0');
             statusCode = 200; //ok
             file.close();
         }
@@ -21,11 +21,12 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &content
     return statusCode;
 }
 
-int DefaultMethodExecutor::postMethod(const string &pathToSave, const string &content) const{
+int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response)
+{
     int statusCode;
-    ofstream file(pathToSave);
+    ofstream file(resourcePath);
     if (file.is_open()) {
-        file << content;
+        file << request;
         file.close();
         statusCode = 200;
     }

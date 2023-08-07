@@ -6,15 +6,28 @@
 class HttpRequestMessage : public HttpMessage
 {
     private:
-        string method;
-        string uri;
-        void requestMessageParser(const string &requestMessage);
+        string httpMethod;
+        string requestTarget;
+        void parseRequestMessage(const string &requestMessage);
         bool chunkedFlag;
+        void parseUri();
+
+        string requestUri;
+        string uri;
+        string filename;
+        string args;
+        string queryString;
+
     public:
         HttpRequestMessage(const string &requestMessage);
-        string getMethod() const;
-        string getUri() const;
+        string getHttpMethod() const;
+        string getRequestTarget() const;
         int getChunkedFlag() const;
+        string getRequestUri() const;
+        string getUri() const;
+        string getFilename() const;
+        string getArgs() const;
+        string getQueryString() const;
 };
 
 #endif

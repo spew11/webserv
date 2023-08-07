@@ -144,7 +144,7 @@ const string & LocationConfig::getCgiCmd( void ) const
 }
 
 // mallllllllloc const를 붙여서 반환하는 방법은 모르겟음
-char ** LocationConfig::getCgiParams( const EnvironmentValues & env ) const 
+char ** LocationConfig::getCgiParams( const WebservValues & env ) const 
 {
 	const vector<pair<string, string> > & params = cgiParamsMod->getParams();
 

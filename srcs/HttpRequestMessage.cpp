@@ -3,16 +3,48 @@
 HttpRequestMessage::HttpRequestMessage(const string &requestMessage)
 {
     chunkedFlag = false;
-    requestMessageParser(requestMessage);
+    parseRequestMessage(requestMessage);
+
 }
 
-void HttpRequestMessage::requestMessageParser(const string &requestMessage)
+// <경로>;<파라미터>?<질의>#<프래그먼트> 경로조각은 없다고 가정
+void HttpRequestMessage::parseUri()
+{
+    // requestUri 초기화
+    requestUri = requestTarget;
+
+    // uri 초기화
+    size_t pos = requestUri.find_first_of(";?#");
+    if (pos == string::npos) {
+        uri = requestUri;
+    }
+    else {
+        uri = requestUri.substr(0, pos);
+    }
+
+    // filename 초기화
+    filename = requestUri.substr(requestUri.find_last_of("/")+1, pos-requestUri.find_last_of("/")-1);
+
+    // args 초기화
+    pos = requestUri.find(";");
+    if (pos != string::npos) {
+        args = requestUri.substr(pos+1, min(requestUri.find("?"), requestUri.length()));
+    }
+
+    // queryString 초기화
+    pos = requestUri.find("?");
+    if (pos != string::npos) {
+        queryString = requestUri.substr(pos+1, min(requestUri.find("#"), requestUri.length())-pos-1);
+    }
+}
+
+void HttpRequestMessage::parseRequestMessage(const string &requestMessage)
 {
     Utils utils;
     vector<string> list = utils.split(requestMessage, "\n\r");
     vector<string> tmp = utils.split(list.at(0), " ");
     //start line parsing
-    method = tmp.at(0);
+    httpMethod = tmp.at(0);
     uri = tmp.at(1);
     serverProtocol = tmp.at(2);
     int byte = list.at(0).length()+1; // 나중에 바디 시작 인덱스 알려면 필요
@@ -60,9 +92,24 @@ void HttpRequestMessage::requestMessageParser(const string &requestMessage)
     this->body = requestMessage.substr(byte, requestMessage.length()-byte);
 }
 
-string HttpRequestMessage::getMethod() const
+string HttpRequestMessage::getHttpMethod() const
 {
-    return method;
+    return httpMethod;
+}
+
+string HttpRequestMessage::getRequestTarget() const
+{
+    return requestTarget;
+}
+
+int HttpRequestMessage::getChunkedFlag() const
+{
+    return chunkedFlag;
+}
+
+string HttpRequestMessage::getRequestUri() const
+{
+    return requestUri;
 }
 
 string HttpRequestMessage::getUri() const
@@ -70,7 +117,17 @@ string HttpRequestMessage::getUri() const
     return uri;
 }
 
-int HttpRequestMessage::getChunkedFlag() const
+string HttpRequestMessage::getFilename() const
 {
-    return chunkedFlag;
+    return filename;
+}
+
+string HttpRequestMessage::getArgs() const
+{
+    return args;
+}
+
+string HttpRequestMessage::getQueryString() const
+{
+    return queryString;
 }

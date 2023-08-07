@@ -9,7 +9,7 @@
 
 using namespace std;
 
-class CgiMethodExecutor : IMethodExecutor
+class CgiMethodExecutor : public IMethodExecutor
 {
     private:
 		const int READ  = 0;
@@ -23,8 +23,8 @@ class CgiMethodExecutor : IMethodExecutor
 		void write_to_pipe(string body);
 	public:
         CgiMethodExecutor(char **cgiEnv);
-        int getMethod(const string &resourcePath, string &content) const;
-        int postMethod(const string &pathToSave, const string &content) const;
+        int getMethod(const string &resourcePath, string &response);
+        int postMethod(const string &resourcePath, const string &request, string &response);
         int deleteMethod(const string & resourcePath) const;
 };
 
