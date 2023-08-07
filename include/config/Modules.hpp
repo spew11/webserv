@@ -24,6 +24,8 @@ public:
     Module ( Derivative const & deriv, enum ModuleType type )
      : name(deriv.name), type(type) {}
 
+    virtual ~Module( void ) {}
+
     const string & getName( void ) const { return name; }
     const enum ModuleType & getType( void ) const { return type; }
     const vector<Module*> & getSubMods( void ) const { return subMods; }

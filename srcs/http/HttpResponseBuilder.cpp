@@ -3,17 +3,19 @@
 #include "CgiMethodExecutor.hpp"
 #include "DefaultMethodExecutor.hpp"
 
-void HttpResponseBuilder::initiate(const string & request, WebservValues &webservValues, const ServerConfig::LocationMap &locationMap)
+void HttpResponseBuilder::initiate(HttpRequestMessage & requestMessage, WebservValues &webservValues, const ServerConfig::LocationMap &locationMap)
 {
     clear();
-    requestMessage = new HttpRequestMessage(request);
+    this->requestMessage = &requestMessage;
     responseMessage = new HttpResponseMessage();
-    if (requestMessage->getChunkedFlag()) {
-        requestBody = requestMessage->getBody();
+    if (this->requestMessage->getChunkedFlag()) {
+        requestBody = this->requestMessage->getBody();
     }
-    needMoreMessageFlag = requestMessage->getChunkedFlag();
-    needCgiFlag = locationConfig->isCgi();
-    *locationConfig = locationMap.getLocConf(requestMessage->getUri());
+    this->webservValues = &webservValues;
+    needMoreMessageFlag = this->requestMessage->getChunkedFlag();
+    locationConfig = locationMap.getLocConf(this->requestMessage->getUri());
+    needCgiFlag = locationConfig.isCgi();
+    responseMessage->setServerProtocol(requestMessage.getServerProtocol());
     initWebservValues();
 }
 
@@ -24,13 +26,12 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("document_uri", requestMessage->getUri());
     
     // $request_filename 및 resourcePath 초기화
-    vector<string> indexes = locationConfig->getIndexes();
+    vector<string> indexes = locationConfig.getIndexes();
     struct stat statbuf;
-    string tmpPath = locationConfig->getRoot() + requestMessage->getUri();
+    string tmpPath = locationConfig.getRoot() + requestMessage->getUri();
     if (stat(tmpPath.c_str(), &statbuf) < 0) {
         // 예외처리 하기
         cout << "stat error" << endl;
-        exit(1);
     }
     if(S_ISDIR(statbuf.st_mode)) { // regular 파일이 없을 때
         for (int i = 0; i < indexes.size(); i++) {
@@ -59,7 +60,7 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("host", requestMessage->getHeader("host"));
 
     // $content-type 초기화
-    webservValues->insert("content_type", locationConfig->getType(requestMessage->getFilename()));
+    webservValues->insert("content_type", locationConfig.getType(requestMessage->getFilename()));
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)
@@ -83,7 +84,7 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
 
 void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
 {
-    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, *locationConfig, requestBody);
+    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, requestBody);
     int statusCode;
 
     string httpMethod = requestMessage->getHttpMethod();
@@ -138,7 +139,6 @@ void HttpResponseBuilder::clear()
 {
     delete requestMessage;
     delete responseMessage;
-    locationConfig = 0;
     webservValues = 0;
     resourcePath = "";
     requestBody = "";

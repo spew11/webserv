@@ -16,7 +16,7 @@ class HttpResponseBuilder
     private:
         HttpRequestMessage *requestMessage;
         HttpResponseMessage *responseMessage;
-        LocationConfig *locationConfig;
+        LocationConfig locationConfig;
         WebservValues *webservValues;
 
         string resourcePath; // locations를 거쳐 찾은 진짜 경로
@@ -33,7 +33,7 @@ class HttpResponseBuilder
         bool getNeedCgiFlag() const;
         HttpResponseMessage getResponseMessage() const;
         HttpRequestMessage getRequestMessage() const;
-        void initiate(const string & request, WebservValues & webservValues, const ServerConfig::LocationMap & locationMap);
+        void initiate(HttpRequestMessage & requestMessage, WebservValues & webservValues, const ServerConfig::LocationMap & locationMap);
         void clear();
 };
 #endif

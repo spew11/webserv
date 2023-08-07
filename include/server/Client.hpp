@@ -7,6 +7,7 @@
 
 # include "Server.hpp"
 # include "HttpResponseBuilder.hpp"
+# include "DefaultMethodExecutor.hpp"
 # include "WebservValues.hpp"
 
 class Server;
@@ -16,7 +17,7 @@ class Client
 private:
 	Server *server;
 	HttpResponseBuilder hrb;
-	WebservValues env;
+	WebservValues webVal;
 
 	int sock;
 	struct sockaddr_in addr;

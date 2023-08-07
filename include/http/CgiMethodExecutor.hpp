@@ -4,7 +4,6 @@
 # include <string>
 # include <fstream>
 # include "IMethodExecutor.hpp"
-# include "ICgiScriptor.hpp"
 # include <unistd.h>
 
 using namespace std;

@@ -40,7 +40,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		close(child_to_parent_pipe[READ]);
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
-		content = read_from_pipe();
+		response = read_from_pipe();
 		dup2(stdin_fd, STDIN_FILENO);
 		if (exit_code == 0)
 			return 200;
@@ -87,7 +87,7 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		write_to_pipe(content);
+		write_to_pipe(response);
 
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);

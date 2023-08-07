@@ -31,13 +31,18 @@ void HttpResponseMessage::addHeader(string headerType, string headerValue)
     headers.insert(make_pair(headerType, headerValue));
 }
 
+void HttpResponseMessage::setServerProtocol(const string &serverProtocol)
+{
+    this->serverProtocol = serverProtocol;
+}
+
 string HttpResponseMessage::toString() const
 {
     map<string, string>::const_iterator it = headers.begin();
-    string response = getServerProtocol() + " " + to_string(getStatusCode()) + "\r\n";
+    string response = getServerProtocol() + " " + to_string(getStatusCode()) + " " + getReasonPhrase() + "\r\n";
     
     for (it = headers.begin(); it != headers.end(); it++) {
-        if (it->first != "") {
+        if (it->second != "") {
             response += it->first + ": " + it->second + "\r\n";
         }
     }

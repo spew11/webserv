@@ -22,6 +22,7 @@ Server::Server(const ServerConfig &config) : ip(config.getIp()), port(config.get
 		throw std::exception();
 
 	configs.push_back(config);
+	std::cout << "create Server\n";
 }
 
 Server::~Server()
@@ -39,6 +40,6 @@ ServerConfig::LocationMap Server::getConfig(std::string host) const
 	std::vector<ServerConfig>::const_iterator it = configs.begin();
 	for (; it != configs.end(); it++)
 		if (*it == host)
-			return *it;
+			return it->getLocationMap();
 	return (configs.begin())->getLocationMap();
 }

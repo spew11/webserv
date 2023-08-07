@@ -3,16 +3,18 @@
 Client::Client(Server *server): server(server), hrb()
 {
 	bzero(&addr, sizeof(addr));
-	sock = accept(server->getSock(), (struct sockaddr*)&addr, NULL);
+	socklen_t cli_size = sizeof(addr);
+	sock = accept(server->getSock(), (struct sockaddr*)&addr, &cli_size);
 	if (sock == -1)
 		throw std::exception();
 	fcntl(sock, F_SETFL, O_NONBLOCK);
 
 	std::cout << "Connet: Client" << sock << std::endl;
-	webVal.insert("$server_addr", server->getIP());
-	webVal.insert("$server_port", server->getPort());
-	webVal.insert("$remote_addr", inet_ntoa(addr.sin_addr));
-	webVal.insert("$remote_port", addr.sin_port);
+	std::cout << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
+	// webVal.insert("server_addr", server->getIP());
+	// webVal.insert("server_port", server->getPort());
+	// webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
+	// webVal.insert("remote_port", addr.sin_port);
 }
 
 Client::~Client()
@@ -22,6 +24,7 @@ Client::~Client()
 
 void Client::send_msg()
 {
+	std::cout << send_buf << std::endl;
 	const char *tmp = send_buf.c_str();
 	ssize_t len = send(sock, tmp, strlen(tmp), MSG_DONTWAIT);
 	if (len == -1)
@@ -78,18 +81,20 @@ void Client::communicate()
 	recv_msg();
 	if (hrb.getNeedMoreMessageFlag() == false)
 	{
-		HttpRequestMessage request(send_buf);
-		const ServerConfig::LocationMap lm = server->getConfig(request.getHeader("host"));
-		hrb.initiate(request, webVal, lm);
+		HttpRequestMessage *request;
+		request = new HttpRequestMessage(recv_buf);
+		const ServerConfig::LocationMap lm = server->getConfig(request->getHeader("host"));
+		hrb.initiate(*request, webVal, lm);
 	}
 	else
 	{
 		hrb.addRequestMessage(recv_buf);
 	}
-	if (hrb.getNeedMoreMessageFlag() == true)
+
+	if (hrb.getNeedMoreMessageFlag() == false)
 	{
 		makeResponse();
-		send_buf = hrb.getResponse().toString();
+		send_buf = hrb.getResponseMessage().toString();
 		hrb.clear();
 	}
 }
@@ -97,14 +102,13 @@ void Client::communicate()
 void Client::makeResponse()
 {
 	IMethodExecutor *executor;
-	if (hrb.getNeedCgiFlag() == true)
-	{
-		ICgiScriptor *cgiScriptor = new PythonScriptor(lm.getCgiParams(webVal));
-		executor = new CgiMethodExecutor(cgiScriptor);
-	}
-	else
+	// if (hrb.getNeedCgiFlag() == true)
+	// {
+	// 	executor = new CgiMethodExecutor(cgiScriptor);
+	// }
+	// else
 		executor = new DefaultMethodExecutor();
 
-	hrb.build(executor);
+	hrb.build(*executor);
 	delete executor;
 }

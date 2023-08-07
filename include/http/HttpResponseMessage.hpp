@@ -14,6 +14,7 @@ class HttpResponseMessage : public HttpMessage
         void setReasonPhrase(const string &reasonPhrase);
         void setBody(const string &body);
         void addHeader(string headerType, string headerValue);
+        void setServerProtocol(const string &serverProtocol);
         string toString() const;
 };
 #endif

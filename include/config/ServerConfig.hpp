@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <Modules.hpp>
 #include <LocationConfig.hpp>
 
@@ -7,6 +8,15 @@ class ServerConfig
 {
 public:
     ServerConfig(ServerModule &srvMod);
+    bool operator==(const string & host) const
+    {
+        const vector<string> & serverNames = getServerNames();
+
+        if (find(serverNames.begin(), serverNames.end(), host) == serverNames.end())
+            return false;
+        
+        return true;
+    }
 
     class LocationMap
     {
