@@ -111,7 +111,7 @@ void Client::makeResponse()
 	IMethodExecutor *executor;
 	if (hrb.getNeedCgiFlag() == true)
 	{
-		LocationConfig lc = lm.getLocConf("html/test.py");
+		LocationConfig lc = lm.getLocConf("cgi-bin/test.py"); //수정 필요!!!!!!
 		char **tmp = lc.getCgiParams(webVal);
 		executor = new CgiMethodExecutor(tmp);
 		// excutor = lm.getLocConf("")

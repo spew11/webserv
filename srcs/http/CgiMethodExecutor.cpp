@@ -32,11 +32,11 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		char **args = new char*[2];
+		char **args = new char*[3];
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
-		execve(resourcePath.c_str(), args, cgiEnv);
-		exit(1);
+		execve(args[0], args, cgiEnv);
+		exit(127);
 	}
 	else
 	{
