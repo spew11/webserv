@@ -6,6 +6,13 @@ CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv): READ(0), WRITE(1), cgiEnv(c
 	stdout_fd = dup(STDOUT_FILENO);
 }
 
+CgiMethodExecutor::~CgiMethodExecutor()
+{
+	for (int i = 0; cgiEnv[i] != NULL; i++)
+		delete cgiEnv[i];
+	delete cgiEnv;
+}
+
 int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 {
 	int child_to_parent_pipe[2];
