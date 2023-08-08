@@ -1,1 +1,0 @@
-GET / HTTP/1.1\n\rHost: localhost:8080\n\rUpgrade-Insecure-Requests: 1\n\rAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\n\rUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.1 Safari/605.1.15\n\rAccept-Language: en-us\n\rAccept-Encoding: gzip, deflate\n\rConnection: keep-alive
