@@ -13,6 +13,12 @@ void WebservValues::insert(const string &key, const string &value)
     envList.insert(pair<string, string>(key, value));
 }
 
+void WebservValues::insert(const string &key, const uint16_t &value)
+{
+	stringstream ss(value);
+	envList.insert(pair<string, string>(key, ss.str()));
+}
+
 string WebservValues::convert(const string &input) const
 {
     string result = input;

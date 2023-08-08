@@ -13,8 +13,8 @@ Client::Client(Server *server): server(server), hrb()
 	std::cout << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
 	// webVal.insert("server_addr", server->getIP());
 	// webVal.insert("server_port", server->getPort());
-	// webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
-	// webVal.insert("remote_port", addr.sin_port);
+	webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
+	webVal.insert("remote_port", addr.sin_port);
 }
 
 Client::~Client()
