@@ -29,10 +29,6 @@ void ConfigParser::setTree( void )
 
     while (getDeriv(deriv))// token을 연결한 지시어(deriv)를 가져온다. 없으면 false
     {
-        for (int i = 0; i < deriv.arg.size(); i++)
-            cout << "[" << deriv.arg[i] << "] ";
-        cout << deriv.delim << endl;
-
         switch (deriv.delim) // 지시어 구분자(delim)
         {
         case ';': // 단순히 sub트리를 만든다.
