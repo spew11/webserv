@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <cstring>
 #include <cstdio>
+#include <stdexcept>
 
 #include <ConfigUtils.hpp>
 
@@ -19,11 +20,39 @@ protected:
     const string            name;
     const enum ModuleType   type;
     vector<Module*>         subMods;
-    
+
+    class syntax_error : public runtime_error
+    {
+    public:
+        syntax_error( const string & deriv )
+         : runtime_error("Config error: The " + deriv + " directive has an incorrect syntax") {}
+    };
+
+    bool isBoolean( const string & str )
+    {
+        if (str == "on" || str == "off")
+            return true;
+        
+        return false;
+    }
+
+    bool isNumeric( const string & str )
+    {
+        if (str.empty())
+            return false;
+
+        for (string::size_type i = 0; i < str.size(); ++i)
+        {
+            if (isdigit(str[i]))
+                return false;
+        }
+
+        return true;
+    }
+
 public:
     Module ( Derivative const & deriv, enum ModuleType type )
      : name(deriv.name), type(type) {}
-
     virtual ~Module( void ) {}
 
     const string & getName( void ) const { return name; }
@@ -31,12 +60,18 @@ public:
     const vector<Module*> & getSubMods( void ) const { return subMods; }
 
     void addModule( Module * m ) { subMods.push_back(m); }
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) = 0;
 };
 
 class MainModule : public Module
 {
 public:
 	MainModule( const Derivative & deriv ) : Module(deriv, NO_TYPE) {}
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+        (void)deriv;
+        (void)subDerivs;
+    }
 };
 
 class ServerModule : public Module
