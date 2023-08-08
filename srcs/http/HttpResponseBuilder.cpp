@@ -13,16 +13,15 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & w
 void HttpResponseBuilder::initiate(const string & request)
 {
     clear();
-    this->requestMessage = new HttpRequestMessage(request);
+    requestMessage = new HttpRequestMessage(request);
     responseMessage = new HttpResponseMessage();
     if (this->requestMessage->getChunkedFlag()) {
         requestBody = this->requestMessage->getBody();
     }
     needMoreMessageFlag = this->requestMessage->getChunkedFlag();
-    //여기서 부터 하기
-    locationConfig = server->getConfig(requestMessage->getHeaders().find()  locationMap.getLocConf(this->requestMessage->getUri());
+    locationConfig = server->getConfig(requestMessage->getHeader("Host")).getLocConf(requestMessage->getUri());
     needCgiFlag = locationConfig.isCgi();
-    responseMessage->setServerProtocol(requestMessage.getServerProtocol());
+    responseMessage->setServerProtocol(requestMessage->getServerProtocol());
     initWebservValues();
 }
 
@@ -137,7 +136,7 @@ void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
         statusCode = methodExecutor.getMethod(resourcePath, response);
         if (statusCode == 200) {
             if (locationConfig.isCgi()) {
-                //파싱하기
+                parseCgiProduct(response);
                 responseMessage->setBody(response);
             }
             else {
@@ -150,6 +149,8 @@ void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
         if (statusCode == 200) {
             if (locationConfig.isCgi()) {
                 //파싱하기
+                parseCgiProduct(response);
+                //마저 짜야됌....parseCgi
                 responseMessage->setBody(response);
             }
             else {
@@ -197,7 +198,7 @@ void HttpResponseBuilder::clear()
 {
     delete responseMessage;
     delete requestMessage;
-    // webservValues 전체 초기화하기
+    webservValues->clear();
     server = 0;
     resourcePath = "";
     requestBody = "";

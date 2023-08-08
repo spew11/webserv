@@ -14,6 +14,7 @@ class WebservValues
         string getValue(const string &key) const;
         string convert(const string &input) const;
         void insert(const string &key, const string &value);
+        void clear();
 };
 
 #endif
