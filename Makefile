@@ -2,35 +2,46 @@
 NAME		= webserv
 # -Wall -Wextra -Werror
 CXXFLAGS	=  \
-				-std=c++98 -MMD -MP
-CPPFLAGS	= -I ./include
+				-std=c++98 -MMD -MP -g
+CPPFLAGS	= -I ./include -I ./include/config -I ./include/http -I ./include/server
 
 RM			= rm -rf
 
-FILENAME	=	\
- 				main \
- 				ConfigParser \
+CONFIG		:=	\
+				ConfigParser \
  				Config \
  				ServerConfig \
  				LocationConfig \
- 				ServerHandler \
- 				Server \
- 				Client \
- 				DerivTree \
+ 				DerivTree 
+
+HTTP		:=	\
+				WebservValues \
 				ResponseHeaderAdder \
-				main \
                	HttpMessage \
 				HttpRequestMessage \
 				HttpResponseMessage \
 				HttpResponseBuilder \
-				WebservValues \
 				Utils \
-				CgiMethodExecutor \
 				DefaultMethodExecutor \
 				ExtendedResponseHeaderAdder \
 				ResponseHeaderAdder \
+				CgiMethodExecutor 
 
+SERVER		:=	\
+				ServerHandler \
+ 				Server \
+ 				Client
 
+# CONFIG		:=	$(addprefix config/, $(CONFIG))
+# HTTP		:=	$(addprefix http/, $(HTTP))
+# SERVER		:=	$(addprefix server/, $(SERVER))
+
+FILENAME	=	\
+ 				main \
+				$(CONFIG)	\
+				$(HTTP)		\
+				$(SERVER)
+				
 SRCS_DIR	=	srcs
 SRCS		=	$(addprefix $(SRCS_DIR)/, $(addsuffix .cpp, $(FILENAME)))
 
@@ -38,6 +49,9 @@ OBJS_DIR	=	objs
 OBJS		=	$(addprefix $(OBJS_DIR)/, $(addsuffix .o, $(FILENAME)))
 
 DEPS		=	$(addsuffix .d, $(FILENAME))
+
+vpath %.cpp srcs/config srcs srcs/http srcs/server
+vpath %.d objs
 
 .PHONY: all clean fclean re
 
@@ -52,7 +66,7 @@ $(NAME): $(OBJS)
 $(OBJS_DIR):
 	@mkdir $(OBJS_DIR)
 
-$(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp $(OBJS_DIR)
+$(OBJS_DIR)/%.o: %.cpp $(OBJS_DIR)
 	@$(COMPILE.cpp) $< $(OUTPUT_OPTION)
 
 clean:

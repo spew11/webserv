@@ -158,6 +158,5 @@ Module * DerivTree::createClienMaxBodySize()
 
 Module * DerivTree::createAcceptMethod()
 {
-	cout << "create\n";
 	return new AcceptMethodModule(deriv);
 }

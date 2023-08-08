@@ -11,7 +11,7 @@ int main(void)
 {
 	try
 	{
-		ConfigParser parser("test");
+		ConfigParser parser("tester.conf");
 		ServerHandler sh(parser.get());
 		sh.loop();
 	}

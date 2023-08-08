@@ -20,7 +20,7 @@ class ResponseHeaderAdder
         virtual void executeAll();
 //        void addCacheControlHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage);
         void addContentTypeHeader(const string & contentType);
-        void addContentLengthHeader(const string & requestBody);
+        void addContentLengthHeader(const string & responseBody);
 };
 
 #endif
