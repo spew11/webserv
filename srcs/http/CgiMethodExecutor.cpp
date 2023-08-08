@@ -47,6 +47,8 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		close(child_to_parent_pipe[READ]);
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
 		response = read_from_pipe();
 		dup2(stdin_fd, STDIN_FILENO);
 		if (exit_code == 0)
@@ -98,6 +100,8 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
 		response = read_from_pipe();
 		dup2(stdin_fd, STDIN_FILENO);
 		dup2(stdout_fd, STDOUT_FILENO);
