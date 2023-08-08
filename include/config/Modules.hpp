@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <cstring>
 #include <cstdio>
+#include <stdexcept>
 
 #include <ConfigUtils.hpp>
 
@@ -19,11 +20,39 @@ protected:
     const string            name;
     const enum ModuleType   type;
     vector<Module*>         subMods;
-    
+
+    class syntax_error : public runtime_error
+    {
+    public:
+        syntax_error( const string & deriv )
+         : runtime_error("Config error: The \"" + deriv + "\" directive has an incorrect syntax") {}
+    };
+
+    bool isBoolean( const string & str )
+    {
+        if (str == "on" || str == "off")
+            return true;
+        
+        return false;
+    }
+
+    bool isNumeric( const string & str )
+    {
+        if (str.empty())
+            return false;
+
+        for (string::size_type i = 0; i < str.size(); ++i)
+        {
+            if (!isdigit(str[i]))
+                return false;
+        }
+
+        return true;
+    }
+
 public:
     Module ( Derivative const & deriv, enum ModuleType type )
      : name(deriv.name), type(type) {}
-
     virtual ~Module( void ) {}
 
     const string & getName( void ) const { return name; }
@@ -31,12 +60,18 @@ public:
     const vector<Module*> & getSubMods( void ) const { return subMods; }
 
     void addModule( Module * m ) { subMods.push_back(m); }
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) = 0;
 };
 
 class MainModule : public Module
 {
 public:
 	MainModule( const Derivative & deriv ) : Module(deriv, NO_TYPE) {}
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+        (void)deriv;
+        (void)subDerivs;
+    }
 };
 
 class ServerModule : public Module
@@ -85,11 +120,17 @@ private:
     return result;
 }
 public:
-	ServerModule( const Derivative & deriv, vector<Derivative> subDerivs )
+	ServerModule( const Derivative & deriv, const vector<Derivative> & subDerivs )
      : Module(deriv, NO_TYPE)
     {
+        checkSyntax(deriv, &subDerivs);
         setListen(subDerivs[0]);
         setServerName(subDerivs[1]);
+    }
+
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+
     }
     
     const uint32_t & getIp( void ) const { return ip; }
@@ -104,10 +145,18 @@ private:
 public:
     LocationModule( const Derivative & deriv ) : Module(deriv, NO_TYPE)
     {
-        // check syntax
+        checkSyntax(deriv, NULL);
+
         uri = deriv.arg[1];
+
         if (uri.back() == '/')
             uri.pop_back();
+    }
+
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+        if (deriv.arg.size() != 2)
+            throw syntax_error("location");
     }
 
     const string & getUri( void ) const { return uri; }
@@ -120,8 +169,15 @@ private:
 public:
     RootModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
     {
-        // check syntax
+        checkSyntax(deriv, NULL);
+
         root = deriv.arg[1];
+    }
+
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {  
+        if (deriv.arg.size() != 2)
+            throw syntax_error("root");
     }
 
     const string & getRoot( void ) const { return root; }
@@ -135,8 +191,9 @@ public:
     TypesModule( const Derivative & deriv, vector<Derivative> subDerivs )
      : Module(deriv, LOC_MOD)
     {
+        checkSyntax(deriv, &subDerivs);
+
         for (size_t i = 0; i < subDerivs.size(); i++) {
-            // check syntax
             string type = subDerivs[i].arg[0];
 
             for (size_t j = 1; j < subDerivs[i].arg.size(); j++) {
@@ -144,6 +201,15 @@ public:
 
                 typesMap[extension] = type;
             }
+        }
+    }
+
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+        for (size_t i = 0; i < subDerivs->size(); i++)
+        {
+            if (subDerivs[i].size() < 2)
+                throw syntax_error("types");
         }
     }
 
@@ -162,6 +228,8 @@ public:
             indexes.push_back(deriv.arg[i]);
     }
 
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) {}
+
     const vector<string> & getIndexes( void ) const { return indexes; }
 };
 
@@ -178,6 +246,10 @@ public:
             errCodes.push_back(atoi(deriv.arg[i].c_str()));
         
         uri = deriv.arg.back();
+    }
+
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
     }
 
     bool isErrCode( int code ) const 
@@ -201,6 +273,8 @@ public:
         cgiCmd = deriv.arg[1];
     }
 
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) {}
+
     const string & getCgiCmd( void ) const { return cgiCmd; }
 };
 
@@ -211,10 +285,20 @@ private:
 public:
     CgiParamsModule( const Derivative & deriv, const vector<Derivative> & subDerivs ) : Module(deriv, LOC_MOD)
     {
+        checkSyntax(deriv, &subDerivs);
+
         for (int i = 0; i < subDerivs.size(); i++)
         {
-            // check syntax
             params.push_back(make_pair(subDerivs[i].arg[0], subDerivs[i].arg[1]));
+        }
+    }
+
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+        for (int i = 0; i < subDerivs->size(); i++)
+        {
+            if (subDerivs[i].size() != 2)
+                throw syntax_error("cgi_params");
         }
     }
 
@@ -228,13 +312,20 @@ private:
 public:
     AutoIndexModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
     {
-        // check syntax
+        checkSyntax(deriv, NULL);
+
         if (deriv.arg[1] == "on")
             isAutoIndex = true;
         else
             isAutoIndex = false;
     }
 
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+        if (deriv.arg.size() != 2 || !isBoolean(deriv.arg[1]))
+            throw syntax_error("autoindex");
+    }
+    
     bool getAutoIndex( void ) const { return isAutoIndex; }
 };
 
@@ -245,7 +336,15 @@ private:
 public:
     ClientMaxBodySizeModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
     {
+        checkSyntax(deriv, NULL);
+
         maxSize = atoi(deriv.arg[1].c_str());
+    }
+
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+        if (deriv.arg.size() != 2 || !isNumeric(deriv.arg[1]))
+            throw syntax_error("client_max_body_size");
     }
 
     int getClientMaxBodySize( void ) const { return maxSize; }
@@ -260,10 +359,11 @@ public:
     {
         for (int i = 1; i < deriv.arg.size(); i++)
         {
-            // check syntax
             methods.push_back(deriv.arg[i]);
         }
     }
+
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) {}
 
     const vector<string> & getAcceptMethods( void ) const { return methods; }
 };
