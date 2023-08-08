@@ -108,7 +108,7 @@ bool ConfigParser::getDeriv( Derivative & deriv )
          || ((idx = token.find('}')) != string::npos))
         {
             // 구분자 이전의 substr을 arg에 넣어준다.
-            deriv.arg.push_back(token.substr(0, idx));
+            deriv.arg.push_back(token.substr(0, idx)); 
 
             // 이때 구분자가 token의 중간에 있다면 token을 구분자 기준으로 잘라 새로 초기화한다.
             if (idx == token.size() - 1)

@@ -137,8 +137,8 @@ HttpRequestMessage HttpResponseBuilder::getRequestMessage() const
 
 void HttpResponseBuilder::clear()
 {
-    delete requestMessage;
-    delete responseMessage;
+    // delete requestMessage;
+    // delete responseMessage;
     webservValues = 0;
     resourcePath = "";
     requestBody = "";

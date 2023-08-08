@@ -17,6 +17,7 @@ class Client
 private:
 	Server *server;
 	HttpResponseBuilder hrb;
+	//HttpResponseBuilder *hrb;
 	WebservValues webVal;
 
 	int sock;

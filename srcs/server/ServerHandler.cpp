@@ -12,7 +12,7 @@ ServerHandler::ServerHandler(Config* config): config(config)
 	for (std::vector<ServerConfig>::const_iterator it = servConf.begin(); it != servConf.end(); it++)
 	{
 		std::map<int, Server*>::iterator it2 = servers.begin();
-		for (; it2 != servers.end(); it++)
+		for (; it2 != servers.end(); it2++)
 			if (it2->second->isSame(it->getIp(), it->getPort()))
 				break;
 	

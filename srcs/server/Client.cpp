@@ -15,6 +15,8 @@ Client::Client(Server *server): server(server), hrb()
 	webVal.insert("server_port", server->getPort());
 	webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
 	webVal.insert("remote_port", addr.sin_port);
+	
+	// hrb = new HttpResponseBuilder(webVal, server);
 }
 
 Client::~Client()
@@ -81,10 +83,13 @@ void Client::communicate()
 	recv_msg();
 	if (hrb.getNeedMoreMessageFlag() == false)
 	{
+		///
 		HttpRequestMessage *request;
 		request = new HttpRequestMessage(recv_buf);
 		const ServerConfig::LocationMap lm = server->getConfig(request->getHeader("host"));
 		hrb.initiate(*request, webVal, lm);
+		///
+		// hrb.initiate(recv_buf);
 	}
 	else
 	{
