@@ -2,18 +2,25 @@
 #include "ServerConfig.hpp"
 #include "CgiMethodExecutor.hpp"
 #include "DefaultMethodExecutor.hpp"
+#include <sstream>
 
-void HttpResponseBuilder::initiate(HttpRequestMessage & requestMessage, WebservValues &webservValues, const ServerConfig::LocationMap &locationMap)
+HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & webservValues)
+{
+    this->server = server;
+    this->webservValues = &webservValues;
+}
+
+void HttpResponseBuilder::initiate(const string & request)
 {
     clear();
-    this->requestMessage = &requestMessage;
+    this->requestMessage = new HttpRequestMessage(request);
     responseMessage = new HttpResponseMessage();
     if (this->requestMessage->getChunkedFlag()) {
         requestBody = this->requestMessage->getBody();
     }
-    this->webservValues = &webservValues;
     needMoreMessageFlag = this->requestMessage->getChunkedFlag();
-    locationConfig = locationMap.getLocConf(this->requestMessage->getUri());
+    //여기서 부터 하기
+    locationConfig = server->getConfig(requestMessage->getHeaders().find()  locationMap.getLocConf(this->requestMessage->getUri());
     needCgiFlag = locationConfig.isCgi();
     responseMessage->setServerProtocol(requestMessage.getServerProtocol());
     initWebservValues();
@@ -82,6 +89,42 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
     return needCgiFlag;
 }
 
+void HttpResponseBuilder::parseCgiProduct(const string & response)
+{
+    Utils utils;
+    string header;
+    string headerKey;
+    string headerValue;
+    string body;
+
+    size_t blankLine = response.find("\r\n");
+    header = response.substr(0, blankLine);
+    if (blankLine == string::npos) {
+        //content-type없음
+        body = response;
+    }
+    else {
+        size_t semicolon = header.find(':');
+        if (semicolon == string::npos) {
+            //content-type 없음
+            body = response;
+        }
+        else {
+            string tmp = header.substr(0, 12);
+            if (tmp == "Content-type") {
+                headerKey = tmp;
+                headerValue = header.substr(13, header.length()-13);
+                body = response.substr(blankLine+2, response.length()-blankLine-1);
+            }
+            else {
+                //content-type 없음
+                body = response;
+            }
+        }
+    }
+
+}
+
 void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
 {
     ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, requestBody);
@@ -93,11 +136,26 @@ void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
     if (httpMethod == "GET") {
         statusCode = methodExecutor.getMethod(resourcePath, response);
         if (statusCode == 200) {
-            responseMessage->setBody(response);
+            if (locationConfig.isCgi()) {
+                //파싱하기
+                responseMessage->setBody(response);
+            }
+            else {
+                responseMessage->setBody(response);
+            }
         }
     }
     else if(httpMethod == "POST") {
         statusCode = methodExecutor.postMethod(resourcePath, requestBody, response);
+        if (statusCode == 200) {
+            if (locationConfig.isCgi()) {
+                //파싱하기
+                responseMessage->setBody(response);
+            }
+            else {
+                responseMessage->setBody(response);
+            }
+        }
     }
     else if(httpMethod == "DELETE") {
         statusCode = methodExecutor.deleteMethod(resourcePath);
@@ -137,9 +195,10 @@ HttpRequestMessage HttpResponseBuilder::getRequestMessage() const
 
 void HttpResponseBuilder::clear()
 {
-    delete requestMessage;
     delete responseMessage;
-    webservValues = 0;
+    delete requestMessage;
+    // webservValues 전체 초기화하기
+    server = 0;
     resourcePath = "";
     requestBody = "";
     needMoreMessageFlag = false;

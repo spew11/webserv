@@ -1,6 +1,6 @@
 # include "Utils.hpp"
 
-vector<string> Utils::split(const string& s, const string& delim) const
+vector<string> Utils::split(const string& s, const string& delim)
 {
     vector<string> result;
     size_t start = 0;
@@ -17,7 +17,7 @@ vector<string> Utils::split(const string& s, const string& delim) const
     return result;
 }
 
-string Utils::ltrim(string s) const
+string Utils::ltrim(string s)
 {
     s.erase(0, s.find_first_not_of(" \t\n\r\f\v"));
     return s;

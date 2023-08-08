@@ -12,8 +12,8 @@ using namespace std;
 class Utils 
 {
     public:
-        vector<string> split(const string& s, const string& delim) const;
-        string ltrim(string s) const;
+        vector<string> split(const string& s, const string& delim);
+        string ltrim(string s);
 };
 
 #endif
