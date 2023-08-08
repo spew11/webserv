@@ -19,8 +19,7 @@ class Server
 {
 private:
 	int			sock;
-	uint32_t	ip;
-	uint16_t	port;
+	struct sockaddr_in addr;
 	std::vector<ServerConfig>	configs;
 
 public:
@@ -29,6 +28,8 @@ public:
 
 	int		getSock(void) const;
 	ServerConfig::LocationMap	getConfig(std::string host) const;
+	std::string	getIP(void) const;
+	uint16_t	getPort(void) const;
 };
 
 #endif
