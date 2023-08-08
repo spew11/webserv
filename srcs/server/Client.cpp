@@ -88,7 +88,7 @@ void Client::communicate()
 		///
 		HttpRequestMessage *request;
 		request = new HttpRequestMessage(recv_buf);
-		const ServerConfig::LocationMap lm = server->getConfig(request->getHeader("host"));
+		lm = server->getConfig(request->getHeader("host"));
 		hrb.initiate(*request, webVal, lm);
 		///
 		// hrb.initiate(recv_buf);
@@ -109,11 +109,15 @@ void Client::communicate()
 void Client::makeResponse()
 {
 	IMethodExecutor *executor;
-	// if (hrb.getNeedCgiFlag() == true)
-	// {
-	// 	executor = new CgiMethodExecutor(cgiScriptor);
-	// }
-	// else
+	if (hrb.getNeedCgiFlag() == true)
+	{
+		LocationConfig lc = lm.getLocConf("html/test.py");
+		char **tmp = lc.getCgiParams(webVal);
+		executor = new CgiMethodExecutor(tmp);
+		// excutor = lm.getLocConf("")
+		// executor = new CgiMethodExecutor(hrb.getEnv()); ///?
+	}
+	else
 		executor = new DefaultMethodExecutor();
 
 	hrb.build(*executor);
