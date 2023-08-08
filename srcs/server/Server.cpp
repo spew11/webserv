@@ -21,7 +21,14 @@ Server::Server(const ServerConfig &config)
 		throw std::exception();
 
 	configs.push_back(config);
-	std::cout << "create Server\n";
+	std::cout << "create Server:" << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
+}
+
+bool Server::isSame(const uint32_t &ip, const uint16_t &port)
+{
+	if (addr.sin_addr.s_addr == ip && addr.sin_port == port)
+		return true;
+	return false;
 }
 
 Server::~Server()
@@ -51,4 +58,13 @@ string	Server::getIP(void) const
 uint16_t	Server::getPort(void) const
 {
 	return addr.sin_port;
+}
+
+void	Server::addConfig(const ServerConfig &config)
+
+{
+	// ServerConfig의 operator== 구현되어야 함.
+	// if (find(configs.begin(), configs.end(), config) == configs.end())
+	// 	throw std::exception();
+	configs.push_back(config);
 }
