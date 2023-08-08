@@ -1,6 +1,6 @@
 #include "CgiMethodExecutor.hpp"
 
-CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv): cgiEnv(cgiEnv)
+CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv): READ(0), WRITE(1), cgiEnv(cgiEnv)
 {
 	stdin_fd = dup(STDIN_FILENO);
 	stdout_fd = dup(STDOUT_FILENO);

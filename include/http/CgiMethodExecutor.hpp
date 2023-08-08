@@ -11,8 +11,8 @@ using namespace std;
 class CgiMethodExecutor : public IMethodExecutor
 {
     private:
-		const int READ  = 0;
-		const int WRITE = 1;
+		const int READ;
+		const int WRITE;
 
 		int	stdin_fd;
 		int stdout_fd;
