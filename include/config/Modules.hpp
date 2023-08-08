@@ -265,17 +265,25 @@ public:
 class CgiModule : public Module
 {
 private:
-    string cgiCmd;
+    bool isCgi;
 public:
     CgiModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
     {
-        // check syntax
-        cgiCmd = deriv.arg[1];
+        checkSyntax(deriv, NULL);
+
+        if (deriv.arg[1] == "on")
+            isCgi = true;
+
+        isCgi = false;
     }
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) {}
+    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
+    {
+        if (deriv.arg.size() != 2 || !isBoolean(deriv.arg[1]))
+            throw syntax_error("cgi");
+    }
 
-    const string & getCgiCmd( void ) const { return cgiCmd; }
+    bool getCgi( void ) const { return isCgi; }
 };
 
 class CgiParamsModule : public Module
