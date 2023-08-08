@@ -34,7 +34,7 @@ Module * DerivTree::createModule()
 	else if (deriv.name == "accept_method")
 		return createAcceptMethod();
 	else
-		; // throw
+		throw runtime_error("Config error: Uknown direction name in the config file");
 		
 	return NULL;
 }
@@ -61,7 +61,7 @@ Module * DerivTree::createServer()
 
 		if (deriv.name == "listen") {// listen지시어를 저장
 			if (listenDeriv != NULL)
-				; //throw
+				throw runtime_error("Config error: only one 'listen' directive is allowed within a 'server' block.");
 			listenDeriv = &deriv;
 		}
 		else if (deriv.name == "server_name") {// server_name지시어를 저장
@@ -69,12 +69,12 @@ Module * DerivTree::createServer()
 				; //throw
 			serverNameDeriv = &deriv;
 		}
-		else // 이외에 지시어는 sub모듈지시어가 된다.
+		else // 이외에 지시어는 server모듈의 sub모듈지시어가 된다.
 			subModDerivs.push_back(&subTree[i]);
 	}
 
 	if (listenDeriv == NULL)
-		cout << "need listen\n"; // throw
+		throw runtime_error("Config error: Missing 'listen' directive within the 'server' block.");
 
 	if (serverNameDeriv == NULL)
 		cout << "need serverName\n"; // throw
