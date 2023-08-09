@@ -1,5 +1,9 @@
 #include "DefaultMethodExecutor.hpp"
 #include <unistd.h>
+DefaultMethodExecutor::~DefaultMethodExecutor()
+{
+	;
+}
 
 int DefaultMethodExecutor::getMethod(const string &resourcePath, string &response)
 {

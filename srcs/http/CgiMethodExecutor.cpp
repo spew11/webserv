@@ -1,9 +1,16 @@
 #include "CgiMethodExecutor.hpp"
 
-CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv): cgiEnv(cgiEnv)
+CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv): READ(0), WRITE(1), cgiEnv(cgiEnv)
 {
 	stdin_fd = dup(STDIN_FILENO);
 	stdout_fd = dup(STDOUT_FILENO);
+}
+
+CgiMethodExecutor::~CgiMethodExecutor()
+{
+	for (int i = 0; cgiEnv[i] != NULL; i++)
+		delete cgiEnv[i];
+	delete cgiEnv;
 }
 
 int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
@@ -25,11 +32,11 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		char **args = new char*[2];
+		char **args = new char*[3];
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
-		execve(resourcePath.c_str(), args, cgiEnv);
-		exit(1);
+		execve(args[0], args, cgiEnv);
+		exit(127);
 	}
 	else
 	{
@@ -40,6 +47,8 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		close(child_to_parent_pipe[READ]);
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
 		response = read_from_pipe();
 		dup2(stdin_fd, STDIN_FILENO);
 		if (exit_code == 0)
@@ -91,6 +100,8 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
 		response = read_from_pipe();
 		dup2(stdin_fd, STDIN_FILENO);
 		dup2(stdout_fd, STDOUT_FILENO);

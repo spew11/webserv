@@ -31,7 +31,7 @@ void HttpResponseBuilder::initWebservValues()
     string tmpPath = locationConfig.getRoot() + requestMessage->getUri();
     if (stat(tmpPath.c_str(), &statbuf) < 0) {
         // 예외처리 하기
-        cout << "stat error" << endl;
+        cout << "stat error:" << tmpPath << endl;
     }
     if(S_ISDIR(statbuf.st_mode)) { // regular 파일이 없을 때
         for (int i = 0; i < indexes.size(); i++) {
@@ -137,8 +137,8 @@ HttpRequestMessage HttpResponseBuilder::getRequestMessage() const
 
 void HttpResponseBuilder::clear()
 {
-    delete requestMessage;
-    delete responseMessage;
+    // delete requestMessage;
+    // delete responseMessage;
     webservValues = 0;
     resourcePath = "";
     requestBody = "";

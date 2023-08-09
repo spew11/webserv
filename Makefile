@@ -66,7 +66,7 @@ $(NAME): $(OBJS)
 $(OBJS_DIR):
 	@mkdir $(OBJS_DIR)
 
-$(OBJS_DIR)/%.o: %.cpp $(OBJS_DIR)
+$(OBJS_DIR)/%.o: %.cpp | $(OBJS_DIR)
 	@$(COMPILE.cpp) $< $(OUTPUT_OPTION)
 
 clean:

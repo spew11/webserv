@@ -8,6 +8,7 @@
 # include "Server.hpp"
 # include "HttpResponseBuilder.hpp"
 # include "DefaultMethodExecutor.hpp"
+# include "CgiMethodExecutor.hpp"
 # include "WebservValues.hpp"
 
 class Server;
@@ -17,6 +18,7 @@ class Client
 private:
 	Server *server;
 	HttpResponseBuilder hrb;
+	//HttpResponseBuilder *hrb;
 	WebservValues webVal;
 
 	int sock;
@@ -25,6 +27,7 @@ private:
 	std::string send_buf;
 	std::string recv_buf;
 
+	ServerConfig::LocationMap lm;
 public:
 	Client(Server *server);
 	~Client();
