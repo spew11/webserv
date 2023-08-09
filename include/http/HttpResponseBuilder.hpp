@@ -5,19 +5,20 @@
 # include "IMethodExecutor.hpp"
 # include "WebservValues.hpp"
 # include "ServerConfig.hpp"
-# include "Server.hpp"
 # include "LocationConfig.hpp"
 # include "ResponseHeaderAdder.hpp"
 # include <vector>
 # include <sys/stat.h>
 # include <unistd.h>
 
+class Server;
+
 class HttpResponseBuilder {
 
     private:
-        const HttpRequestMessage *requestMessage;
+        HttpRequestMessage *requestMessage;
         HttpResponseMessage *responseMessage;
-        const LocationConfig *locationConfig;
+        LocationConfig locationConfig;
         const Server *server;
         WebservValues *webservValues;
 

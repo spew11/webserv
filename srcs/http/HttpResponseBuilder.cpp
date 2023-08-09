@@ -2,13 +2,14 @@
 #include "ServerConfig.hpp"
 #include "CgiMethodExecutor.hpp"
 #include "DefaultMethodExecutor.hpp"
+#include "Server.hpp"
 #include <sstream>
 #include <algorithm>
 #include <vector>
 
 HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & webservValues)
+    : server(server)
 {
-    this->server = server;
     this->webservValues = &webservValues;
 }
 
@@ -21,8 +22,8 @@ void HttpResponseBuilder::initiate(const string & request)
         requestBody = this->requestMessage->getBody();
     }
     needMoreMessageFlag = this->requestMessage->getChunkedFlag();
-    locationConfig = &(server->getConfig(requestMessage->getHeader("Host")).getLocConf(requestMessage->getUri()));
-    needCgiFlag = locationConfig->isCgi();
+    locationConfig = server->getConfig(requestMessage->getHeader("Host")).getLocConf(requestMessage->getUri());
+    needCgiFlag = locationConfig.isCgi();
     initWebservValues();
 }
 
@@ -33,9 +34,9 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("document_uri", requestMessage->getUri());
     
     // $request_filename 및 resourcePath 초기화
-    vector<string> indexes = locationConfig->getIndexes();
+    vector<string> indexes = locationConfig.getIndexes();
     struct stat statbuf;
-    string tmpPath = locationConfig->getRoot() + requestMessage->getUri();
+    string tmpPath = locationConfig.getRoot() + requestMessage->getUri();
     if (stat(tmpPath.c_str(), &statbuf) < 0) {
         // 예외처리 하기
     }
@@ -67,7 +68,7 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("host", requestMessage->getHeader("Host"));
 
     // $content-type 초기화
-    webservValues->insert("content_type", locationConfig->getType(requestMessage->getFilename()));
+    webservValues->insert("content_type", locationConfig.getType(requestMessage->getFilename()));
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)
@@ -95,7 +96,7 @@ void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
     string httpMethod = requestMessage->getHttpMethod();
     string response;
     int statusCode;
-    const vector<string> acceptMethods = locationConfig->getAcceptMethods();
+    const vector<string> acceptMethods = locationConfig.getAcceptMethods();
     
     // accept method check
     if (find(acceptMethods.begin(), acceptMethods.end(), httpMethod) == acceptMethods.end()) {
@@ -118,9 +119,9 @@ void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
     responseMessage->setStatusCode(statusCode);
     responseMessage->setReasonPhrase(findReasonPhrase(statusCode));
     
-    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, *locationConfig, response, resourcePath);
+    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, response, resourcePath);
     responseHeaderAdder.executeAll();
-    //이후에 reponse가 적절하게 파싱되어있을 거임
+    //이후에 response가 적절하게 파싱되어있을 거임
     responseMessage->setBody(response);
 }
 

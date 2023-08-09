@@ -1,6 +1,7 @@
 #ifndef HTTP_RESPONSE_MESSAGE_HPP
 #define HTTP_RESPONSE_MESSAGE_HPP
 #include "HttpMessage.hpp"
+#include <sstream>
 
 class HttpResponseMessage : public HttpMessage
 {

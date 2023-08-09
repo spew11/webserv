@@ -38,63 +38,46 @@ void HttpRequestMessage::parseUri()
     }
 }
 
-void HttpRequestMessage::parseRequestMessage(const string &requestMessage)
+void HttpRequestMessage::parseRequestMessage(const string &request)
 {
     Utils utils;
-    vector<string> lst = utils.split(requestMessage, "\n\r");
-    vector<string> tmp = utils.split(lst.at(0), " ");
+    vector<string> lst = utils.split(request, "\r\n");
+    
     //start line parsing
+    vector<string> tmp = utils.split(lst.at(0), " ");
     httpMethod = tmp.at(0);
     uri = tmp.at(1);
     serverProtocol = tmp.at(2);
-    int byte = lst.at(0).length()+1; // 나중에 바디 시작 인덱스 알려면 필요
+    
+    int byte = lst.at(0).length()+2; // 나중에 바디 시작 인덱스 알려면 필요
+    
     //headers parsing
-    vector<pair<string, string> > headerTmp;
-
     int i = 1;
+    bool crlf = false;
     for (; i < lst.size(); i++) {
-        byte += lst.at(i).length() + 1;
-        bool crlf = true;
-        for (int j = 0; i < lst.at(i).length(); j++) {
-            string tmpS = lst.at(i);
-            if (tmpS.at(j) != '\n' and tmpS.at(j) != '\r') {
-                crlf = false;
-                break;
-            }
-        }
-        if (crlf == true) {
+        if (crlf == false && lst.at(i) == "") {
+            crlf = true;
+            byte += 2;
             break;
         }
         if (lst.at(i).find(":") != string::npos) {
             tmp = utils.split(lst.at(i), ":");
-            headerTmp.push_back(make_pair(tmp.at(0), tmp.at(1)));
-        }
-        else {
-            vector<pair<string, string> >::iterator lastPair = headerTmp.end()-1;
-            string key = lastPair->first;
-            string val = lastPair->second;
-            val = val + " " + utils.ltrim(lst.at(i));
-            headerTmp.pop_back();
-            headerTmp.push_back(make_pair(key, val));
+            headers.insert(make_pair(tmp.at(0), utils.ltrim(tmp.at(1))));
+            byte += lst.at(i).length() + 2;
         }
     }
-    for (vector<pair<string, string> >::iterator it = headerTmp.begin(); it != headerTmp.end(); it++) {
-        headers.insert(make_pair(it->first, it->second));
-    }
-    byte++;
-    i++;
+    
     //body parsing
-    string bodyTmp;
-    if (this->getHeader("Transfer-Encoding") == "chunked") {
-        if (lst.at(i) == "0") {
-            chunkedFlag = false;
-        }
-        else {
-            chunkedFlag = true;
-        }
+    if (byte == request.length()) {
+        body = "";
+    }
+    else if (this->getHeader("Transfer-Encoding") == "chunked") {
+        chunkedFlag = static_cast<bool>(stoi(lst.at(i), 0, 16));
         byte += lst.at(i).length();
     }
-    this->body = requestMessage.substr(byte, requestMessage.length()-byte);
+    else {
+        body = request.substr(byte, request.length()-byte);
+    }
 }
 
 string HttpRequestMessage::getHttpMethod() const

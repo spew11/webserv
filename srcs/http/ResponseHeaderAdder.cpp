@@ -42,6 +42,13 @@ void ResponseHeaderAdder::executeAll()
             addContentLengthHeader(response);
         }
     }
+    else if (statusCode == 400) { // 클라이언트가 잘못된 요청을 보냄
+        //본문 없으면 Content-Type, Content-Length 생략해도됌
+        if (response != "") {
+            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
+            addContentLengthHeader(response);
+        }
+    }
     else if (statusCode == 404) { // 리소스 찾을 수 없음
         //본문 없으면 Content-Type, Content-Length 생략해도됌
         if (response != "") {

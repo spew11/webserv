@@ -1,6 +1,5 @@
 #include "HttpResponseMessage.hpp"
 
-
 int HttpResponseMessage::getStatusCode() const
 {
     return statusCode;
@@ -39,7 +38,11 @@ void HttpResponseMessage::setServerProtocol(const string &serverProtocol)
 string HttpResponseMessage::toString() const
 {
     map<string, string>::const_iterator it = headers.begin();
-    string response = getServerProtocol() + " " + to_string(getStatusCode()) + " " + getReasonPhrase() + "\r\n";
+    
+    stringstream statusCode;
+    statusCode << getStatusCode();
+    
+    string response = getServerProtocol() + " " + statusCode.str() + " " + getReasonPhrase() + "\r\n";
     
     for (it = headers.begin(); it != headers.end(); it++) {
         if (it->second != "") {
