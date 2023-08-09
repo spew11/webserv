@@ -1,5 +1,9 @@
 # include "Utils.hpp"
 
+Utils::Utils(){}
+
+Utils::~Utils(){}
+
 vector<string> Utils::split(const string& s, const string& delim)
 {
     vector<string> result;
@@ -21,4 +25,11 @@ string Utils::ltrim(string s)
 {
     s.erase(0, s.find_first_not_of(" \t\n\r\f\v"));
     return s;
+}
+
+string Utils::itoa(const int & num)
+{
+    stringstream ss;
+    ss << num;
+    return ss.str();
 }

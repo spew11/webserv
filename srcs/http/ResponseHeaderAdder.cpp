@@ -42,13 +42,6 @@ void ResponseHeaderAdder::executeAll()
             addContentLengthHeader(response);
         }
     }
-    else if (statusCode == 400) { // 클라이언트가 잘못된 요청을 보냄
-        //본문 없으면 Content-Type, Content-Length 생략해도됌
-        if (response != "") {
-            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-            addContentLengthHeader(response);
-        }
-    }
     else if (statusCode == 404) { // 리소스 찾을 수 없음
         //본문 없으면 Content-Type, Content-Length 생략해도됌
         if (response != "") {
@@ -71,6 +64,13 @@ void ResponseHeaderAdder::executeAll()
             addContentLengthHeader(response);
         }
     }
+    else{
+        //본문 없으면 Content-Type, Content-Length 생략해도됌
+        if (response != "") {
+            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
+            addContentLengthHeader(response);
+        }
+    }
 }
 
 //void ResponseHeaderAdder::addCacheControlHeader(){}
@@ -82,7 +82,7 @@ void ResponseHeaderAdder::addContentTypeHeader(const string & contentType)
 
 void ResponseHeaderAdder::addContentLengthHeader(const string & responseBody)
 {
-    responseMessage.addHeader("Content-Length", to_string(responseBody.length()));
+    responseMessage.addHeader("Content-Length", Utils::itoa(responseBody.length()));
 }
 
 
@@ -112,14 +112,12 @@ void ResponseHeaderAdder::addDateHeader()
 
 void ResponseHeaderAdder::parseCgiProduct(string & response, string & contentType)
 {
-    Utils utils;
-
     size_t newline = response.find("\n\n");
     if (newline != string::npos) {
         string header = response.substr(0, newline);
         if (header.find(":") != string::npos) {
             if (header.substr(0, 12) == "Content-type") {
-                contentType = utils.ltrim(header.substr(13, header.length()-13));
+                contentType = Utils::ltrim(header.substr(13, header.length()-13));
                 response = response.substr(newline+2, response.length()-newline-2);
             }
         }

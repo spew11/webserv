@@ -40,11 +40,10 @@ void HttpRequestMessage::parseUri()
 
 void HttpRequestMessage::parseRequestMessage(const string &request)
 {
-    Utils utils;
-    vector<string> lst = utils.split(request, "\r\n");
+    vector<string> lst = Utils::split(request, "\r\n");
     
     //start line parsing
-    vector<string> tmp = utils.split(lst.at(0), " ");
+    vector<string> tmp = Utils::split(lst.at(0), " ");
     httpMethod = tmp.at(0);
     uri = tmp.at(1);
     serverProtocol = tmp.at(2);
@@ -61,8 +60,8 @@ void HttpRequestMessage::parseRequestMessage(const string &request)
             break;
         }
         if (lst.at(i).find(":") != string::npos) {
-            tmp = utils.split(lst.at(i), ":");
-            headers.insert(make_pair(tmp.at(0), utils.ltrim(tmp.at(1))));
+            tmp = Utils::split(lst.at(i), ":");
+            headers.insert(make_pair(tmp.at(0), Utils::ltrim(tmp.at(1))));
             byte += lst.at(i).length() + 2;
         }
     }

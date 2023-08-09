@@ -39,10 +39,7 @@ string HttpResponseMessage::toString() const
 {
     map<string, string>::const_iterator it = headers.begin();
     
-    stringstream statusCode;
-    statusCode << getStatusCode();
-    
-    string response = getServerProtocol() + " " + statusCode.str() + " " + getReasonPhrase() + "\r\n";
+    string response = getServerProtocol() + " " + Utils::itoa(statusCode) + " " + getReasonPhrase() + "\r\n";
     
     for (it = headers.begin(); it != headers.end(); it++) {
         if (it->second != "") {
