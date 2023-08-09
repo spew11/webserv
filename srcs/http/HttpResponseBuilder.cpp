@@ -3,6 +3,8 @@
 #include "CgiMethodExecutor.hpp"
 #include "DefaultMethodExecutor.hpp"
 #include <sstream>
+#include <algorithm>
+#include <vector>
 
 HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & webservValues)
 {
@@ -19,9 +21,8 @@ void HttpResponseBuilder::initiate(const string & request)
         requestBody = this->requestMessage->getBody();
     }
     needMoreMessageFlag = this->requestMessage->getChunkedFlag();
-    locationConfig = server->getConfig(requestMessage->getHeader("Host")).getLocConf(requestMessage->getUri());
-    needCgiFlag = locationConfig.isCgi();
-    responseMessage->setServerProtocol(requestMessage->getServerProtocol());
+    locationConfig = &(server->getConfig(requestMessage->getHeader("Host")).getLocConf(requestMessage->getUri()));
+    needCgiFlag = locationConfig->isCgi();
     initWebservValues();
 }
 
@@ -32,13 +33,13 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("document_uri", requestMessage->getUri());
     
     // $request_filename 및 resourcePath 초기화
-    vector<string> indexes = locationConfig.getIndexes();
+    vector<string> indexes = locationConfig->getIndexes();
     struct stat statbuf;
-    string tmpPath = locationConfig.getRoot() + requestMessage->getUri();
+    string tmpPath = locationConfig->getRoot() + requestMessage->getUri();
     if (stat(tmpPath.c_str(), &statbuf) < 0) {
         // 예외처리 하기
-        cout << "stat error" << endl;
     }
+
     if(S_ISDIR(statbuf.st_mode)) { // regular 파일이 없을 때
         for (int i = 0; i < indexes.size(); i++) {
             string resourcePathTmp = tmpPath+indexes.at(i);
@@ -63,10 +64,10 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("method", requestMessage->getHttpMethod());
 
     // $host 초기화
-    webservValues->insert("host", requestMessage->getHeader("host"));
+    webservValues->insert("host", requestMessage->getHeader("Host"));
 
     // $content-type 초기화
-    webservValues->insert("content_type", locationConfig.getType(requestMessage->getFilename()));
+    webservValues->insert("content_type", locationConfig->getType(requestMessage->getFilename()));
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)
@@ -88,82 +89,39 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
     return needCgiFlag;
 }
 
-void HttpResponseBuilder::parseCgiProduct(const string & response)
-{
-    Utils utils;
-    string header;
-    string headerKey;
-    string headerValue;
-    string body;
-
-    size_t blankLine = response.find("\r\n");
-    header = response.substr(0, blankLine);
-    if (blankLine == string::npos) {
-        //content-type없음
-        body = response;
-    }
-    else {
-        size_t semicolon = header.find(':');
-        if (semicolon == string::npos) {
-            //content-type 없음
-            body = response;
-        }
-        else {
-            string tmp = header.substr(0, 12);
-            if (tmp == "Content-type") {
-                headerKey = tmp;
-                headerValue = header.substr(13, header.length()-13);
-                body = response.substr(blankLine+2, response.length()-blankLine-1);
-            }
-            else {
-                //content-type 없음
-                body = response;
-            }
-        }
-    }
-
-}
 
 void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
 {
-    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, requestBody);
-    int statusCode;
-
     string httpMethod = requestMessage->getHttpMethod();
-    // 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임) (엔진엑스는 요청 들어오면 다 대응해주는 듯)
     string response;
-    if (httpMethod == "GET") {
-        statusCode = methodExecutor.getMethod(resourcePath, response);
-        if (statusCode == 200) {
-            if (locationConfig.isCgi()) {
-                parseCgiProduct(response);
-                responseMessage->setBody(response);
-            }
-            else {
-                responseMessage->setBody(response);
-            }
+    int statusCode;
+    const vector<string> acceptMethods = locationConfig->getAcceptMethods();
+    
+    // accept method check
+    if (find(acceptMethods.begin(), acceptMethods.end(), httpMethod) == acceptMethods.end()) {
+        statusCode = 405; // Method not allowed;
+    }
+    else {
+        // 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
+        
+        if (httpMethod == "GET") {
+            statusCode = methodExecutor.getMethod(resourcePath, response);
+        }
+        else if(httpMethod == "POST") {
+            statusCode = methodExecutor.postMethod(resourcePath, requestBody, response);
+        }
+        else if(httpMethod == "DELETE") {
+            statusCode = methodExecutor.deleteMethod(resourcePath);
         }
     }
-    else if(httpMethod == "POST") {
-        statusCode = methodExecutor.postMethod(resourcePath, requestBody, response);
-        if (statusCode == 200) {
-            if (locationConfig.isCgi()) {
-                //파싱하기
-                parseCgiProduct(response);
-                //마저 짜야됌....parseCgi
-                responseMessage->setBody(response);
-            }
-            else {
-                responseMessage->setBody(response);
-            }
-        }
-    }
-    else if(httpMethod == "DELETE") {
-        statusCode = methodExecutor.deleteMethod(resourcePath);
-    }
+    responseMessage->setServerProtocol(requestMessage->getServerProtocol());
     responseMessage->setStatusCode(statusCode);
     responseMessage->setReasonPhrase(findReasonPhrase(statusCode));
+    
+    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, *locationConfig, response, resourcePath);
     responseHeaderAdder.executeAll();
+    //이후에 reponse가 적절하게 파싱되어있을 거임
+    responseMessage->setBody(response);
 }
 
 string HttpResponseBuilder::getResourcePath() const
@@ -176,8 +134,16 @@ string HttpResponseBuilder::findReasonPhrase(const int &statusCode)
     switch(statusCode) {
         case 200:
             return "OK";
+        case 201:
+            return "Created";
+        case 204:
+            return "No Content";
+        case 400:
+            return "Bad Request";
         case 404:
             return "Not Found";
+        case 405:
+            return "Method Not Allowed";
         case 500:
             return "Internal Server Error";
     }

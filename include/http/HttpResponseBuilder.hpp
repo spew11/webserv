@@ -12,12 +12,12 @@
 # include <sys/stat.h>
 # include <unistd.h>
 
-class HttpResponseBuilder
-{
+class HttpResponseBuilder {
+
     private:
-        HttpRequestMessage *requestMessage;
+        const HttpRequestMessage *requestMessage;
         HttpResponseMessage *responseMessage;
-        LocationConfig locationConfig;
+        const LocationConfig *locationConfig;
         const Server *server;
         WebservValues *webservValues;
 
@@ -29,7 +29,7 @@ class HttpResponseBuilder
     public:
         HttpResponseBuilder(const Server *server, WebservValues & webservValues);
         void build(IMethodExecutor & methodExecutor);
-        void parseCgiProduct(const string & reponse);
+        void parseCgiProduct(string & response, string & contentType);
         void addRequestMessage(const string &request);
         string getResourcePath() const;
         string findReasonPhrase(const int &statusCode);

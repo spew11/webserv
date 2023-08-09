@@ -4,7 +4,7 @@ vector<string> Utils::split(const string& s, const string& delim)
 {
     vector<string> result;
     size_t start = 0;
-    size_t end = s.find_first_of(delim);
+    size_t end = s.find(delim);
     while (end != string::npos) {
         result.push_back(s.substr(start, end - start));
         start = end + delim.size();

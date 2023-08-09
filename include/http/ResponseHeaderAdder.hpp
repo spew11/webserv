@@ -6,21 +6,28 @@
 # include "HttpResponseMessage.hpp"
 # include "ResponseHeaderAdder.hpp"
 # include "ServerConfig.hpp"
+# include "Utils.hpp"
 using namespace std;
 
 class ResponseHeaderAdder
 {
-    protected:
+    private:
         const HttpRequestMessage & requestMessage;
         HttpResponseMessage & responseMessage;
         const LocationConfig & locationConfig;
-        const string & requestBody;
+        string & response;
+        const string & resourcePath;
     public:
-        ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, const LocationConfig & locationConfig, const string & requestBody);
-        virtual void executeAll();
-//        void addCacheControlHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage);
+        ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage,\
+            const LocationConfig & locationConfig, string & response, const string & resourcePath);
+        void executeAll();
         void addContentTypeHeader(const string & contentType);
         void addContentLengthHeader(const string & responseBody);
+        void addLocationHeader(const string & location);
+        void addAllowHeader(const vector<string> & acceptMethods);
+        void addDateHeader();
+        void parseCgiProduct(string & response, string & contentType);
+//        void addCacheControlHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage);
 };
 
 #endif
