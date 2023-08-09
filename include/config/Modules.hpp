@@ -89,17 +89,24 @@ public:
 
         string listenArg = subDerivs[0].arg[1];
         size_t delimIdx = listenArg.find(':');
+
+        if (delimIdx == string::npos) // ':'이 없는 경우
+            throw syntax_error("server");
         
         string ipStr = listenArg.substr(0, delimIdx);
         string portStr = listenArg.substr(delimIdx + 1);
 
-        if (inet_addr(ipStr.c_str()) == INADDR_NONE) // ip주소형식 맞는지 확인
+        if (!ipStr.empty() && inet_addr(ipStr.c_str()) == INADDR_NONE) // ip주소형식 맞는지 확인
             throw syntax_error("server");
+
+        if (ipStr.empty()) // ip값이 비었다면 모든 ip 허용
+            ip = INADDR_ANY;
+        else
+            ip = ntohl(inet_addr(ipStr.c_str()));
 
         if (!isNumeric(portStr.c_str())) // port값이 숫자인지 확인
             throw syntax_error("server");
 
-        ip = ntohl(inet_addr(ipStr.c_str()));
         port = atoi(listenArg.substr(delimIdx + 1).c_str());
     }
 
