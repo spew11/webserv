@@ -1,6 +1,8 @@
 #include <ServerConfig.hpp>
 
-ServerConfig::ServerConfig( ServerModule & _srvMod ) : srvMod(&_srvMod)
+ServerConfig::ServerConfig( ServerModule & _srvMod )
+ : srvMod(&_srvMod),
+   srvNameMod(NULL)
 {
 	LocationConfig defaultLocConf;
 
@@ -24,6 +26,11 @@ ServerConfig::ServerConfig( ServerModule & _srvMod ) : srvMod(&_srvMod)
 			locConf.addModules(locMod->getSubMods());
 
 			locMap.insert(locMod->getUri(), locConf);
+		}
+		else if (srvSubMods[i]->getName() == "server_name")
+		{
+			srvNameMod = dynamic_cast<ServerNameModule *>(srvSubMods[i]);
+			// casting check
 		}
 	}
 }
