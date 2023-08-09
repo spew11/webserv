@@ -15,7 +15,8 @@ class WebservValues
         string getValue(const string &key) const;
         string convert(const string &input) const;
         void insert(const string &key, const string &value);
-		void insert(const string &key, const uint16_t &value);
+        void insert(const string &key, const uint16_t &value);
+        void clear();
 };
 
 #endif

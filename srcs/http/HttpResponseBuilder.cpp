@@ -2,20 +2,28 @@
 #include "ServerConfig.hpp"
 #include "CgiMethodExecutor.hpp"
 #include "DefaultMethodExecutor.hpp"
+#include "Server.hpp"
+#include <sstream>
+#include <algorithm>
+#include <vector>
 
-void HttpResponseBuilder::initiate(HttpRequestMessage & requestMessage, WebservValues &webservValues, const ServerConfig::LocationMap &locationMap)
+HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & webservValues)
+    : server(server)
+{
+    this->webservValues = &webservValues;
+}
+
+void HttpResponseBuilder::initiate(const string & request)
 {
     clear();
-    this->requestMessage = &requestMessage;
+    requestMessage = new HttpRequestMessage(request);
     responseMessage = new HttpResponseMessage();
     if (this->requestMessage->getChunkedFlag()) {
         requestBody = this->requestMessage->getBody();
     }
-    this->webservValues = &webservValues;
     needMoreMessageFlag = this->requestMessage->getChunkedFlag();
-    locationConfig = locationMap.getLocConf(this->requestMessage->getUri());
+    locationConfig = server->getConfig(requestMessage->getHeader("Host")).getLocConf(requestMessage->getUri());
     needCgiFlag = locationConfig.isCgi();
-    responseMessage->setServerProtocol(requestMessage.getServerProtocol());
     initWebservValues();
 }
 
@@ -33,6 +41,7 @@ void HttpResponseBuilder::initWebservValues()
         // 예외처리 하기
         cout << "stat error:" << tmpPath << endl;
     }
+
     if(S_ISDIR(statbuf.st_mode)) { // regular 파일이 없을 때
         for (int i = 0; i < indexes.size(); i++) {
             string resourcePathTmp = tmpPath+indexes.at(i);
@@ -57,7 +66,7 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("method", requestMessage->getHttpMethod());
 
     // $host 초기화
-    webservValues->insert("host", requestMessage->getHeader("host"));
+    webservValues->insert("host", requestMessage->getHeader("Host"));
 
     // $content-type 초기화
     webservValues->insert("content_type", locationConfig.getType(requestMessage->getFilename()));
@@ -82,29 +91,39 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
     return needCgiFlag;
 }
 
+
 void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
 {
-    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, requestBody);
-    int statusCode;
-
     string httpMethod = requestMessage->getHttpMethod();
-    // 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임) (엔진엑스는 요청 들어오면 다 대응해주는 듯)
     string response;
-    if (httpMethod == "GET") {
-        statusCode = methodExecutor.getMethod(resourcePath, response);
-        if (statusCode == 200) {
-            responseMessage->setBody(response);
+    int statusCode;
+    const vector<string> acceptMethods = locationConfig.getAcceptMethods();
+    
+    // accept method check
+    if (find(acceptMethods.begin(), acceptMethods.end(), httpMethod) == acceptMethods.end()) {
+        statusCode = 405; // Method not allowed;
+    }
+    else {
+        // 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
+        
+        if (httpMethod == "GET") {
+            statusCode = methodExecutor.getMethod(resourcePath, response);
+        }
+        else if(httpMethod == "POST") {
+            statusCode = methodExecutor.postMethod(resourcePath, requestBody, response);
+        }
+        else if(httpMethod == "DELETE") {
+            statusCode = methodExecutor.deleteMethod(resourcePath);
         }
     }
-    else if(httpMethod == "POST") {
-        statusCode = methodExecutor.postMethod(resourcePath, requestBody, response);
-    }
-    else if(httpMethod == "DELETE") {
-        statusCode = methodExecutor.deleteMethod(resourcePath);
-    }
+    responseMessage->setServerProtocol(requestMessage->getServerProtocol());
     responseMessage->setStatusCode(statusCode);
     responseMessage->setReasonPhrase(findReasonPhrase(statusCode));
+    
+    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, response, resourcePath);
     responseHeaderAdder.executeAll();
+    //이후에 response가 적절하게 파싱되어있을 거임
+    responseMessage->setBody(response);
 }
 
 string HttpResponseBuilder::getResourcePath() const
@@ -117,8 +136,16 @@ string HttpResponseBuilder::findReasonPhrase(const int &statusCode)
     switch(statusCode) {
         case 200:
             return "OK";
+        case 201:
+            return "Created";
+        case 204:
+            return "No Content";
+        case 400:
+            return "Bad Request";
         case 404:
             return "Not Found";
+        case 405:
+            return "Method Not Allowed";
         case 500:
             return "Internal Server Error";
     }
@@ -137,9 +164,10 @@ HttpRequestMessage HttpResponseBuilder::getRequestMessage() const
 
 void HttpResponseBuilder::clear()
 {
-    // delete requestMessage;
-    // delete responseMessage;
-    webservValues = 0;
+    delete responseMessage;
+    delete requestMessage;
+    webservValues->clear();
+    server = 0;
     resourcePath = "";
     requestBody = "";
     needMoreMessageFlag = false;

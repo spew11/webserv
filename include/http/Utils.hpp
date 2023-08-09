@@ -6,14 +6,19 @@
 # include <map>
 # include <list>
 # include <algorithm>
+# include "Utils.hpp"
+# include <sstream>
 
 using namespace std;
 
 class Utils 
-{
+{   private:
+        Utils();
+        ~Utils();
     public:
-        vector<string> split(const string& s, const string& delim) const;
-        string ltrim(string s) const;
+        static vector<string> split(const string& s, const string& delim);
+        static string ltrim(string s);
+        static string itoa(const int & num);
 };
 
 #endif

@@ -11,12 +11,15 @@
 # include <sys/stat.h>
 # include <unistd.h>
 
-class HttpResponseBuilder
-{
+class Server;
+
+class HttpResponseBuilder {
+
     private:
         HttpRequestMessage *requestMessage;
         HttpResponseMessage *responseMessage;
         LocationConfig locationConfig;
+        const Server *server;
         WebservValues *webservValues;
 
         string resourcePath; // locations를 거쳐 찾은 진짜 경로
@@ -25,7 +28,9 @@ class HttpResponseBuilder
         bool needCgiFlag;
         void initWebservValues();
     public:
+        HttpResponseBuilder(const Server *server, WebservValues & webservValues);
         void build(IMethodExecutor & methodExecutor);
+        void parseCgiProduct(string & response, string & contentType);
         void addRequestMessage(const string &request);
         string getResourcePath() const;
         string findReasonPhrase(const int &statusCode);
@@ -33,7 +38,7 @@ class HttpResponseBuilder
         bool getNeedCgiFlag() const;
         HttpResponseMessage getResponseMessage() const;
         HttpRequestMessage getRequestMessage() const;
-        void initiate(HttpRequestMessage & requestMessage, WebservValues & webservValues, const ServerConfig::LocationMap & locationMap);
+        void initiate(const string & request);
         void clear();
 };
 #endif

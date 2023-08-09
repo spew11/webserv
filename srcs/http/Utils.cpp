@@ -1,10 +1,14 @@
 # include "Utils.hpp"
 
-vector<string> Utils::split(const string& s, const string& delim) const
+Utils::Utils(){}
+
+Utils::~Utils(){}
+
+vector<string> Utils::split(const string& s, const string& delim)
 {
     vector<string> result;
     size_t start = 0;
-    size_t end = s.find_first_of(delim);
+    size_t end = s.find(delim);
     while (end != string::npos) {
         result.push_back(s.substr(start, end - start));
         start = end + delim.size();
@@ -17,8 +21,15 @@ vector<string> Utils::split(const string& s, const string& delim) const
     return result;
 }
 
-string Utils::ltrim(string s) const
+string Utils::ltrim(string s)
 {
     s.erase(0, s.find_first_not_of(" \t\n\r\f\v"));
     return s;
+}
+
+string Utils::itoa(const int & num)
+{
+    stringstream ss;
+    ss << num;
+    return ss.str();
 }

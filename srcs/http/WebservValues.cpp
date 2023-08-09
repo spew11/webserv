@@ -40,3 +40,8 @@ string WebservValues::convert(const string &input) const
 
     return result;
 }
+
+void WebservValues::clear()
+{
+    envList.clear();
+}

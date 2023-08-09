@@ -1,9 +1,4 @@
 #include "DefaultMethodExecutor.hpp"
-#include <unistd.h>
-DefaultMethodExecutor::~DefaultMethodExecutor()
-{
-	;
-}
 
 int DefaultMethodExecutor::getMethod(const string &resourcePath, string &response)
 {
@@ -32,7 +27,7 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
     if (file.is_open()) {
         file << request;
         file.close();
-        statusCode = 200;
+        statusCode = 201; // Created
     }
     else {
         statusCode = 500;
@@ -43,10 +38,10 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 int DefaultMethodExecutor::deleteMethod(const string &resourcePath) const
 {
     int statusCode;
-    int ret = remove(resourcePath.c_str());
     if (access(resourcePath.c_str(), F_OK) == 0) {
+        int ret = remove(resourcePath.c_str());
         if (ret == 0) {
-            statusCode = 200;
+            statusCode = 204; // No Content
         }
         else {
             statusCode = 500;
@@ -54,6 +49,7 @@ int DefaultMethodExecutor::deleteMethod(const string &resourcePath) const
     }
     else {
         statusCode = 404;
+        
     }
     return statusCode;
 }

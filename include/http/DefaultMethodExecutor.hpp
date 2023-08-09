@@ -3,9 +3,11 @@
 # include "HttpRequestMessage.hpp"
 # include "HttpResponseMessage.hpp"
 # include "IMethodExecutor.hpp"
+# include <stdio.h>
 # include <iostream>
 # include <string>
 # include <fstream>
+# include <unistd.h>
 
 using namespace std;
 
