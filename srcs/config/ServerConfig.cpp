@@ -35,6 +35,16 @@ ServerConfig::ServerConfig( ServerModule & _srvMod )
 	}
 }
 
+bool ServerConfig::operator==( const string & host ) const
+{
+	const vector<string> & serverNames = getServerNames();
+
+	if (find(serverNames.begin(), serverNames.end(), host) == serverNames.end())
+		return false;
+	
+	return true;
+}
+
 const LocationConfig & ServerConfig::LocationMap::getLocConf( string uri ) const
 {
 	// 빈문자열("")은 만족하는 location이 없을때 반환되는 default설정의 key이다.
@@ -66,3 +76,27 @@ void ServerConfig::LocationMap::insert( const string & key, const LocationConfig
 	locConfMap[key] = locConf;
 }
 
+const uint32_t & ServerConfig::getIp(void) const
+{
+	return srvMod->getIp();
+}
+
+int ServerConfig::getPort(void) const
+{
+	return srvMod->getPort();
+}
+
+const vector<string> & ServerConfig::getServerNames( void ) const
+{
+	static const vector<string> defaultSrvName;
+
+	if (srvNameMod == NULL)
+		return defaultSrvName;
+	
+	return srvNameMod->getServerNames();
+}
+
+const ServerConfig::LocationMap & ServerConfig::getLocationMap( void ) const
+{
+	return locMap;
+}
