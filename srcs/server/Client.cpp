@@ -11,10 +11,12 @@ Client::Client(Server *server): server(server), hrb()
 
 	std::cout << "Connet: Client" << sock << std::endl;
 	std::cout << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
-	// webVal.insert("server_addr", server->getIP());
-	// webVal.insert("server_port", server->getPort());
-	// webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
-	// webVal.insert("remote_port", addr.sin_port);
+	webVal.insert("server_addr", server->getIP());
+	webVal.insert("server_port", server->getPort());
+	webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
+	webVal.insert("remote_port", addr.sin_port);
+	
+	// hrb = new HttpResponseBuilder(webVal, server);
 }
 
 Client::~Client()
@@ -30,6 +32,7 @@ void Client::send_msg()
 	if (len == -1)
 		throw std::exception();
 	send_buf = "";
+	recv_buf = "";
 }
 
 void Client::recv_msg()
@@ -37,7 +40,6 @@ void Client::recv_msg()
 	char tmp[1024];
 
 	bzero(tmp, sizeof(char) * 1024);
-	recv_buf = "";
 	while (true)
 	{
 		ssize_t len = recv(sock, tmp, 1024, 0);
@@ -79,12 +81,17 @@ bool Client::isSendable() const
 void Client::communicate()
 {
 	recv_msg();
+	if (recv_buf.find("\r\n\r\n") == string::npos)
+		return;
 	if (hrb.getNeedMoreMessageFlag() == false)
 	{
+		///
 		HttpRequestMessage *request;
 		request = new HttpRequestMessage(recv_buf);
-		const ServerConfig::LocationMap lm = server->getConfig(request->getHeader("host"));
+		lm = server->getConfig(request->getHeader("host"));
 		hrb.initiate(*request, webVal, lm);
+		///
+		// hrb.initiate(recv_buf);
 	}
 	else
 	{
@@ -102,11 +109,15 @@ void Client::communicate()
 void Client::makeResponse()
 {
 	IMethodExecutor *executor;
-	// if (hrb.getNeedCgiFlag() == true)
-	// {
-	// 	executor = new CgiMethodExecutor(cgiScriptor);
-	// }
-	// else
+	if (hrb.getNeedCgiFlag() == true)
+	{
+		LocationConfig lc = lm.getLocConf("cgi-bin/test.py"); //수정 필요!!!!!!
+		char **tmp = lc.getCgiParams(webVal);
+		executor = new CgiMethodExecutor(tmp);
+		// excutor = lm.getLocConf("")
+		// executor = new CgiMethodExecutor(hrb.getEnv()); ///?
+	}
+	else
 		executor = new DefaultMethodExecutor();
 
 	hrb.build(*executor);

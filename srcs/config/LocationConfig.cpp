@@ -127,25 +127,23 @@ const string & LocationConfig::getErrPage( int code ) const
 
 bool LocationConfig::isCgi( void ) const
 {
-	if (cgiMod != NULL)
-		return true;
+	if (cgiMod == NULL)
+		return false;
 	
-	return false;
-}
-
-const string & LocationConfig::getCgiCmd( void ) const
-{
-	static const string defaultCmd = "";
-
-	if (cgiMod != NULL)
-		return cgiMod->getCgiCmd();
-
-	return defaultCmd;
+	return cgiMod->getCgi();
 }
 
 // mallllllllloc const를 붙여서 반환하는 방법은 모르겟음
 char ** LocationConfig::getCgiParams( const WebservValues & env ) const 
 {
+	if (cgiParamsMod == NULL)
+	{
+		char ** paramArr = new char*[1];
+		*paramArr = NULL;
+		
+		return paramArr;
+	}
+		
 	const vector<pair<string, string> > & params = cgiParamsMod->getParams();
 
 	char ** paramArr = new char*[params.size() + 1];

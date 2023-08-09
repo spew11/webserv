@@ -18,6 +18,7 @@ public:
 
     Module * createMain();
     Module * createServer();
+    Module * createServerName();
     Module * createLocation();
     Module * createRoot();
     Module * createTypes();

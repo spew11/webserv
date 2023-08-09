@@ -1,6 +1,8 @@
 #include <ServerConfig.hpp>
 
-ServerConfig::ServerConfig( ServerModule & _srvMod ) : srvMod(&_srvMod)
+ServerConfig::ServerConfig( ServerModule & _srvMod )
+ : srvMod(&_srvMod),
+   srvNameMod(NULL)
 {
 	LocationConfig defaultLocConf;
 
@@ -25,7 +27,22 @@ ServerConfig::ServerConfig( ServerModule & _srvMod ) : srvMod(&_srvMod)
 
 			locMap.insert(locMod->getUri(), locConf);
 		}
+		else if (srvSubMods[i]->getName() == "server_name")
+		{
+			srvNameMod = dynamic_cast<ServerNameModule *>(srvSubMods[i]);
+			// casting check
+		}
 	}
+}
+
+bool ServerConfig::operator==( const string & host ) const
+{
+	const vector<string> & serverNames = getServerNames();
+
+	if (find(serverNames.begin(), serverNames.end(), host) == serverNames.end())
+		return false;
+	
+	return true;
 }
 
 const LocationConfig & ServerConfig::LocationMap::getLocConf( string uri ) const
@@ -59,3 +76,27 @@ void ServerConfig::LocationMap::insert( const string & key, const LocationConfig
 	locConfMap[key] = locConf;
 }
 
+const uint32_t & ServerConfig::getIp(void) const
+{
+	return srvMod->getIp();
+}
+
+int ServerConfig::getPort(void) const
+{
+	return srvMod->getPort();
+}
+
+const vector<string> & ServerConfig::getServerNames( void ) const
+{
+	static const vector<string> defaultSrvName;
+
+	if (srvNameMod == NULL)
+		return defaultSrvName;
+	
+	return srvNameMod->getServerNames();
+}
+
+const ServerConfig::LocationMap & ServerConfig::getLocationMap( void ) const
+{
+	return locMap;
+}

@@ -39,6 +39,7 @@ void HttpResponseBuilder::initWebservValues()
     string tmpPath = locationConfig.getRoot() + requestMessage->getUri();
     if (stat(tmpPath.c_str(), &statbuf) < 0) {
         // 예외처리 하기
+        cout << "stat error:" << tmpPath << endl;
     }
 
     if(S_ISDIR(statbuf.st_mode)) { // regular 파일이 없을 때

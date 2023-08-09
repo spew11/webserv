@@ -26,7 +26,6 @@ public:
     bool isErrCode( int code ) const;
     const string & getErrPage( int code ) const;
     bool isCgi( void ) const;
-    const string & getCgiCmd( void ) const;
     bool isAutoIndex( void ) const;
     int  getClientMaxBodySize( void ) const;
     const vector<string> & getAcceptMethods( void ) const;

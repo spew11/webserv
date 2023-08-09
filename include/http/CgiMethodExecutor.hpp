@@ -11,8 +11,8 @@ using namespace std;
 class CgiMethodExecutor : public IMethodExecutor
 {
     private:
-		const int READ  = 0;
-		const int WRITE = 1;
+		const int READ;
+		const int WRITE;
 
 		int	stdin_fd;
 		int stdout_fd;
@@ -22,6 +22,7 @@ class CgiMethodExecutor : public IMethodExecutor
 		void write_to_pipe(string body);
 	public:
         CgiMethodExecutor(char **cgiEnv);
+		~CgiMethodExecutor();
         int getMethod(const string &resourcePath, string &response);
         int postMethod(const string &resourcePath, const string &request, string &response);
         int deleteMethod(const string & resourcePath) const;

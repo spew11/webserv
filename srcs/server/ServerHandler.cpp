@@ -9,24 +9,21 @@ ServerHandler::ServerHandler(Config* config): config(config)
 
 	// Server 생성 및 changeList에 추가
 	const std::vector<ServerConfig> &servConf = config->getSrvConf();
-	std::cout << "test\n";
-	std::map<std::pair<uint32_t, uint16_t>, int> addr_fd; //<ip, port> - fd 매핑: 중복검사
 	for (std::vector<ServerConfig>::const_iterator it = servConf.begin(); it != servConf.end(); it++)
 	{
-		std::cout << "hello\n";
-		Server *tmp = new Server(*it);
-		servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
-		change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-		// std::pair<uint32_t, uint16_t> addr(it->getIp(), it->getPort());
-		// std::map<std::pair<uint32_t, uint16_t>, int>::iterator it2 = addr_fd.find(addr);
-		// if (it2 != addr_fd.end()) // 중복 ip,port 존재 x
-		// {
-		// 	Server *tmp = new Server(*it);
-		// 	servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
-		// 	change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-		// }
-		// else //중복 ip,port 존재
-		// 	; // servers[it2->second]->addConf(*it); 구현필요
+		std::map<int, Server*>::iterator it2 = servers.begin();
+		for (; it2 != servers.end(); it2++)
+			if (it2->second->isSame(it->getIp(), it->getPort()))
+				break;
+	
+		if (it2 == servers.end()) // 중복 ip,port 존재 x
+		{
+			Server *tmp = new Server(*it);
+			servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
+			change_events(tmp->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+		}
+		else //중복 ip,port 존재
+			servers[it2->first]->addConfig(*it);
 	}
 }
 
