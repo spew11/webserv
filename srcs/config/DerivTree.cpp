@@ -54,7 +54,7 @@ Module * DerivTree::createServer()
 	const Derivative * listenDeriv = NULL;
 	const Derivative * serverNameDeriv = NULL;
 
-	vector<DerivTree *> subModDerivs; 
+	vector<DerivTree *> subModDerivs;
 
 	for (int i = 0; i < subTree.size(); i++) {
 		const Derivative & deriv = subTree[i].getDeriv();
