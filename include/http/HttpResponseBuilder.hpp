@@ -27,6 +27,9 @@ class HttpResponseBuilder {
         bool needMoreMessageFlag; 
         bool needCgiFlag;
         void initWebservValues();
+        int errorCode;
+        string errorPhrase;
+        bool  ready;
     public:
         HttpResponseBuilder(const Server *server, WebservValues & webservValues);
         void build(IMethodExecutor & methodExecutor);
@@ -40,5 +43,13 @@ class HttpResponseBuilder {
         HttpRequestMessage getRequestMessage() const;
         void initiate(const string & request);
         void clear();
+        LocationConfig getLocationConfig() const;
+        int verifyUrl();
+        void setErrorCode(const int & num);
+        int getErrorCode() const;
+        void setErrorPhrase(const string & errorPhrase);
+        string getErrorPhrase() const;
+        int checkAcceptMethod();
 };
+
 #endif
