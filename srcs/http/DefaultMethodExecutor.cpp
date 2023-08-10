@@ -20,6 +20,7 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
     return statusCode;
 }
 
+DefaultMethodExecutor::~DefaultMethodExecutor(){}
 int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response)
 {
     int statusCode;

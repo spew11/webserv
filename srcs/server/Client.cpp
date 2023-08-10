@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(Server *server): server(server), hrb()
+Client::Client(Server *server): server(server)
 {
 	bzero(&addr, sizeof(addr));
 	socklen_t cli_size = sizeof(addr);
@@ -16,7 +16,7 @@ Client::Client(Server *server): server(server), hrb()
 	webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
 	webVal.insert("remote_port", addr.sin_port);
 	
-	// hrb = new HttpResponseBuilder(webVal, server);
+	hrb = new HttpResponseBuilder(server, webVal);
 }
 
 Client::~Client()
@@ -80,46 +80,38 @@ bool Client::isSendable() const
 
 void Client::communicate()
 {
-	recv_msg();
+	recv_msg();	
 	if (recv_buf.find("\r\n\r\n") == string::npos)
 		return;
-	if (hrb.getNeedMoreMessageFlag() == false)
+	if (hrb->getNeedMoreMessageFlag() == false)
 	{
-		///
-		HttpRequestMessage *request;
-		request = new HttpRequestMessage(recv_buf);
-		lm = server->getConfig(request->getHeader("host"));
-		hrb.initiate(*request, webVal, lm);
-		///
-		// hrb.initiate(recv_buf);
+		hrb->initiate(recv_buf);
 	}
 	else
 	{
-		hrb.addRequestMessage(recv_buf);
+		hrb->addRequestMessage(recv_buf);
 	}
-
-	if (hrb.getNeedMoreMessageFlag() == false)
+	if (hrb->getNeedMoreMessageFlag() == false)
 	{
 		makeResponse();
-		send_buf = hrb.getResponseMessage().toString();
-		hrb.clear();
+		send_buf = hrb->getResponseMessage().toString();
+		hrb->clear();
 	}
 }
 
 void Client::makeResponse()
 {
 	IMethodExecutor *executor;
-	if (hrb.getNeedCgiFlag() == true)
+	if (hrb->getNeedCgiFlag() == true)
 	{
 		LocationConfig lc = lm.getLocConf("cgi-bin/test.py"); //수정 필요!!!!!!
 		char **tmp = lc.getCgiParams(webVal);
 		executor = new CgiMethodExecutor(tmp);
 		// excutor = lm.getLocConf("")
-		// executor = new CgiMethodExecutor(hrb.getEnv()); ///?
+		// executor = new CgiMethodExecutor(hrb->getEnv()); ///?
 	}
 	else
 		executor = new DefaultMethodExecutor();
-
-	hrb.build(*executor);
+	hrb->build(*executor);
 	delete executor;
 }

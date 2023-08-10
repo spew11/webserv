@@ -1,36 +1,34 @@
 
 NAME		= webserv
-# -Wall -Wextra -Werror
+# -Wall -Wextra -Werror -std=c++98
 CXXFLAGS	=  \
-				-std=c++98 -MMD -MP -g
+				-MMD -MP -g
 CPPFLAGS	= -I ./include -I ./include/config -I ./include/http -I ./include/server
 
 RM			= rm -rf
 
 CONFIG		:=	\
-				ConfigParser \
  				Config \
- 				ServerConfig \
+				ConfigParser \
+ 				DerivTree \
  				LocationConfig \
- 				DerivTree 
+ 				ServerConfig 
 
 HTTP		:=	\
-				WebservValues \
-				ResponseHeaderAdder \
+				CgiMethodExecutor \
+				DefaultMethodExecutor \
                	HttpMessage \
 				HttpRequestMessage \
-				HttpResponseMessage \
 				HttpResponseBuilder \
-				Utils \
-				DefaultMethodExecutor \
-				ExtendedResponseHeaderAdder \
+				HttpResponseMessage \
 				ResponseHeaderAdder \
-				CgiMethodExecutor 
+				Utils \
+				WebservValues
 
 SERVER		:=	\
-				ServerHandler \
+ 				Client \
  				Server \
- 				Client
+				ServerHandler
 
 # CONFIG		:=	$(addprefix config/, $(CONFIG))
 # HTTP		:=	$(addprefix http/, $(HTTP))
