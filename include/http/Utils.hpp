@@ -18,6 +18,8 @@ class Utils
     public:
         static vector<string> split(const string& s, const string& delim);
         static string ltrim(string s);
+        static string rtrim(string s);
+        static string trim(string s);
         static string itoa(const int & num);
 };
 

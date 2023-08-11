@@ -78,38 +78,17 @@ bool Client::isSendable() const
 	return true;
 }
 
-// 소영이의 원본 코드
-// void Client::communicate()
-// {
-// 	recv_msg();	
-// 	if (recv_buf.find("\r\n\r\n") == string::npos)
-// 		return;
-// 	if (hrb->getNeedMoreMessageFlag() == false)
-// 	{
-// 		hrb->initiate(recv_buf);
-// 	}
-// 	else
-// 	{
-// 		hrb->addRequestMessage(recv_buf);
-// 	}
-// 	if (hrb->getNeedMoreMessageFlag() == false)
-// 	{
-// 		makeResponse();
-// 		send_buf = hrb->getResponseMessage().toString();
-// 		hrb->clear();
-// 	}
-// }
-
-//ResponseBuilder 변경사항으로 아래와 같이 변경되어야됌(은지가 씀)
 void Client::communicate()
 {
 	recv_msg();	
 	if (recv_buf.find("\r\n\r\n") == string::npos)
 		return;
-	if (hrb->isChunked() == false)
+	if (hrb->getNeedMoreMessageFlag() == false)
 	{
 		hrb->initiate(recv_buf);
-		if (hrb->getEnd()) {
+		// 아래 if문 하나 추가 (은지가)
+		if (hrb->getEnd())
+		{
 			send_buf = hrb->getResponseMessage().toString();
 			return;
 		}
@@ -118,14 +97,12 @@ void Client::communicate()
 	{
 		hrb->addRequestMessage(recv_buf);
 	}
-	if (hrb->isLast() == true)
+	if (hrb->getNeedMoreMessageFlag() == false)
 	{
 		makeResponse();
 		send_buf = hrb->getResponseMessage().toString();
-		// hrb->clear(); -> initiation()안에서 clear()하기 때문에 필요X
 	}
 }
-
 
 void Client::makeResponse()
 {

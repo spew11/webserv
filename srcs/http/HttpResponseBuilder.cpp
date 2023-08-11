@@ -6,7 +6,6 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & w
     this->webservValues = &webservValues;
     this->webservValues->initEnvList();
     errorCode = 500;
-    last = true;
 }
 
 void HttpResponseBuilder::clear()
@@ -30,8 +29,7 @@ void HttpResponseBuilder::clear()
     contentType = "";
     responseBody = "";
     errorCode = 500;
-    last = true; // chunked가 아닌 메시지라면 언제나 마지막 메시지이기 때문에 true로 초기화됨
-    chunked = false;
+    needMoreMessageFlag = false;
     needCgiFlag = false;
     end = false;
 }
@@ -218,21 +216,15 @@ void HttpResponseBuilder::initiate(const string & request)
         return;
     }
     initWebservValues();
-    chunked = requestMessage->getChunkedFlag();
-    last = requestMessage->isLast();
+    needMoreMessageFlag = requestMessage->getChunkedFlag();
     needCgiFlag = locationConfig.isCgi();
     requestBody = requestMessage->getBody();
-
-    // cout << "chunked: " << chunked << endl;
-    // cout << "last: " << last << endl;
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)
 {
-    // cout << "ADD!!!" << endl;
     HttpRequestMessage newRequestMessage(request);
-    chunked = newRequestMessage.getChunkedFlag();
-    last = newRequestMessage.isLast();
+    needMoreMessageFlag = newRequestMessage.getChunkedFlag();
     requestBody.append(newRequestMessage.getBody());
 
     /* 이전과 같은 chunk 요청인지 구별하는 방법은 HTTP 메서드와 requestTarget이 동일함을 확인, Contetn-Length 헤더가 없는것을 확인
@@ -261,11 +253,6 @@ LocationConfig HttpResponseBuilder::getLocationConfig() const
     return locationConfig;
 }
 
-bool HttpResponseBuilder::isLast() const
-{
-    return last;
-}
-
 bool HttpResponseBuilder::getNeedCgiFlag() const
 {
     return needCgiFlag;
@@ -273,10 +260,10 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
 
 bool HttpResponseBuilder::getEnd() const
 {
-    return end;
+    return end;   
 }
 
-bool HttpResponseBuilder::isChunked() const
+bool HttpResponseBuilder::getNeedMoreMessageFlag() const
 {
-    return chunked;
+    return needMoreMessageFlag;
 }

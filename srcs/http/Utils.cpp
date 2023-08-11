@@ -27,6 +27,17 @@ string Utils::ltrim(string s)
     return s;
 }
 
+string Utils::rtrim(string s) {
+    s.erase(s.find_last_not_of(" \t\n\r\f\v")+ 1);
+    return s;
+}
+
+string Utils::trim(string s) {
+    s = ltrim(s);
+    s = rtrim(s);
+    return s;
+}
+
 string Utils::itoa(const int & num)
 {
     stringstream ss;
