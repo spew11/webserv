@@ -60,9 +60,6 @@ void HttpResponseBuilder::parseRequestUri(const string & requestTarget)
 
 int HttpResponseBuilder::checkAcceptMethod(const vector<string> & acceptMethods, const string & httpMethod)
 {
-    string httpMethod = requestMessage->getHttpMethod();
-    const vector<string> acceptMethods = locationConfig.getAcceptMethods();
-    
     if (find(acceptMethods.begin(), acceptMethods.end(), httpMethod) == acceptMethods.end()) {
         errorCode = 405;
         return 1;

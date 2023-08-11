@@ -6,6 +6,7 @@
 # include "CgiMethodExecutor.hpp"
 # include "WebservValues.hpp"
 # include "ServerConfig.hpp"
+# include "Server.hpp"
 # include "LocationConfig.hpp"
 # include "ResponseHeaderAdder.hpp"
 # include "ServerErrors.hpp"
