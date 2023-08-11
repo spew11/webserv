@@ -1,18 +1,14 @@
 #include <ServerConfig.hpp>
 
-ServerConfig::ServerConfig( ServerModule & _srvMod )
+ServerConfig::ServerConfig( const ServerModule & _srvMod )
  : srvMod(&_srvMod),
    srvNameMod(NULL)
 {
-	LocationConfig defaultLocConf;
+	const vector<Module *> & srvSubMods = srvMod->getSubMods();
 
-	vector<Module *> srvSubMods = srvMod->getSubMods();
-
-	// server블록에 정의되서 locationConfig에 상속될 module;
-	defaultLocConf.addModules(srvSubMods);
-	
-	// location을 만족하지 못하는 uri를 위한 defaultConf
-	locMap.insert("", defaultLocConf);
+	// server블록에 정의된 location설정. (location블록에 상속된다.)
+	// uri에 맞는 location 블록이 없을때 사용되는 default설정으로도 쓰인다.
+	locMap.defaultLocConf.addModules(srvSubMods);
 
 	// location블록에 정의된 module
 	for (size_t i = 0; i < srvSubMods.size(); i++)
@@ -22,10 +18,10 @@ ServerConfig::ServerConfig( ServerModule & _srvMod )
 			LocationModule *locMod = dynamic_cast<LocationModule *>(srvSubMods[i]);
 			// casting check
 
-			LocationConfig locConf = defaultLocConf;
+			LocationConfig locConf = locMap.defaultLocConf;
 			locConf.addModules(locMod->getSubMods());
 
-			locMap.insert(locMod->getUri(), locConf);
+			locMap.uriMap[locMod->getUri()] = locConf;
 		}
 		else if (srvSubMods[i]->getName() == "server_name")
 		{
@@ -47,13 +43,12 @@ bool ServerConfig::operator==( const string & host ) const
 
 const LocationConfig & ServerConfig::LocationMap::getLocConf( string uri ) const
 {
-	// 빈문자열("")은 만족하는 location이 없을때 반환되는 default설정의 key이다.
-	while (uri != "")
+	while (!uri.empty())
 	{
-		map<string, LocationConfig>::const_iterator it = locConfMap.find(uri);
+		map<string, LocationConfig>::const_iterator it = uriMap.find(uri);
 
 		// uri가 있다면 value반환
-		if (it != locConfMap.end()) {
+		if (it != uriMap.end()) {
 			return it->second;
 		}
 		else { // uri가 없다면 '/'기준으로 잘라서 uri를 수정해 찾는다.
@@ -68,27 +63,28 @@ const LocationConfig & ServerConfig::LocationMap::getLocConf( string uri ) const
 		}
 	}
 
-	return locConfMap.find("")->second;
+	return defaultLocConf;
 }
 
-void ServerConfig::LocationMap::insert( const string & key, const LocationConfig & locConf )
+uint32_t ServerConfig::getIp(void) const
 {
-	locConfMap[key] = locConf;
-}
+	if (srvMod == NULL)// 생성자에서 반드시 srvMod 초기화 해줘야한다.
+		return INADDR_NONE;
 
-const uint32_t & ServerConfig::getIp(void) const
-{
 	return srvMod->getIp();
 }
 
 int ServerConfig::getPort(void) const
 {
+	if (srvMod == NULL)// 생성자에서 반드시 srvMod 초기화 해줘야한다.
+		return -1;
+
 	return srvMod->getPort();
 }
 
 const vector<string> & ServerConfig::getServerNames( void ) const
 {
-	static const vector<string> defaultSrvName;
+	static const vector<string> defaultSrvName;// = 빈 벡터.
 
 	if (srvNameMod == NULL)
 		return defaultSrvName;

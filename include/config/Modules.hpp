@@ -90,7 +90,7 @@ public:
         string listenArg = subDerivs[0].arg[1];
         size_t delimIdx = listenArg.find(':');
 
-        if (delimIdx == string::npos) // ':'이 없는 경우
+        if (delimIdx == string::npos) // ':'이 없는 경우 허용하지 않음
             throw syntax_error("server");
         
         string ipStr = listenArg.substr(0, delimIdx);
@@ -112,9 +112,9 @@ public:
 
     virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
     {
+        // subDerivs에는 listen지시어가 들어있다.
         if (subDerivs->size() != 1 || (*subDerivs)[0].arg.size() != 2)
             throw syntax_error("server");
-
     }
     
     const uint32_t & getIp( void ) const { return ip; }
@@ -129,7 +129,7 @@ public:
     ServerNameModule( const Derivative & deriv ) : Module(deriv, SRV_MOD)
     {
         checkSyntax(deriv, NULL);
-
+        // server_name 지시어의 arg가 없다면 serverNames는 빈 벡터이다.
         for (size_t i = 1; i < deriv.arg.size(); i++)
             this->serverNames.push_back(deriv.arg[i]);
     }
@@ -194,12 +194,13 @@ public:
     {
         checkSyntax(deriv, &subDerivs);
 
-        for (size_t i = 0; i < subDerivs.size(); i++) {
+        for (size_t i = 0; i < subDerivs.size(); i++)
+        {
             string type = subDerivs[i].arg[0];
 
-            for (size_t j = 1; j < subDerivs[i].arg.size(); j++) {
+            for (size_t j = 1; j < subDerivs[i].arg.size(); j++)
+            {
                 string extension = subDerivs[i].arg[j];
-
                 typesMap[extension] = type;
             }
         }
@@ -209,7 +210,7 @@ public:
     {
         for (size_t i = 0; i < subDerivs->size(); i++)
         {
-            if (subDerivs[i].size() < 2)
+            if ((*subDerivs)[i].arg.size() < 2)
                 throw syntax_error("types");
         }
     }
@@ -224,7 +225,9 @@ private:
 public:
     IndexModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
     {
-        // check syntax
+        checkSyntax(deriv, NULL);
+
+        // deriv.arg가 비었다면 indexes벡터도 빈 벡터이다.        
         for (size_t i = 1; i < deriv.arg.size(); i++)
             indexes.push_back(deriv.arg[i]);
     }
@@ -242,7 +245,8 @@ private:
 public:
     ErrorPageModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
     {
-        // check syntax
+        checkSyntax(deriv, NULL);
+
         for (size_t i = 1; i < deriv.arg.size() - 1; i++)
             errCodes.push_back(atoi(deriv.arg[i].c_str()));
         
@@ -274,8 +278,8 @@ public:
 
         if (deriv.arg[1] == "on")
             isCgi = true;
-
-        isCgi = false;
+		else
+        	isCgi = false;
     }
 
     virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
@@ -306,7 +310,7 @@ public:
     {
         for (int i = 0; i < subDerivs->size(); i++)
         {
-            if (subDerivs[i].size() != 2)
+            if ((*subDerivs)[i].arg.size() != 2)
                 throw syntax_error("cgi_params");
         }
     }
@@ -366,6 +370,7 @@ private:
 public:
     AcceptMethodModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
     {
+        // accept_method 지시어 arg가 비었다면 methods벡터는 빈 벡터.
         for (int i = 1; i < deriv.arg.size(); i++)
         {
             methods.push_back(deriv.arg[i]);
