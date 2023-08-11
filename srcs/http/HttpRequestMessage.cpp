@@ -7,37 +7,6 @@ HttpRequestMessage::HttpRequestMessage(const string &requestMessage)
 
 }
 
-// <경로>;<파라미터>?<질의>#<프래그먼트> 경로조각은 없다고 가정
-void HttpRequestMessage::parseUri()
-{
-    // requestUri 초기화
-    requestUri = requestTarget;
-
-    // uri 초기화
-    size_t pos = requestUri.find_first_of(";?#");
-    if (pos == string::npos) {
-        uri = requestUri;
-    }
-    else {
-        uri = requestUri.substr(0, pos);
-    }
-
-    // filename 초기화
-    filename = requestUri.substr(requestUri.find_last_of("/")+1, pos-requestUri.find_last_of("/")-1);
-
-    // args 초기화
-    pos = requestUri.find(";");
-    if (pos != string::npos) {
-        args = requestUri.substr(pos+1, min(requestUri.find("?"), requestUri.length()));
-    }
-
-    // queryString 초기화
-    pos = requestUri.find("?");
-    if (pos != string::npos) {
-        queryString = requestUri.substr(pos+1, min(requestUri.find("#"), requestUri.length())-pos-1);
-    }
-}
-
 void HttpRequestMessage::parseRequestMessage(const string &request)
 {
     vector<string> lst = Utils::split(request, "\r\n");
@@ -45,7 +14,7 @@ void HttpRequestMessage::parseRequestMessage(const string &request)
     //start line parsing
     vector<string> tmp = Utils::split(lst.at(0), " ");
     httpMethod = tmp.at(0);
-    uri = tmp.at(1);
+    requestTarget = tmp.at(1);
     serverProtocol = tmp.at(2);
     
     int byte = lst.at(0).length()+2; // 나중에 바디 시작 인덱스 알려면 필요
@@ -92,29 +61,4 @@ string HttpRequestMessage::getRequestTarget() const
 int HttpRequestMessage::getChunkedFlag() const
 {
     return chunkedFlag;
-}
-
-string HttpRequestMessage::getRequestUri() const
-{
-    return requestUri;
-}
-
-string HttpRequestMessage::getUri() const
-{
-    return uri;
-}
-
-string HttpRequestMessage::getFilename() const
-{
-    return filename;
-}
-
-string HttpRequestMessage::getArgs() const
-{
-    return args;
-}
-
-string HttpRequestMessage::getQueryString() const
-{
-    return queryString;
 }

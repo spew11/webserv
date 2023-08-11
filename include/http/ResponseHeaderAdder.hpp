@@ -7,6 +7,7 @@
 # include "ResponseHeaderAdder.hpp"
 # include "ServerConfig.hpp"
 # include "Utils.hpp"
+
 using namespace std;
 
 class ResponseHeaderAdder
@@ -15,11 +16,12 @@ class ResponseHeaderAdder
         const HttpRequestMessage & requestMessage;
         HttpResponseMessage & responseMessage;
         const LocationConfig & locationConfig;
-        string & response;
+        const string & responseBody;
         const string & resourcePath;
+        const string & contentType;
     public:
-        ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage,\
-            const LocationConfig & locationConfig, string & response, const string & resourcePath);
+        ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, \
+            const LocationConfig & locationConfig, const string & responseBody, const string & resourcePath, const string & contentType);
         void executeAll();
         void addContentTypeHeader(const string & contentType);
         void addContentLengthHeader(const string & responseBody);
@@ -27,7 +29,9 @@ class ResponseHeaderAdder
         void addAllowHeader(const vector<string> & acceptMethods);
         void addDateHeader();
         void parseCgiProduct(string & response, string & contentType);
-//        void addCacheControlHeader(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage);
+        void setResponseBody(string responseBody);
+        void setResourcePath(string resourcePath);
+        void setContentType(string contentType);
 };
 
 #endif

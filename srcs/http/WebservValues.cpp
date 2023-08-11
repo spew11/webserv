@@ -46,4 +46,10 @@ string WebservValues::convert(const string &input) const
 void WebservValues::clear()
 {
     envList.clear();
+    envList = addressValues;
+}
+
+void WebservValues::initEnvList()
+{
+    addressValues = envList;
 }

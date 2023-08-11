@@ -1,9 +1,8 @@
 #include "ResponseHeaderAdder.hpp"
-
 ResponseHeaderAdder::ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, \
-    const LocationConfig & locationConfig, string & response, const string & resourcePath)
+    const LocationConfig & locationConfig, const string & responseBody, const string & resourcePath, const string & contentType)
     : requestMessage(requestMessage), responseMessage(responseMessage), locationConfig(locationConfig), \
-        response(response), resourcePath(resourcePath) {}
+        responseBody(responseBody), resourcePath(resourcePath), contentType(contentType) {}
 
 
 void ResponseHeaderAdder::executeAll()
@@ -11,69 +10,18 @@ void ResponseHeaderAdder::executeAll()
     string contentType;
     const int statusCode = responseMessage.getStatusCode();
     
-    addDateHeader();
-    
-    if (statusCode == 200) { // 요청한 리소스 반환 성공
-        if (locationConfig.isCgi()) {
-            parseCgiProduct(response, contentType);
-            if (contentType != "") {
-                addContentTypeHeader(contentType);
-            }
-            else {
-                addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-            }
-            addContentLengthHeader(response);
-        }
-        else {
-            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-            addContentLengthHeader(response);
-        }
-    }
-    else if (statusCode == 201) { // 리소스 생성 성공
-        addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-        addContentLengthHeader(response);
+    if (statusCode == 201) { // 리소스 생성 성공
         addLocationHeader(resourcePath); 
-
-    }
-    else if (statusCode == 204) { // 리소스 삭제 성공
-        //본문 없으면 Content-Type, Content-Length 생략해도됌
-        if (response != "") {
-            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-            addContentLengthHeader(response);
-        }
-    }
-    else if (statusCode == 404) { // 리소스 찾을 수 없음
-        //본문 없으면 Content-Type, Content-Length 생략해도됌
-        if (response != "") {
-            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-            addContentLengthHeader(response);
-        }
     }
     else if (statusCode == 405) { // 허락하지 않은 메소드를 받음
-        //본문 없으면 Content-Type, Content-Length 생략해도됌
-        if (response != "") {
-            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-            addContentLengthHeader(response);
-            addAllowHeader(locationConfig.getAcceptMethods());
-        }
+        addAllowHeader(locationConfig.getAcceptMethods());
     }
-    else if (statusCode == 500) { // 서버 에러
-        //왠만하면 본문을 만들어서 주는게 좋음
-        if (response != "") {
-            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-            addContentLengthHeader(response);
-        }
+    if (responseBody != "") {
+        addContentTypeHeader(contentType);
+        addContentLengthHeader(Utils::itoa(responseBody.length()));
     }
-    else{
-        //본문 없으면 Content-Type, Content-Length 생략해도됌
-        if (response != "") {
-            addContentTypeHeader(locationConfig.getType(requestMessage.getUri()));
-            addContentLengthHeader(response);
-        }
-    }
+    addDateHeader();
 }
-
-//void ResponseHeaderAdder::addCacheControlHeader(){}
 
 void ResponseHeaderAdder::addContentTypeHeader(const string & contentType)
 {

@@ -22,17 +22,18 @@ HTTP		:=	\
 				HttpResponseBuilder \
 				HttpResponseMessage \
 				ResponseHeaderAdder \
+        ServerErrors \
 				Utils \
 				WebservValues
-
+        
 SERVER		:=	\
  				Client \
  				Server \
 				ServerHandler
 
-# CONFIG		:=	$(addprefix config/, $(CONFIG))
-# HTTP		:=	$(addprefix http/, $(HTTP))
-# SERVER		:=	$(addprefix server/, $(SERVER))
+CONFIG		:=	$(addprefix config/, $(CONFIG))
+HTTP		:=	$(addprefix http/, $(HTTP))
+SERVER		:=	$(addprefix server/, $(SERVER))
 
 FILENAME	=	\
  				main \
