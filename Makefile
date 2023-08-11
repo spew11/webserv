@@ -23,18 +23,18 @@ HTTP		:=	\
 				HttpResponseBuilder \
 				Utils \
 				DefaultMethodExecutor \
-				ExtendedResponseHeaderAdder \
 				ResponseHeaderAdder \
-				CgiMethodExecutor 
-
+				CgiMethodExecutor \
+				ServerErrors \
+				
 SERVER		:=	\
 				ServerHandler \
  				Server \
  				Client
 
-# CONFIG		:=	$(addprefix config/, $(CONFIG))
-# HTTP		:=	$(addprefix http/, $(HTTP))
-# SERVER		:=	$(addprefix server/, $(SERVER))
+CONFIG		:=	$(addprefix config/, $(CONFIG))
+HTTP		:=	$(addprefix http/, $(HTTP))
+SERVER		:=	$(addprefix server/, $(SERVER))
 
 FILENAME	=	\
  				main \
