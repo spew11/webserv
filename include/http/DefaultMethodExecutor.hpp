@@ -15,7 +15,7 @@ class DefaultMethodExecutor : public IMethodExecutor
 {
     private:
     public:
-		~DefaultMethodExecutor();
+        ~DefaultMethodExecutor();
         int getMethod(const string &resourcePath, string &response);
         int postMethod(const string &resourcePath, const string &request, string &response);
         int deleteMethod(const string & resourcePath) const;

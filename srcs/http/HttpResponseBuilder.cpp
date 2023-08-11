@@ -15,7 +15,7 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & w
 
 void HttpResponseBuilder::initiate(const string & request)
 {
-    clear();
+    //clear();
     requestMessage = new HttpRequestMessage(request);
     responseMessage = new HttpResponseMessage();
     if (this->requestMessage->getChunkedFlag()) {
@@ -97,6 +97,7 @@ void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
     string httpMethod = requestMessage->getHttpMethod();
     string response;
     int statusCode;
+    		std::cout << "test" << std::endl;
     const vector<string> acceptMethods = locationConfig.getAcceptMethods();
     
     // accept method check

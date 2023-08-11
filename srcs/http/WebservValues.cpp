@@ -15,7 +15,9 @@ void WebservValues::insert(const string &key, const string &value)
 
 void WebservValues::insert(const string &key, const uint16_t &value)
 {
-	stringstream ss(value);
+    int tmp = static_cast<int>(value);
+	stringstream ss;
+    ss << tmp;
 	envList.insert(pair<string, string>(key, ss.str()));
 }
 

@@ -5,7 +5,11 @@
 # include <fstream>
 # include "IMethodExecutor.hpp"
 # include <unistd.h>
-
+# ifdef __linux__
+# include <signal.h>
+# include <sys/wait.h>
+# include <cstring>
+# endif
 using namespace std;
 
 class CgiMethodExecutor : public IMethodExecutor
