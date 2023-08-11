@@ -12,6 +12,7 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
     return 200;
 }
 
+DefaultMethodExecutor::~DefaultMethodExecutor(){}
 int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response)
 {
     ofstream file(resourcePath);

@@ -1,5 +1,6 @@
 #include "ServerHandler.hpp"
 
+#ifdef __APPLE__
 ServerHandler::ServerHandler(Config* config): config(config)
 {
 	//kqueue() 생성
@@ -27,6 +28,30 @@ ServerHandler::ServerHandler(Config* config): config(config)
 	}
 }
 
+#elif __linux__
+ServerHandler::ServerHandler(Config* config): config(config)
+{
+	const std::vector<ServerConfig> &servConf = config->getSrvConf();
+	for (std::vector<ServerConfig>::const_iterator it = servConf.begin(); it != servConf.end(); it++)
+	{
+		std::map<int, Server*>::iterator it2 = servers.begin();
+		for (; it2 != servers.end(); it2++)
+			if (it2->second->isSame(it->getIp(), it->getPort()))
+				break;
+		if (it2 == servers.end()) // 중복 ip,port 존재 x
+		{
+			Server *tmp = new Server(*it);
+			servers.insert(std::pair<int, Server*>(tmp->getSock(), tmp));
+			struct pollfd pfd = {tmp->getSock(), POLLIN, 0};
+			fds.push_back(pfd);
+		}
+		else //중복 ip,port 존재
+			servers[it2->first]->addConfig(*it);
+	}
+}
+
+#endif
+
 ServerHandler::~ServerHandler()
 {
 	std::multimap<int, Server*>::iterator it = servers.begin();
@@ -36,6 +61,7 @@ ServerHandler::~ServerHandler()
 	clients.clear();	
 }
 
+#ifdef __APPLE__
 void	ServerHandler::loop()
 {
 	while (true)
@@ -91,3 +117,35 @@ void ServerHandler::change_events(uintptr_t ident, int16_t filter, uint16_t flag
 	EV_SET(&tmp_event, ident, filter, flags, fflags, data, udata);
 	changeList.push_back(tmp_event);
 }
+
+#elif __linux__
+void	ServerHandler::loop()
+{
+	while (true)
+	{
+		int activity = poll(fds.data(), fds.size(), -1);
+		if (activity < 0)
+			throw std::exception();
+		
+		for (int i = 0; i < fds.size(); i++)
+		{
+			if (fds[i].revents & POLLIN)
+			{
+				if (i < servers.size())
+				{
+					Client *cli = new Client(servers[fds[i].fd]);
+					clients[cli->getSock()] = cli;
+					struct pollfd pfd = {cli->getSock(), POLLIN, 0};
+					fds.push_back(pfd);
+				}
+				else
+				{
+					Client *cli = clients[fds[i].fd];
+					cli->communicate();
+					cli->send_msg();
+				}
+			}
+		}
+	}
+}
+#endif
