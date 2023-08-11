@@ -9,7 +9,6 @@ class HttpRequestMessage : public HttpMessage
         string httpMethod;
         string requestTarget;
         bool chunkedFlag;
-        bool last;
         void parseRequestMessage(const string &requestMessage);
     public:
         HttpRequestMessage(const string &requestMessage);
