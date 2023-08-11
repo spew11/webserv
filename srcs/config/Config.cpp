@@ -1,4 +1,4 @@
-#include <Config.hpp>
+#include "Config.hpp"
 
 Config::Config( Module *_mainMod ) : mainMod(_mainMod)
 {

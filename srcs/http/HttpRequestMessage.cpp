@@ -40,7 +40,14 @@ void HttpRequestMessage::parseRequestMessage(const string &request)
         body = "";
     }
     else if (this->getHeader("Transfer-Encoding") == "chunked") {
-        chunkedFlag = static_cast<bool>(stoi(lst.at(i), 0, 16));
+        ++i;
+        chunkedFlag = true;
+        if (lst.at(i) == "0") {
+            last = true;
+        }
+        else {
+            last = false;
+        }
         byte += lst.at(i).length();
     }
     else {
@@ -58,7 +65,12 @@ string HttpRequestMessage::getRequestTarget() const
     return requestTarget;
 }
 
-int HttpRequestMessage::getChunkedFlag() const
+bool HttpRequestMessage::getChunkedFlag() const
 {
     return chunkedFlag;
+}
+
+bool HttpRequestMessage::isLast() const
+{
+    return last;
 }

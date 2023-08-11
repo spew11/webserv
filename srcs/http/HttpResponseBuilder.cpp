@@ -5,6 +5,8 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & w
 {
     this->webservValues = &webservValues;
     this->webservValues->initEnvList();
+    errorCode = 500;
+    last = true;
 }
 
 void HttpResponseBuilder::clear()
@@ -28,7 +30,8 @@ void HttpResponseBuilder::clear()
     contentType = "";
     responseBody = "";
     errorCode = 500;
-    needMoreMessageFlag = false;
+    last = true; // chunked가 아닌 메시지라면 언제나 마지막 메시지이기 때문에 true로 초기화됨
+    chunked = false;
     needCgiFlag = false;
     end = false;
 }
@@ -72,8 +75,9 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
     struct stat statbuf;
     string tmpPath;
     
+    tmpPath = locationConfig.getRoot() + uri;
+
     if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi())) { 
-        tmpPath = locationConfig.getRoot() + uri;
         
         if (access(tmpPath.c_str(), F_OK) != 0) {
             errorCode = 404;
@@ -108,8 +112,12 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
             resourcePath = tmpPath;
         }
     }
-    else if (httpMethod == "POST") { 
+    else if (httpMethod == "POST") {
         if (access(tmpPath.c_str(), F_OK) == 0) {
+            if (stat(tmpPath.c_str(), &statbuf) < 0) {
+                errorCode = 500;
+                return 1;
+            }
             if (S_ISDIR(statbuf.st_mode)) { 
                 // bad request 응답하거나 인덱스 페이지를 보여주거나 선택사항임, 지금은 전자.
                 errorCode = 400;
@@ -210,17 +218,23 @@ void HttpResponseBuilder::initiate(const string & request)
         return;
     }
     initWebservValues();
-    needMoreMessageFlag = requestMessage->getChunkedFlag();
+    chunked = requestMessage->getChunkedFlag();
+    last = requestMessage->isLast();
     needCgiFlag = locationConfig.isCgi();
     requestBody = requestMessage->getBody();
+
+    // cout << "chunked: " << chunked << endl;
+    // cout << "last: " << last << endl;
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)
 {
+    // cout << "ADD!!!" << endl;
     HttpRequestMessage newRequestMessage(request);
-    needMoreMessageFlag = newRequestMessage.getChunkedFlag();
+    chunked = newRequestMessage.getChunkedFlag();
+    last = newRequestMessage.isLast();
     requestBody.append(newRequestMessage.getBody());
-    
+
     /* 이전과 같은 chunk 요청인지 구별하는 방법은 HTTP 메서드와 requestTarget이 동일함을 확인, Contetn-Length 헤더가 없는것을 확인
     Transfer-Encoding: chunked 헤더가 지정되어 있는지를 확인하면 됌 */
 }
@@ -247,9 +261,9 @@ LocationConfig HttpResponseBuilder::getLocationConfig() const
     return locationConfig;
 }
 
-bool HttpResponseBuilder::getNeedMoreMessageFlag() const
+bool HttpResponseBuilder::isLast() const
 {
-    return needMoreMessageFlag;
+    return last;
 }
 
 bool HttpResponseBuilder::getNeedCgiFlag() const
@@ -260,4 +274,9 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
 bool HttpResponseBuilder::getEnd() const
 {
     return end;
+}
+
+bool HttpResponseBuilder::isChunked() const
+{
+    return chunked;
 }

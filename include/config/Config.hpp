@@ -4,8 +4,8 @@
 #include <vector>
 #include <map>
 
-#include <Modules.hpp>
-#include <ServerConfig.hpp>
+#include "Modules.hpp"
+#include "ServerConfig.hpp"
 
 class ConfigParser;
 

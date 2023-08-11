@@ -76,11 +76,12 @@ string ServerErrors::generateErrorHtml(const int & statusCode) const
     string statusCodeStr = Utils::itoa(statusCode);
     string message = findErrorMessage(statusCode);
 
-    string errorHtml = "<!DOCTYPE html>\
+    string errorHtml = \
+    "<!DOCTYPE html>\
     <html>\
     <head>\
         <meta charset=\"UTF-8\">\
-        <title> " + statusCodeStr + " " + statusCodeStr + " Not Found</title>\
+        <title> " + statusCodeStr + " " + reasonPhrase + "</title>\
         <style>\
             body {\
                 font-family: Arial, sans-serif;\
@@ -98,7 +99,7 @@ string ServerErrors::generateErrorHtml(const int & statusCode) const
         </style>\
     </head>\
     <body>\
-        <h1>" + statusCodeStr + " " + reasonPhrase + " Not Found</h1>\
+        <h1>" + statusCodeStr + " " + reasonPhrase + "</h1>\
         <p>" + message + "</p>\
     </body>\
     </html>";

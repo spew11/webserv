@@ -11,6 +11,7 @@
 # include "CgiMethodExecutor.hpp"
 # include "WebservValues.hpp"
 
+class HttpResponseBuilder;
 class Server;
 
 class Client

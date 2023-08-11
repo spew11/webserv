@@ -41,7 +41,8 @@ class HttpResponseBuilder {
         int errorCode; // statudCode
 
         // flag
-        bool needMoreMessageFlag; 
+        bool chunked;
+        bool last; 
         bool needCgiFlag;
         bool end;
 
@@ -63,7 +64,8 @@ class HttpResponseBuilder {
         HttpResponseMessage getResponseMessage() const;
         HttpRequestMessage getRequestMessage() const;
         LocationConfig getLocationConfig() const;
-        bool getNeedMoreMessageFlag() const;
+        bool isChunked() const;
+        bool isLast() const;
         bool getNeedCgiFlag() const;
         bool getEnd() const;
 };

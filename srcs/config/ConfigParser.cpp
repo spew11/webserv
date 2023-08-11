@@ -1,5 +1,5 @@
-#include <ConfigParser.hpp>
-#include <Config.hpp>
+#include "ConfigParser.hpp"
+#include "Config.hpp"
 
 ConfigParser::ConfigParser( const string & configFile ) : mainTree(DerivTree(Derivative("main")))
 {

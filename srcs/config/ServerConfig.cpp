@@ -1,4 +1,4 @@
-#include <ServerConfig.hpp>
+#include "ServerConfig.hpp"
 
 ServerConfig::ServerConfig( const ServerModule & _srvMod )
  : srvMod(&_srvMod),

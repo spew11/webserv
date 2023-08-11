@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <arpa/inet.h>
 
-#include <ConfigUtils.hpp>
+#include "ConfigUtils.hpp"
 
 using namespace std;
 

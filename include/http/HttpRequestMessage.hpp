@@ -9,12 +9,15 @@ class HttpRequestMessage : public HttpMessage
         string httpMethod;
         string requestTarget;
         bool chunkedFlag;
+        bool last;
         void parseRequestMessage(const string &requestMessage);
     public:
         HttpRequestMessage(const string &requestMessage);
         string getHttpMethod() const;
         string getRequestTarget() const;
-        int getChunkedFlag() const;
+        bool getChunkedFlag() const;
+        bool isLast() const;
+
 };
 
 #endif
