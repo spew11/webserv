@@ -86,6 +86,12 @@ void Client::communicate()
 	if (hrb->getNeedMoreMessageFlag() == false)
 	{
 		hrb->initiate(recv_buf);
+		// 아래 if문 하나 추가 (은지가)
+		if (hrb->getEnd())
+		{
+			send_buf = hrb->getResponseMessage().toString();
+			return;
+		}
 	}
 	else
 	{
@@ -95,7 +101,6 @@ void Client::communicate()
 	{
 		makeResponse();
 		send_buf = hrb->getResponseMessage().toString();
-		hrb->clear();
 	}
 }
 
@@ -104,7 +109,7 @@ void Client::makeResponse()
 	IMethodExecutor *executor;
 	if (hrb->getNeedCgiFlag() == true)
 	{
-		LocationConfig lc = lm.getLocConf("cgi-bin/test.py"); //수정 필요!!!!!!
+		LocationConfig lc = hrb->getLocationConfig();
 		char **tmp = lc.getCgiParams(webVal);
 		executor = new CgiMethodExecutor(tmp);
 		// excutor = lm.getLocConf("")

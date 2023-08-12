@@ -14,7 +14,7 @@ class HttpRequestMessage : public HttpMessage
         HttpRequestMessage(const string &requestMessage);
         string getHttpMethod() const;
         string getRequestTarget() const;
-        int getChunkedFlag() const;
+        bool getChunkedFlag() const;
 };
 
 #endif

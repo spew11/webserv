@@ -7,7 +7,6 @@ ResponseHeaderAdder::ResponseHeaderAdder(const HttpRequestMessage & requestMessa
 
 void ResponseHeaderAdder::executeAll()
 {
-    string contentType;
     const int statusCode = responseMessage.getStatusCode();
     
     if (statusCode == 201) { // 리소스 생성 성공
@@ -18,7 +17,7 @@ void ResponseHeaderAdder::executeAll()
     }
     if (responseBody != "") {
         addContentTypeHeader(contentType);
-        addContentLengthHeader(Utils::itoa(responseBody.length()));
+        addContentLengthHeader(responseBody);
     }
     addDateHeader();
 }

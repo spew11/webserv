@@ -34,14 +34,22 @@ void HttpRequestMessage::parseRequestMessage(const string &request)
             byte += lst.at(i).length() + 2;
         }
     }
-    
-    //body parsing
+    ++i;
     if (byte == request.length()) {
         body = "";
     }
     else if (this->getHeader("Transfer-Encoding") == "chunked") {
-        chunkedFlag = static_cast<bool>(stoi(lst.at(i), 0, 16));
-        byte += lst.at(i).length();
+        int bodySize = stoi(lst.at(i), 0, 16);
+        byte += lst.at(i).length() + 2;
+        body = request.substr(byte, bodySize);
+        byte += bodySize;
+        string eof = Utils::trim(request.substr(byte, request.length()-byte));
+        if (eof == "0") {
+            chunkedFlag = false;
+        }
+        else {
+            chunkedFlag = true;
+        }
     }
     else {
         body = request.substr(byte, request.length()-byte);
@@ -58,7 +66,7 @@ string HttpRequestMessage::getRequestTarget() const
     return requestTarget;
 }
 
-int HttpRequestMessage::getChunkedFlag() const
+bool HttpRequestMessage::getChunkedFlag() const
 {
     return chunkedFlag;
 }

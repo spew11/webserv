@@ -1,8 +1,8 @@
 #pragma once
 
 #include <algorithm>
-#include <Modules.hpp>
-#include <LocationConfig.hpp>
+#include "Modules.hpp"
+#include "LocationConfig.hpp"
 
 class ServerConfig
 {
@@ -13,7 +13,7 @@ public:
     class LocationMap
     {
     private:
-        friend ServerConfig;
+        friend class ServerConfig;
         map<string, LocationConfig> uriMap;
         LocationConfig defaultLocConf;
     public:

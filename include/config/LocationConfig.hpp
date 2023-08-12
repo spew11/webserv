@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Modules.hpp>
-#include <WebservValues.hpp>
+#include "Modules.hpp"
+#include "WebservValues.hpp"
 
 class LocationConfig
 {

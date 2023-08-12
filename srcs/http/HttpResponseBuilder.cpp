@@ -5,6 +5,7 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & w
 {
     this->webservValues = &webservValues;
     this->webservValues->initEnvList();
+    errorCode = 500;
 }
 
 void HttpResponseBuilder::clear()
@@ -72,8 +73,9 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
     struct stat statbuf;
     string tmpPath;
     
+    tmpPath = locationConfig.getRoot() + uri;
+
     if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi())) { 
-        tmpPath = locationConfig.getRoot() + uri;
         
         if (access(tmpPath.c_str(), F_OK) != 0) {
             errorCode = 404;
@@ -108,8 +110,12 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
             resourcePath = tmpPath;
         }
     }
-    else if (httpMethod == "POST") { 
+    else if (httpMethod == "POST") {
         if (access(tmpPath.c_str(), F_OK) == 0) {
+            if (stat(tmpPath.c_str(), &statbuf) < 0) {
+                errorCode = 500;
+                return 1;
+            }
             if (S_ISDIR(statbuf.st_mode)) { 
                 // bad request 응답하거나 인덱스 페이지를 보여주거나 선택사항임, 지금은 전자.
                 errorCode = 400;
@@ -220,7 +226,7 @@ void HttpResponseBuilder::addRequestMessage(const string &request)
     HttpRequestMessage newRequestMessage(request);
     needMoreMessageFlag = newRequestMessage.getChunkedFlag();
     requestBody.append(newRequestMessage.getBody());
-    
+
     /* 이전과 같은 chunk 요청인지 구별하는 방법은 HTTP 메서드와 requestTarget이 동일함을 확인, Contetn-Length 헤더가 없는것을 확인
     Transfer-Encoding: chunked 헤더가 지정되어 있는지를 확인하면 됌 */
 }
@@ -247,11 +253,6 @@ LocationConfig HttpResponseBuilder::getLocationConfig() const
     return locationConfig;
 }
 
-bool HttpResponseBuilder::getNeedMoreMessageFlag() const
-{
-    return needMoreMessageFlag;
-}
-
 bool HttpResponseBuilder::getNeedCgiFlag() const
 {
     return needCgiFlag;
@@ -259,5 +260,10 @@ bool HttpResponseBuilder::getNeedCgiFlag() const
 
 bool HttpResponseBuilder::getEnd() const
 {
-    return end;
+    return end;   
+}
+
+bool HttpResponseBuilder::getNeedMoreMessageFlag() const
+{
+    return needMoreMessageFlag;
 }

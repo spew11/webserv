@@ -7,6 +7,8 @@
 #include "CgiMethodExecutor.hpp"
 #include "WebservValues.hpp"
 #include "ServerConfig.hpp"
+#include "Config.hpp"
+
 int main(void)
 {
 	try

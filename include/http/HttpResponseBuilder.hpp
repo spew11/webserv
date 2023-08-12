@@ -41,7 +41,7 @@ class HttpResponseBuilder {
         int errorCode; // statudCode
 
         // flag
-        bool needMoreMessageFlag; 
+        bool needMoreMessageFlag;
         bool needCgiFlag;
         bool end;
 

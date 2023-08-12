@@ -8,9 +8,9 @@
 #include <stdexcept>
 #include <algorithm>
 
-#include <DerivTree.hpp>
-#include <Modules.hpp>
-#include <ConfigUtils.hpp>
+#include "DerivTree.hpp"
+#include "Modules.hpp"
+#include "ConfigUtils.hpp"
 
 class Config;
 

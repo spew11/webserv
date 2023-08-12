@@ -1,4 +1,4 @@
-#include <LocationConfig.hpp>
+#include "LocationConfig.hpp"
 
 LocationConfig::LocationConfig( void )
 {
