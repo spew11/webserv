@@ -15,11 +15,12 @@ void ResponseHeaderAdder::executeAll()
     else if (statusCode == 405) { // 허락하지 않은 메소드를 받음
         addAllowHeader(locationConfig.getAcceptMethods());
     }
-    if (responseBody != "") {
-        addContentTypeHeader(contentType);
-        addContentLengthHeader(responseBody);
-    }
+    addContentTypeHeader(contentType);
+    addContentLengthHeader(responseBody);
     addDateHeader();
+    if (requestMessage.getHeader("Connection") == "close") {
+        addConnectionHeader(false);
+    }
 }
 
 void ResponseHeaderAdder::addContentTypeHeader(const string & contentType)
@@ -55,6 +56,16 @@ void ResponseHeaderAdder::addDateHeader()
     char buffer[100];
     strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S %Z", gmt);
     responseMessage.addHeader("Date", string(buffer));
+}
+
+void ResponseHeaderAdder::addConnectionHeader(const bool & connect)
+{
+    if (connect == false) {
+        responseMessage.addHeader("Connection", "close");
+    }
+    else {
+        responseMessage.addHeader("Connection", "keep-alive");
+    }
 }
 
 void ResponseHeaderAdder::parseCgiProduct(string & response, string & contentType)

@@ -21,8 +21,9 @@ HTTP		:=	\
 				HttpRequestMessage \
 				HttpResponseBuilder \
 				HttpResponseMessage \
+				ServerAutoIndexSimulator \
 				ResponseHeaderAdder \
-        ServerErrors \
+        		ResponseStatusManager \
 				Utils \
 				WebservValues
         
@@ -31,9 +32,9 @@ SERVER		:=	\
  				Server \
 				ServerHandler
 
-CONFIG		:=	$(addprefix config/, $(CONFIG))
-HTTP		:=	$(addprefix http/, $(HTTP))
-SERVER		:=	$(addprefix server/, $(SERVER))
+# CONFIG		:=	$(addprefix config/, $(CONFIG))
+# HTTP		:=	$(addprefix http/, $(HTTP))
+# SERVER		:=	$(addprefix server/, $(SERVER))
 
 FILENAME	=	\
  				main \

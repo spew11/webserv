@@ -27,6 +27,7 @@ class ResponseHeaderAdder
         void addContentLengthHeader(const string & responseBody);
         void addLocationHeader(const string & location);
         void addAllowHeader(const vector<string> & acceptMethods);
+        void addConnectionHeader(const bool & connect);
         void addDateHeader();
         void parseCgiProduct(string & response, string & contentType);
         void setResponseBody(string responseBody);

@@ -1,6 +1,6 @@
-#include "ServerErrors.hpp"
+#include "ResponseStatusManager.hpp"
 
-string ServerErrors::findErrorMessage(const int & statusCode) const
+string ResponseStatusManager::findStatusMessage(const int & statusCode) const
 {
     switch(statusCode) {
         case 100:
@@ -35,7 +35,7 @@ string ServerErrors::findErrorMessage(const int & statusCode) const
     return "An internal server error occurred. We apologize for the inconvenience. Please try again later.";
 }
 
-string ServerErrors::findReasonPhrase(const int & statusCode) const
+string ResponseStatusManager::findReasonPhrase(const int & statusCode) const
 {
     switch(statusCode) {
         case 100:
@@ -70,11 +70,11 @@ string ServerErrors::findReasonPhrase(const int & statusCode) const
     return "Internal Server Error";
 }
 
-string ServerErrors::generateErrorHtml(const int & statusCode) const
+string ResponseStatusManager::generateResponseHtml(const int & statusCode) const
 {
     string reasonPhrase = findReasonPhrase(statusCode);
     string statusCodeStr = Utils::itoa(statusCode);
-    string message = findErrorMessage(statusCode);
+    string message = findStatusMessage(statusCode);
 
     string errorHtml = \
     "<!DOCTYPE html>\

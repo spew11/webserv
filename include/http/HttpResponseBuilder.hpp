@@ -9,7 +9,7 @@
 # include "Server.hpp"
 # include "LocationConfig.hpp"
 # include "ResponseHeaderAdder.hpp"
-# include "ServerErrors.hpp"
+# include "ResponseStatusManager.hpp"
 # include <vector>
 # include <sys/stat.h>
 # include <unistd.h>
@@ -32,18 +32,19 @@ class HttpResponseBuilder {
         string queryString;
         
         // request info
-        string resourcePath; // locations를 거쳐 찾은 진짜 경로
+        string resourcePath;
         string requestBody;
         
         // reponse information 
         string contentType;
         string responseBody;
-        int errorCode; // statudCode
+        int statusCode;
 
         // flag
-        bool needMoreMessageFlag;
-        bool needCgiFlag;
+        bool needMoreMessage;
+        bool needCgi;
         bool end;
+        bool connection;
 
         void clear();
         void parseRequestUri(const string & requestTarget);
@@ -63,9 +64,10 @@ class HttpResponseBuilder {
         HttpResponseMessage getResponseMessage() const;
         HttpRequestMessage getRequestMessage() const;
         LocationConfig getLocationConfig() const;
-        bool getNeedMoreMessageFlag() const;
-        bool getNeedCgiFlag() const;
+        bool getNeedMoreMessage() const;
+        bool getNeedCgi() const;
         bool getEnd() const;
+        bool getConnection() const;
 };
 
 #endif

@@ -8,13 +8,15 @@ class HttpRequestMessage : public HttpMessage
     private:
         string httpMethod;
         string requestTarget;
-        bool chunkedFlag;
+        bool chunked;
+        bool connection;
         void parseRequestMessage(const string &requestMessage);
     public:
         HttpRequestMessage(const string &requestMessage);
         string getHttpMethod() const;
         string getRequestTarget() const;
-        bool getChunkedFlag() const;
+        bool getChunked() const;
+        bool getConnection() const;
 };
 
 #endif

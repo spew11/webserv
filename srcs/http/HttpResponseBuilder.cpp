@@ -5,7 +5,22 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & w
 {
     this->webservValues = &webservValues;
     this->webservValues->initEnvList();
-    errorCode = 500;
+    requestMessage = NULL;
+    responseMessage = NULL;
+    requestUri = "";
+    uri = "";
+    filename = "";
+    args = "";
+    queryString = "";
+    resourcePath = "";
+    requestBody = "";
+    contentType = "";
+    responseBody = "";
+    statusCode = 500;
+    needMoreMessage = false;
+    needCgi = false;
+    end = false;
+    connection = true;
 }
 
 void HttpResponseBuilder::clear()
@@ -28,10 +43,11 @@ void HttpResponseBuilder::clear()
     requestBody = "";
     contentType = "";
     responseBody = "";
-    errorCode = 500;
-    needMoreMessageFlag = false;
-    needCgiFlag = false;
+    statusCode = 500;
+    needMoreMessage = false;
+    needCgi = false;
     end = false;
+    connection = true;
 }
 
 void HttpResponseBuilder::parseRequestUri(const string & requestTarget)
@@ -62,7 +78,7 @@ void HttpResponseBuilder::parseRequestUri(const string & requestTarget)
 int HttpResponseBuilder::checkAcceptMethod(const vector<string> & acceptMethods, const string & httpMethod)
 {
     if (find(acceptMethods.begin(), acceptMethods.end(), httpMethod) == acceptMethods.end()) {
-        errorCode = 405;
+        statusCode = 405;
         return 1;
     }
     return 0;
@@ -75,26 +91,30 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
     
     tmpPath = locationConfig.getRoot() + uri;
 
-    if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi())) { 
+    if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi()) \
+        or (httpMethod == "PUT" and locationConfig.isCgi()) or httpMethod == "HEAD") { 
         
         if (access(tmpPath.c_str(), F_OK) != 0) {
-            errorCode = 404;
+            statusCode = 404;
             return 1;
         }
         else if (access(tmpPath.c_str(), R_OK) != 0) {
-            errorCode = 403;
+            statusCode = 403;
             return 1;
         }
 
         if (stat(tmpPath.c_str(), &statbuf) < 0) {
-            errorCode = 500;
+            statusCode = 500;
             return 1;
         }
 
-        if(S_ISDIR(statbuf.st_mode)) { // 디렉터리 일때
+        if(S_ISDIR(statbuf.st_mode)) {
             bool exist = false;
+            if (tmpPath[tmpPath.length()-1] != '/') {
+                tmpPath += "/";
+            }
             for (int i = 0; i < indexes.size(); i++) {
-                string resourcePathTmp = tmpPath+indexes.at(i);
+                string resourcePathTmp = tmpPath + indexes.at(i);
                 if (access(resourcePathTmp.c_str(), R_OK) == 0) {
                     resourcePath = resourcePathTmp;
                     exist = true;
@@ -102,7 +122,13 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
                 }
             }
             if (exist == false) {
-                errorCode = 400;
+                if (locationConfig.isAutoIndex()) {
+                    //오토인덱스
+                    statusCode = 200;
+                }
+                else {
+                    statusCode = 404;
+                }
                 return 1;
             }
         }
@@ -110,15 +136,14 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
             resourcePath = tmpPath;
         }
     }
-    else if (httpMethod == "POST") {
+    else if (httpMethod == "POST" or httpMethod == "PUT") {
         if (access(tmpPath.c_str(), F_OK) == 0) {
             if (stat(tmpPath.c_str(), &statbuf) < 0) {
-                errorCode = 500;
+                statusCode = 500;
                 return 1;
             }
             if (S_ISDIR(statbuf.st_mode)) { 
-                // bad request 응답하거나 인덱스 페이지를 보여주거나 선택사항임, 지금은 전자.
-                errorCode = 400;
+                statusCode = 400;
                 return 1;
             }
         }
@@ -126,11 +151,11 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
     }
     else if (httpMethod == "DELETE") {
         if (access(tmpPath.c_str(), F_OK) != 0) {
-            errorCode = 404;
+            statusCode = 404;
             return 1;
         }
         else if (access(tmpPath.c_str(), W_OK) != 0) {
-            errorCode = 403;
+            statusCode = 403;
             return 1;
         }
         resourcePath = tmpPath;
@@ -157,13 +182,16 @@ void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)
     
     // 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
     if (httpMethod == "GET") {
-        errorCode = methodExecutor.getMethod(resourcePath, responseBody);
+        statusCode = methodExecutor.getMethod(resourcePath, responseBody);
     }
     else if(httpMethod == "POST") {
-        errorCode = methodExecutor.postMethod(resourcePath, requestBody, responseBody);
+        statusCode = methodExecutor.postMethod(resourcePath, requestBody, responseBody);
     }
     else if(httpMethod == "DELETE") {
-        errorCode = methodExecutor.deleteMethod(resourcePath);
+        statusCode = methodExecutor.deleteMethod(resourcePath);
+    }
+    else if(httpMethod == "PUT") {
+        statusCode = methodExecutor.putMethod(resourcePath, requestBody, responseBody);
     }
 }
 
@@ -182,22 +210,36 @@ void HttpResponseBuilder::parseCgiProduct()
 }
 
 void HttpResponseBuilder::createResponseMessage() {
-    ServerErrors serverErrors;
-
+    ResponseStatusManager ResponseStatusManager;
+    
     responseMessage = new HttpResponseMessage();
     responseMessage->setServerProtocol(requestMessage->getServerProtocol());
-    responseMessage->setStatusCode(errorCode);
-    responseMessage->setReasonPhrase(serverErrors.findReasonPhrase(errorCode));
+    responseMessage->setStatusCode(statusCode);
+    responseMessage->setReasonPhrase(ResponseStatusManager.findReasonPhrase(statusCode));
+    
     contentType = locationConfig.getType(resourcePath);
+    string httpMethod = requestMessage->getHttpMethod();
+
     if (responseBody == "") {
-        responseBody = serverErrors.generateErrorHtml(errorCode);
+        if (httpMethod != "GET" or \
+            httpMethod != "HEAD" or \
+            !(httpMethod == "POST" and locationConfig.isCgi()) or \
+            !(httpMethod == "PUT" and locationConfig.isCgi()))
+        {
+            responseBody = ResponseStatusManager.generateResponseHtml(statusCode);
+        }
     }
     else if (responseBody != "" && locationConfig.isCgi()) {
         parseCgiProduct();
     }
-    responseMessage->setBody(responseBody);
+    else {
+        responseMessage->setBody(responseBody);
+    }
     ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, responseBody, resourcePath, contentType);
     responseHeaderAdder.executeAll();
+    if (httpMethod == "HEAD") {
+        responseMessage->setBody("");
+    }
 }
 
 void HttpResponseBuilder::initiate(const string & request)
@@ -216,15 +258,17 @@ void HttpResponseBuilder::initiate(const string & request)
         return;
     }
     initWebservValues();
-    needMoreMessageFlag = requestMessage->getChunkedFlag();
-    needCgiFlag = locationConfig.isCgi();
+    needMoreMessage = requestMessage->getChunked();
+    connection = requestMessage->getConnection();
+    needCgi = locationConfig.isCgi();
     requestBody = requestMessage->getBody();
 }
 
 void HttpResponseBuilder::addRequestMessage(const string &request)
 {
     HttpRequestMessage newRequestMessage(request);
-    needMoreMessageFlag = newRequestMessage.getChunkedFlag();
+    needMoreMessage = newRequestMessage.getChunked();
+    connection = newRequestMessage.getConnection();
     requestBody.append(newRequestMessage.getBody());
 
     /* 이전과 같은 chunk 요청인지 구별하는 방법은 HTTP 메서드와 requestTarget이 동일함을 확인, Contetn-Length 헤더가 없는것을 확인
@@ -253,9 +297,9 @@ LocationConfig HttpResponseBuilder::getLocationConfig() const
     return locationConfig;
 }
 
-bool HttpResponseBuilder::getNeedCgiFlag() const
+bool HttpResponseBuilder::getNeedCgi() const
 {
-    return needCgiFlag;
+    return needCgi;
 }
 
 bool HttpResponseBuilder::getEnd() const
@@ -263,7 +307,12 @@ bool HttpResponseBuilder::getEnd() const
     return end;   
 }
 
-bool HttpResponseBuilder::getNeedMoreMessageFlag() const
+bool HttpResponseBuilder::getNeedMoreMessage() const
 {
-    return needMoreMessageFlag;
+    return needMoreMessage;
+}
+
+bool HttpResponseBuilder::getConnection() const
+{
+    return connection;
 }

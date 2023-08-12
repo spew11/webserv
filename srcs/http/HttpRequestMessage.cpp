@@ -2,7 +2,8 @@
 
 HttpRequestMessage::HttpRequestMessage(const string &requestMessage)
 {
-    chunkedFlag = false;
+    chunked = false;
+    connection = true;
     parseRequestMessage(requestMessage);
 
 }
@@ -19,7 +20,7 @@ void HttpRequestMessage::parseRequestMessage(const string &request)
     
     int byte = lst.at(0).length()+2; // 나중에 바디 시작 인덱스 알려면 필요
     
-    //headers parsing
+    //headers parsing 짤려서 오는거 고려해야됌
     int i = 1;
     bool crlf = false;
     for (; i < lst.size(); i++) {
@@ -35,6 +36,8 @@ void HttpRequestMessage::parseRequestMessage(const string &request)
         }
     }
     ++i;
+
+    //parse body and check flag
     if (byte == request.length()) {
         body = "";
     }
@@ -45,14 +48,18 @@ void HttpRequestMessage::parseRequestMessage(const string &request)
         byte += bodySize;
         string eof = Utils::trim(request.substr(byte, request.length()-byte));
         if (eof == "0") {
-            chunkedFlag = false;
+            chunked = false;
         }
         else {
-            chunkedFlag = true;
+            chunked = true;
         }
     }
     else {
         body = request.substr(byte, request.length()-byte);
+    }
+
+    if (this->getHeader("Connection") == "close") {
+        connection = false;
     }
 }
 
@@ -66,7 +73,12 @@ string HttpRequestMessage::getRequestTarget() const
     return requestTarget;
 }
 
-bool HttpRequestMessage::getChunkedFlag() const
+bool HttpRequestMessage::getChunked() const
 {
-    return chunkedFlag;
+    return chunked;
+}
+
+bool HttpRequestMessage::getConnection() const
+{
+    return connection;
 }
