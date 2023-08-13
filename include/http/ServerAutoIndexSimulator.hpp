@@ -31,7 +31,7 @@ class ServerAutoIndexSimulator
         vector<ServerAutoIndexSimulator::DirectoryEntry> directory;
         void fillDirectory(const string & dirName);
     public:
-        string generateAutoIndexHtml(const string & dirName);
+        string generateAutoIndexHtml(const string & root, const string &filename);
 };
 
 # endif

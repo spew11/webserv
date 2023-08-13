@@ -51,8 +51,9 @@ class HttpResponseBuilder {
         bool autoIndex;
 
         void clear();
-        void parseRequestUri(const string & requestTarget);
+        int parseRequestUri(const string & requestTarget);
         int checkAcceptMethod(const vector<string> & acceptMethods, const string & httpMethod);
+        int checkClientMaxBodySize(const int & clientMaxBodySize);
         int validateResource(const vector<string> & indexes, const string & httpMethod);
         void initWebservValues();
         void execute(IMethodExecutor & methodExecutor);
@@ -63,7 +64,7 @@ class HttpResponseBuilder {
         void initiate(const string & request);
         void addRequestMessage(const string &request);
         void build(IMethodExecutor & methodExecutor);
-        
+        string getResponse() const; 
         //getter setter
         HttpResponseMessage getResponseMessage() const;
         HttpRequestMessage getRequestMessage() const;

@@ -34,19 +34,3 @@ void HttpResponseMessage::setServerProtocol(const string &serverProtocol)
 {
     this->serverProtocol = serverProtocol;
 }
-
-string HttpResponseMessage::toString() const
-{
-    map<string, string>::const_iterator it = headers.begin();
-    
-    string response = getServerProtocol() + " " + Utils::itoa(statusCode) + " " + getReasonPhrase() + "\r\n";
-    
-    for (it = headers.begin(); it != headers.end(); it++) {
-        if (it->second != "") {
-            response += it->first + ": " + it->second + "\r\n";
-        }
-    }
-    response += "\r\n";
-    response += getBody();
-    return response;
-}

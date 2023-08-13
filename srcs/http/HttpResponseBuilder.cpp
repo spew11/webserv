@@ -52,8 +52,9 @@ void HttpResponseBuilder::clear()
     autoIndex = false;
 }
 
-void HttpResponseBuilder::parseRequestUri(const string & requestTarget)
+int HttpResponseBuilder::parseRequestUri(const string & requestTarget)
 {
+    
     requestUri = requestTarget;
     
     size_t pos = requestUri.find_first_of(";?#");
@@ -63,7 +64,23 @@ void HttpResponseBuilder::parseRequestUri(const string & requestTarget)
     else {
         uri = requestUri.substr(0, pos);
     }
-    
+
+    //폴더면 '/' 붙이기
+    if (uri[uri.length()-1] != '/') {
+        string absolutePath = locationConfig.getRoot() + uri;
+        if (access(absolutePath.c_str(), F_OK) == 0) {
+            struct stat statbuf;
+            if (stat(absolutePath.c_str(), &statbuf) < 0) {
+                statusCode = 500;
+                return 1;           
+            }
+            if (S_ISDIR(statbuf.st_mode)) {
+                uri += "/";
+            }
+
+        }
+    }
+
     filename = uri;
 
     pos = requestUri.find(";");
@@ -75,6 +92,7 @@ void HttpResponseBuilder::parseRequestUri(const string & requestTarget)
     if (pos != string::npos) {
         queryString = requestUri.substr(pos+1, min(requestUri.find("#"), requestUri.length())-pos-1);
     }
+    return 0;
 }
 
 int HttpResponseBuilder::checkAcceptMethod(const vector<string> & acceptMethods, const string & httpMethod)
@@ -86,21 +104,28 @@ int HttpResponseBuilder::checkAcceptMethod(const vector<string> & acceptMethods,
     return 0;
 }
 
+int HttpResponseBuilder::checkClientMaxBodySize(const int & clientMaxBodySize)
+{
+    if (requestMessage->getBody().length() > clientMaxBodySize) {
+        return 1;
+    }
+    return 0;
+}
+
 int HttpResponseBuilder::validateResource(const vector<string> & indexes, const string & httpMethod)
 {
     struct stat statbuf;
-    string tmpPath;
+    string tmpPath = locationConfig.getRoot() + uri;
     
-    
-    tmpPath = locationConfig.getRoot() + uri;
     cout << "tmpPath :  " << tmpPath << endl;
     cout << "uri :  " << uri << endl;
 
     if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi()) \
         or (httpMethod == "PUT" and locationConfig.isCgi()) or httpMethod == "HEAD") { 
-        cout << "*************** GET METHOD **************" << endl;
+        cout << "here1" << endl;
+        
         if (access(tmpPath.c_str(), F_OK) != 0) {
-            cout << "*************** faile **************" << endl;
+            cout << "here2" << endl;
             statusCode = 404;
             return 1;
         }
@@ -108,7 +133,6 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
             statusCode = 403;
             return 1;
         }
-        cout << "*************** pass **************" << endl;
 
         if (stat(tmpPath.c_str(), &statbuf) < 0) {
             statusCode = 500;
@@ -116,10 +140,9 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
         }
 
         if(S_ISDIR(statbuf.st_mode)) {
+
+            cout << "here3" << endl;
             bool exist = false;
-            if (tmpPath[tmpPath.length()-1] != '/') {
-                tmpPath += "/";
-            }
             for (int i = 0; i < indexes.size(); i++) {
                 string resourcePathTmp = tmpPath + indexes.at(i);
                 if (access(resourcePathTmp.c_str(), R_OK) == 0) {
@@ -131,7 +154,6 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
             if (exist == false) {
                 resourcePath = tmpPath;
                 if (locationConfig.isAutoIndex()) {
-                    cout << "^^^^^^^^^^^^^" << locationConfig.isAutoIndex() << endl;
                     if (opendir(resourcePath.c_str()) == 0) {
                         statusCode = 500;
                     }
@@ -148,6 +170,7 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
         }
         else if (S_ISREG(statbuf.st_mode)) { 
             resourcePath = tmpPath;
+            cout << "here4" << endl;
         }
     }
     else if (httpMethod == "POST" or httpMethod == "PUT") {
@@ -211,24 +234,40 @@ void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)
         statusCode = methodExecutor.headMethod(resourcePath, responseBody);
     }
 
-    if (statusCode == 200 && locationConfig.isCgi()) {
-        parseCgiProduct();
-    }
 }
 
 void HttpResponseBuilder::parseCgiProduct()
 {
-    size_t newline = responseBody.find("\n\n");
-    if (newline != string::npos) {
-        string header = responseBody.substr(0, newline);
-        if (header.find(":") != string::npos) {
-            if (header.substr(0, 12) == "Content-type") {
-                contentType = Utils::ltrim(header.substr(13, header.length()-13));
-                responseBody = responseBody.substr(newline+2, responseBody.length()-newline-2);
-            }
+    vector<string> lst = Utils::split(responseBody, "\n");
+	int byte = 0;
+    for (int i = 0; i < lst.size(); i++) {
+		if (lst.at(i) == "") {
+			byte += 1;
+			break;
+		}
+		vector<string> tmp = Utils::split(lst.at(i), ":");
+        responseMessage->addHeader(tmp.at(0), tmp.at(1));
+		byte += lst.at(i).length()+1;
+	}
+	responseBody = responseBody.substr(byte, responseBody.length()-byte);
+}
+
+string HttpResponseBuilder::getResponse() const {   
+    string response = responseMessage->getServerProtocol() + " ";
+    response += Utils::itoa(responseMessage->getStatusCode()) + " ";
+    response += responseMessage->getReasonPhrase() + "\r\n";
+    
+    map<string, string> headers = responseMessage->getHeaders();
+    for (map<string, string>::iterator it = headers.begin(); it != headers.end(); it++) {
+        if (it->second != "") {
+            response += it->first + ": " + it->second + "\r\n";
         }
     }
-    //여기서 헤더 박아버려
+    response += "\r\n";
+    if (requestMessage->getHttpMethod() != "HEAD") {
+        response += responseMessage->getBody();
+    }
+    return response;
 }
 
 void HttpResponseBuilder::createResponseMessage() {
@@ -241,16 +280,16 @@ void HttpResponseBuilder::createResponseMessage() {
     responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
     if (autoIndex) {
         ServerAutoIndexSimulator serverAutoIndexSimulator;
-        responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(resourcePath);
+        responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(locationConfig.getRoot(), uri);
+    }
+    else if (statusCode == 200 && locationConfig.isCgi()) {
+        parseCgiProduct();
     }
     else if (statusCode != 200 && responseBody == "") {
         responseBody = responseStatusManager.generateResponseHtml(statusCode);
     }
-    if (httpMethod != "HEAD") {
-        responseMessage->setBody(responseBody);
-    }
-    contentType = locationConfig.getType(resourcePath); //이따 고치자
-    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, responseBody, resourcePath, contentType);
+    responseMessage->setBody(responseBody);
+    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, resourcePath);
     responseHeaderAdder.executeAll();
 }
 
@@ -259,7 +298,9 @@ void HttpResponseBuilder::initiate(const string & request)
     clear();
     requestMessage = new HttpRequestMessage(request);
     
-    parseRequestUri(requestMessage->getRequestTarget());
+    if ((end = parseRequestUri(requestMessage->getRequestTarget())) == 1) {
+        return;
+    }
     locationConfig = server->getConfig(requestMessage->getHeader("Host")).getLocConf(uri);
     if ((end = checkAcceptMethod(locationConfig.getAcceptMethods(), requestMessage->getHttpMethod())) == true) {
         createResponseMessage();
@@ -268,6 +309,9 @@ void HttpResponseBuilder::initiate(const string & request)
     if ((end = validateResource(locationConfig.getIndexes(), requestMessage->getHttpMethod())) == true) {
         createResponseMessage();
         return;
+    }
+    if ((end = checkClientMaxBodySize(locationConfig.getClientMaxBodySize())) == true) {
+        return ;
     }
     initWebservValues();
     needMoreMessage = requestMessage->getChunked();
@@ -279,6 +323,9 @@ void HttpResponseBuilder::initiate(const string & request)
 void HttpResponseBuilder::addRequestMessage(const string &request)
 {
     HttpRequestMessage newRequestMessage(request);
+    if ((end = checkClientMaxBodySize(newRequestMessage.getBody().length())) == 1) {
+        return ;
+    }
     needMoreMessage = newRequestMessage.getChunked();
     connection = newRequestMessage.getConnection();
     requestBody.append(newRequestMessage.getBody());

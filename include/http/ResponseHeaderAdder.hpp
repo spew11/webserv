@@ -16,12 +16,12 @@ class ResponseHeaderAdder
         const HttpRequestMessage & requestMessage;
         HttpResponseMessage & responseMessage;
         const LocationConfig & locationConfig;
-        const string & responseBody;
         const string & resourcePath;
-        const string & contentType;
     public:
-        ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, \
-            const LocationConfig & locationConfig, const string & responseBody, const string & resourcePath, const string & contentType);
+        ResponseHeaderAdder(const HttpRequestMessage & requestMessage, \
+            HttpResponseMessage & responseMessage, \
+            const LocationConfig & locationConfig, \
+            const string & resourcePath);
         void executeAll();
         void addContentTypeHeader(const string & contentType);
         void addContentLengthHeader(const string & responseBody);
@@ -29,10 +29,6 @@ class ResponseHeaderAdder
         void addAllowHeader(const vector<string> & acceptMethods);
         void addConnectionHeader(const bool & connect);
         void addDateHeader();
-        void parseCgiProduct(string & response, string & contentType);
-        void setResponseBody(string responseBody);
-        void setResourcePath(string resourcePath);
-        void setContentType(string contentType);
 };
 
 #endif

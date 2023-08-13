@@ -24,17 +24,18 @@ string ServerAutoIndexSimulator::DirectoryEntry::toString() const
     return "name is " + name + "date is " + date + "size is " + size;
 }
 
-string ServerAutoIndexSimulator::generateAutoIndexHtml(const string & dirName)
+string ServerAutoIndexSimulator::generateAutoIndexHtml(const string & root, const string & filename)
 {
-    fillDirectory(dirName);
+    string absolutePath = root+filename;
+    fillDirectory(absolutePath);
 
-    string html = "<html><head><title>Index of " + dirName + "</title>";
+    string html = "<html><head><title>Index of " + absolutePath + "</title>";
         html += "<style>"
                 "table { width: 100%; table-layout: fixed; }"
                 "td, th { width: 33.33%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }"
                 "</style>";
         html += "</head><body>";
-        html += "<h1>Index of " + dirName + "</h1><hr>";
+        html += "<h1>Index of " + absolutePath + "</h1><hr>";
         html += "<table border=\"1\" cellspacing=\"0\" cellpadding=\"5\">";
         html += "<thead><tr><th>Path</th><th>Date</th><th>Size</th></tr></thead>";
         html += "<tbody>";
@@ -46,7 +47,7 @@ string ServerAutoIndexSimulator::generateAutoIndexHtml(const string & dirName)
             if (path == "..") {
                 name = "Parent directory/";
             }
-            string link = "<a href=\"" + path + "\">" + name + "</a>";
+            string link = "<a href=\"" + filename + path + "\">" + name + "</a>";
             html += "<tr>";
             html += "<td>" + link + "</td>";
             html += "<td>" + entry.getDate() + "</td>";
