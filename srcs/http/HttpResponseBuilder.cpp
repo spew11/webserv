@@ -297,7 +297,10 @@ void HttpResponseBuilder::initiate(const string & request)
 {
     clear();
     requestMessage = new HttpRequestMessage(request);
-    
+    if (requestMessage->getErrorCode() > 0) {
+        statusCode = requestMessage->getErrorCode();
+        return ;
+    }
     if ((end = parseRequestUri(requestMessage->getRequestTarget())) == 1) {
         return;
     }

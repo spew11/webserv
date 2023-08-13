@@ -27,10 +27,14 @@ string ResponseStatusManager::findStatusMessage(const int & statusCode) const
             return "The page you're looking for could not be found. Please check the URL or try again later.";
         case 405:
             return "The requested HTTP method is not allowed for this resource.";
+        case 411:
+            return "The request failed. The length of the request body is required, please include the 'Content-Length' header in your request.";
         case 500:
             return "An internal server error occurred. We apologize for the inconvenience. Please try again later.";
         case 503:
             return "The server is currently unavailable due to maintenance or high load. Please try again later.";
+        case 505:
+            return "The server does not support the HTTP protocol version used in the request.";
     }
     return "An internal server error occurred. We apologize for the inconvenience. Please try again later.";
 }
@@ -60,12 +64,16 @@ string ResponseStatusManager::findReasonPhrase(const int & statusCode) const
             return "Forbidden";
         case 404:
             return "Not Found";
+        case 411:
+            return "411 Length Required";
         case 405:
             return "Method Not Allowed";
         case 500:
             return "Internal Server Error";
         case 503:
             return "Service Unavailable";
+        case 505:
+            return "HTTP Version Not Supported";
     }
     return "Internal Server Error";
 }

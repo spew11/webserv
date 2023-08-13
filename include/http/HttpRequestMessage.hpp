@@ -10,13 +10,15 @@ class HttpRequestMessage : public HttpMessage
         string requestTarget;
         bool chunked;
         bool connection;
-        void parseRequestMessage(const string &requestMessage);
+        int parseRequestMessage(const string &requestMessage);
+        int errorCode;
     public:
         HttpRequestMessage(const string &requestMessage);
         string getHttpMethod() const;
         string getRequestTarget() const;
         bool getChunked() const;
         bool getConnection() const;
+        int getErrorCode() const;
 };
 
 #endif

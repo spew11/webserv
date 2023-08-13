@@ -23,6 +23,9 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
     }   
     file << request;
     file.close();
+    if (request.length() == 0) {
+        return 204;
+    }
     return 201;
 }
 
@@ -44,6 +47,9 @@ int DefaultMethodExecutor::putMethod(const string & resourcePath, const string &
     }
     getline(file, response, '\0');
     file.close();
+    if (request.length() == 0) {
+        return 204;
+    }
     return 200;
 }
 
