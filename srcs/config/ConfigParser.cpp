@@ -112,7 +112,7 @@ bool ConfigParser::createDirective( Directive & directive )
 
         size_t idx;
         // token이 구분자를 가지는지 확인
-        if ((idx = token.find_first_not_of(";{}")) != string::npos)
+        if ((idx = token.find_first_of(";{}")) != string::npos)
         {
             // 구분자 이전의 substr을 arg에 넣어준다.
             if (idx != 0)
