@@ -15,7 +15,7 @@ public:
     private:
         friend class ServerConfig;
         map<string, LocationConfig> uriMap;
-        LocationConfig defaultLocConf;
+        LocationConfig              defaultLocConf;
     public:
         const LocationConfig &getLocConf( string uri ) const;
     };

@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-#include "DerivTree.hpp"
+#include "DirectiveTree.hpp"
 #include "Modules.hpp"
 #include "ConfigUtils.hpp"
 
@@ -19,15 +19,14 @@ using namespace std;
 class ConfigParser
 {
 private:
-    list<string>        tokenList;
-    stack<DerivTree *>  blocks;
-    DerivTree           mainTree;
+    list<string>            tokenList;
+    stack<DirectiveTree *>  blocks;
+    DirectiveTree           mainTree;
 
-    void read( const string & file, string & buffer );
-    void tokenize( const string & file, list<string> & list );
-    size_t findDelim( const string & str );
-    bool getDeriv( Derivative & );
-    void setTree( void );
+    void    read( const string & file, string & buffer );
+    void    tokenize( const string & file, list<string> & list );
+    bool    createDirective( Directive & );
+    void    setTree( void );
 public:
     ConfigParser( const string & file );
 

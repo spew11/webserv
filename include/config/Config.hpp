@@ -19,7 +19,7 @@ private:
 
     Config( Module * mainMod );
 public:
-    void getMainConf();
+    // void getMainConf();
     const vector<ServerConfig> & getSrvConf( void ) const {	return srvConfs; }
 };
 
