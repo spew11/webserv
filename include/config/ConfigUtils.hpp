@@ -12,18 +12,18 @@ enum ModuleType {
     LOC_MOD,
 };
 
-enum DerivName
+enum DirectiveName
 {
     ROOT,
 };
 
-struct Derivative {
-    string          name;
-    enum DerivName  e_name;
-    vector<string>  arg;
-    char            delim;
+struct Directive {
+    string              name;
+    enum DirectiveName  e_name;
+    vector<string>      arg;
+    char                delim;
 
-    Derivative( void ) {}
-    Derivative( const string & name ) : name(name) {}
+    Directive( void ) {}
+    Directive( const string & name ) : name(name) {}
 };
 

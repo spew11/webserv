@@ -25,100 +25,45 @@ protected:
     class syntax_error : public runtime_error
     {
     public:
-        syntax_error( const string & deriv )
-         : runtime_error("Config error: The \"" + deriv + "\" directive has an incorrect syntax") {}
+        syntax_error( const string & directive );
     };
 
-    bool isBoolean( const string & str )
-    {
-        if (str == "on" || str == "off")
-            return true;
-        
-        return false;
-    }
-
-    bool isNumeric( const string & str )
-    {
-        if (str.empty())
-            return false;
-
-        for (string::size_type i = 0; i < str.size(); ++i)
-        {
-            if (!isdigit(str[i]))
-                return false;
-        }
-
-        return true;
-    }
+    bool isBoolean( const string & str );
+    bool isNumeric( const string & str );
 
 public:
-    Module ( Derivative const & deriv, enum ModuleType type )
-     : name(deriv.name), type(type) {}
+    Module ( Directive const & directive, enum ModuleType type );
     virtual ~Module( void ) {}
 
-    const string & getName( void ) const { return name; }
-    const enum ModuleType & getType( void ) const { return type; }
-    const vector<Module*> & getSubMods( void ) const { return subMods; }
+    const string & getName( void ) const;
+    const enum ModuleType & getType( void ) const;
+    const vector<Module*> & getSubMods( void ) const;
 
-    void addModule( Module * m ) { subMods.push_back(m); }
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) = 0;
+    void addModule( Module * m );
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives ) = 0;
 };
 
 class MainModule : public Module
 {
 public:
-	MainModule( const Derivative & deriv ) : Module(deriv, NO_TYPE) {}
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-        (void)deriv;
-        (void)subDerivs;
-    }
+	MainModule( const Directive & directive );
+
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 };
 
 class ServerModule : public Module
 {
 private:
     uint32_t    ip;
-    int         port;
+    uint16_t    port;
 
 public:
-	ServerModule( const Derivative & deriv, const vector<Derivative> & subDerivs )
-     : Module(deriv, NO_TYPE)
-    {
-        checkSyntax(deriv, &subDerivs);
+	ServerModule( const Directive & directive, const vector<Directive> & subDirectives );
 
-        string listenArg = subDerivs[0].arg[1];
-        size_t delimIdx = listenArg.find(':');
-
-        if (delimIdx == string::npos) // ':'이 없는 경우 허용하지 않음
-            throw syntax_error("server");
-        
-        string ipStr = listenArg.substr(0, delimIdx);
-        string portStr = listenArg.substr(delimIdx + 1);
-
-        if (!ipStr.empty() && inet_addr(ipStr.c_str()) == INADDR_NONE) // ip주소형식 맞는지 확인
-            throw syntax_error("server");
-
-        if (ipStr.empty()) // ip값이 비었다면 모든 ip 허용
-            ip = INADDR_ANY;
-        else
-            ip = ntohl(inet_addr(ipStr.c_str()));
-
-        if (!isNumeric(portStr.c_str())) // port값이 숫자인지 확인
-            throw syntax_error("server");
-
-        port = atoi(listenArg.substr(delimIdx + 1).c_str());
-    }
-
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-        // subDerivs에는 listen지시어가 들어있다.
-        if (subDerivs->size() != 1 || (*subDerivs)[0].arg.size() != 2)
-            throw syntax_error("server");
-    }
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
     
-    const uint32_t & getIp( void ) const { return ip; }
-    int getPort( void ) const { return port; }
+    uint32_t getIp( void ) const;
+    uint16_t getPort( void ) const;
 };
 
 class ServerNameModule : public Module
@@ -126,17 +71,11 @@ class ServerNameModule : public Module
 private:
     vector<string> serverNames;
 public:
-    ServerNameModule( const Derivative & deriv ) : Module(deriv, SRV_MOD)
-    {
-        checkSyntax(deriv, NULL);
-        // server_name 지시어의 arg가 없다면 serverNames는 빈 벡터이다.
-        for (size_t i = 1; i < deriv.arg.size(); i++)
-            this->serverNames.push_back(deriv.arg[i]);
-    }
+    ServerNameModule( const Directive & directive );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) {}
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    const vector<string> & getServerNames( void ) const { return serverNames; }
+    const vector<string> & getServerNames( void ) const;
 };
 
 class LocationModule : public Module
@@ -144,23 +83,11 @@ class LocationModule : public Module
 private:
     string uri;
 public:
-    LocationModule( const Derivative & deriv ) : Module(deriv, NO_TYPE)
-    {
-        checkSyntax(deriv, NULL);
+    LocationModule( const Directive & directive );
 
-        uri = deriv.arg[1];
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-        if (uri.back() == '/')
-            uri.pop_back();
-    }
-
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-        if (deriv.arg.size() != 2)
-            throw syntax_error("location");
-    }
-
-    const string & getUri( void ) const { return uri; }
+    const string & getUri( void ) const;
 };
 
 class RootModule : public Module
@@ -168,20 +95,11 @@ class RootModule : public Module
 private:
     string root;
 public:
-    RootModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
-    {
-        checkSyntax(deriv, NULL);
+    RootModule( const Directive & directive );
 
-        root = deriv.arg[1];
-    }
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {  
-        if (deriv.arg.size() != 2)
-            throw syntax_error("root");
-    }
-
-    const string & getRoot( void ) const { return root; }
+    const string & getRoot( void ) const;
 };
 
 class TypesModule : public Module
@@ -189,33 +107,11 @@ class TypesModule : public Module
 private:
     map<string, string> typesMap;
 public:
-    TypesModule( const Derivative & deriv, vector<Derivative> subDerivs )
-     : Module(deriv, LOC_MOD)
-    {
-        checkSyntax(deriv, &subDerivs);
+    TypesModule( const Directive & directive, vector<Directive> subDirectives );
 
-        for (size_t i = 0; i < subDerivs.size(); i++)
-        {
-            string type = subDerivs[i].arg[0];
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-            for (size_t j = 1; j < subDerivs[i].arg.size(); j++)
-            {
-                string extension = subDerivs[i].arg[j];
-                typesMap[extension] = type;
-            }
-        }
-    }
-
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-        for (size_t i = 0; i < subDerivs->size(); i++)
-        {
-            if ((*subDerivs)[i].arg.size() < 2)
-                throw syntax_error("types");
-        }
-    }
-
-    const map<string, string> & getTypesMap( void ) const { return typesMap; }
+    const map<string, string> & getTypesMap( void ) const;
 };
 
 class IndexModule : public Module
@@ -223,72 +119,37 @@ class IndexModule : public Module
 private:
     vector<string> indexes;
 public:
-    IndexModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
-    {
-        checkSyntax(deriv, NULL);
+    IndexModule( const Directive & directive );
 
-        // deriv.arg가 비었다면 indexes벡터도 빈 벡터이다.        
-        for (size_t i = 1; i < deriv.arg.size(); i++)
-            indexes.push_back(deriv.arg[i]);
-    }
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) {}
-
-    const vector<string> & getIndexes( void ) const { return indexes; }
+    const vector<string> & getIndexes( void ) const;
 };
 
 class ErrorPageModule : public Module
 {
 private:
     vector<int> errCodes;
-    string uri;
+    string      uri;
 public:
-    ErrorPageModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
-    {
-        checkSyntax(deriv, NULL);
+    ErrorPageModule( const Directive & directive );
 
-        for (size_t i = 1; i < deriv.arg.size() - 1; i++)
-            errCodes.push_back(atoi(deriv.arg[i].c_str()));
-        
-        uri = deriv.arg.back();
-    }
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-    }
-
-    bool isErrCode( int code ) const 
-    {
-        if (find(errCodes.begin(), errCodes.end(), code) != errCodes.end())
-            return true;
-
-        return false;
-    }
-    const string & getUri( void ) const { return uri; }
+    bool isErrCode( int code ) const;
+    const string & getUri( void ) const;
 };
 
 class CgiModule : public Module
 {
 private:
-    bool isCgi;
+    bool isCgi; // string으로 변경
 public:
-    CgiModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
-    {
-        checkSyntax(deriv, NULL);
+    CgiModule( const Directive & directive );
 
-        if (deriv.arg[1] == "on")
-            isCgi = true;
-		else
-        	isCgi = false;
-    }
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-        if (deriv.arg.size() != 2 || !isBoolean(deriv.arg[1]))
-            throw syntax_error("cgi");
-    }
-
-    bool getCgi( void ) const { return isCgi; }
+    bool getCgi( void ) const;
 };
 
 class CgiParamsModule : public Module
@@ -296,26 +157,11 @@ class CgiParamsModule : public Module
 private:
     vector<pair<string, string> > params;
 public:
-    CgiParamsModule( const Derivative & deriv, const vector<Derivative> & subDerivs ) : Module(deriv, LOC_MOD)
-    {
-        checkSyntax(deriv, &subDerivs);
+    CgiParamsModule( const Directive & directive, const vector<Directive> & subDirectives );
 
-        for (int i = 0; i < subDerivs.size(); i++)
-        {
-            params.push_back(make_pair(subDerivs[i].arg[0], subDerivs[i].arg[1]));
-        }
-    }
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-        for (int i = 0; i < subDerivs->size(); i++)
-        {
-            if ((*subDerivs)[i].arg.size() != 2)
-                throw syntax_error("cgi_params");
-        }
-    }
-
-    const vector<pair<string, string> > & getParams( void ) const { return params; }
+    const vector<pair<string, string> > & getParams( void ) const;
 };
 
 class AutoIndexModule : public Module
@@ -323,23 +169,11 @@ class AutoIndexModule : public Module
 private:
     bool isAutoIndex;
 public:
-    AutoIndexModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
-    {
-        checkSyntax(deriv, NULL);
+    AutoIndexModule( const Directive & directive );
 
-        if (deriv.arg[1] == "on")
-            isAutoIndex = true;
-        else
-            isAutoIndex = false;
-    }
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-        if (deriv.arg.size() != 2 || !isBoolean(deriv.arg[1]))
-            throw syntax_error("autoindex");
-    }
-    
-    bool getAutoIndex( void ) const { return isAutoIndex; }
+    bool getAutoIndex( void ) const;
 };
 
 class ClientMaxBodySizeModule : public Module
@@ -347,20 +181,11 @@ class ClientMaxBodySizeModule : public Module
 private:
     int maxSize;
 public:
-    ClientMaxBodySizeModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
-    {
-        checkSyntax(deriv, NULL);
+    ClientMaxBodySizeModule( const Directive & directive );
 
-        maxSize = atoi(deriv.arg[1].c_str());
-    }
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs )
-    {
-        if (deriv.arg.size() != 2 || !isNumeric(deriv.arg[1]))
-            throw syntax_error("client_max_body_size");
-    }
-
-    int getClientMaxBodySize( void ) const { return maxSize; }
+    int getClientMaxBodySize( void ) const;
 };
 
 class AcceptMethodModule : public Module
@@ -368,16 +193,9 @@ class AcceptMethodModule : public Module
 private:
     vector<string> methods;
 public:
-    AcceptMethodModule( const Derivative & deriv ) : Module(deriv, LOC_MOD)
-    {
-        // accept_method 지시어 arg가 비었다면 methods벡터는 빈 벡터.
-        for (int i = 1; i < deriv.arg.size(); i++)
-        {
-            methods.push_back(deriv.arg[i]);
-        }
-    }
+    AcceptMethodModule( const Directive & directive );
 
-    virtual void checkSyntax( const Derivative & deriv, const vector<Derivative> * subDerivs ) {}
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    const vector<string> & getAcceptMethods( void ) const { return methods; }
+    const vector<string> & getAcceptMethods( void ) const;
 };

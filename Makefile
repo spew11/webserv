@@ -10,9 +10,10 @@ RM			= rm -rf
 CONFIG		:=	\
  				Config \
 				ConfigParser \
- 				DerivTree \
+ 				DirectiveTree \
  				LocationConfig \
- 				ServerConfig 
+ 				ServerConfig \
+				Modules
 
 HTTP		:=	\
 				CgiMethodExecutor \
@@ -22,7 +23,7 @@ HTTP		:=	\
 				HttpResponseBuilder \
 				HttpResponseMessage \
 				ResponseHeaderAdder \
-        ServerErrors \
+        		ServerErrors \
 				Utils \
 				WebservValues
         
@@ -30,10 +31,6 @@ SERVER		:=	\
  				Client \
  				Server \
 				ServerHandler
-
-CONFIG		:=	$(addprefix config/, $(CONFIG))
-HTTP		:=	$(addprefix http/, $(HTTP))
-SERVER		:=	$(addprefix server/, $(SERVER))
 
 FILENAME	=	\
  				main \
