@@ -3,7 +3,13 @@
 # include <iostream>
 # include <string>
 # include <vector>
+# include <dirent.h>
+# include <stdlib.h>
+# include <sys/stat.h>
+# include <sys/types.h>
+# include <ctime>
 # include "Utils.hpp"
+
 using namespace std;
 
 class ServerAutoIndexSimulator
@@ -12,21 +18,20 @@ class ServerAutoIndexSimulator
         class DirectoryEntry
         {
             private:
-                const string & name;
-                const string & date;
-                const size_t & size;
+                const string name;
+                const string date;
+                const string size;
             public:
-                DirectoryEntry(const string & name, const string & date, const size_t & size);
+                DirectoryEntry(const string name, const string date, const string size);
                 string getName() const;
                 string getDate() const;
-                size_t getSize() const;
+                string getSize() const;
+                string toString() const;
         };
-
         vector<ServerAutoIndexSimulator::DirectoryEntry> directory;
-        string findModifiedDate(const string & name) const;
-        string CreateDirectoryEntries();
+        void fillDirectory(const string & dirName);
     public:
-        string generateAutoIndexHtml(const string & path);
+        string generateAutoIndexHtml(const string & dirName);
 };
 
 # endif

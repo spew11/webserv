@@ -21,6 +21,7 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & w
     needCgi = false;
     end = false;
     connection = true;
+    autoIndex = false;
 }
 
 void HttpResponseBuilder::clear()
@@ -48,6 +49,7 @@ void HttpResponseBuilder::clear()
     needCgi = false;
     end = false;
     connection = true;
+    autoIndex = false;
 }
 
 void HttpResponseBuilder::parseRequestUri(const string & requestTarget)
@@ -93,8 +95,9 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
 
     if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi()) \
         or (httpMethod == "PUT" and locationConfig.isCgi()) or httpMethod == "HEAD") { 
-        
+        cout << "*************** GET METHOD **************" << endl;
         if (access(tmpPath.c_str(), F_OK) != 0) {
+            cout << "*************** faile **************" << endl;
             statusCode = 404;
             return 1;
         }
@@ -102,6 +105,7 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
             statusCode = 403;
             return 1;
         }
+        cout << "*************** pass **************" << endl;
 
         if (stat(tmpPath.c_str(), &statbuf) < 0) {
             statusCode = 500;
@@ -122,9 +126,16 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
                 }
             }
             if (exist == false) {
+                resourcePath = tmpPath;
                 if (locationConfig.isAutoIndex()) {
-                    //오토인덱스
-                    statusCode = 200;
+                    cout << "^^^^^^^^^^^^^" << locationConfig.isAutoIndex() << endl;
+                    if (opendir(resourcePath.c_str()) == 0) {
+                        statusCode = 500;
+                    }
+                    else {
+                        statusCode = 200;
+                        autoIndex = true;
+                    }
                 }
                 else {
                     statusCode = 404;
@@ -193,6 +204,13 @@ void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)
     else if(httpMethod == "PUT") {
         statusCode = methodExecutor.putMethod(resourcePath, requestBody, responseBody);
     }
+    else if (httpMethod == "HEAD") {
+        statusCode = methodExecutor.headMethod(resourcePath, responseBody);
+    }
+
+    if (statusCode == 200 && locationConfig.isCgi()) {
+        parseCgiProduct();
+    }
 }
 
 void HttpResponseBuilder::parseCgiProduct()
@@ -207,39 +225,30 @@ void HttpResponseBuilder::parseCgiProduct()
             }
         }
     }
+    //여기서 헤더 박아버려
 }
 
 void HttpResponseBuilder::createResponseMessage() {
-    ResponseStatusManager ResponseStatusManager;
-    
+    string httpMethod = requestMessage->getHttpMethod();
     responseMessage = new HttpResponseMessage();
+    ResponseStatusManager responseStatusManager;
+
     responseMessage->setServerProtocol(requestMessage->getServerProtocol());
     responseMessage->setStatusCode(statusCode);
-    responseMessage->setReasonPhrase(ResponseStatusManager.findReasonPhrase(statusCode));
-    
-    contentType = locationConfig.getType(resourcePath);
-    string httpMethod = requestMessage->getHttpMethod();
-
-    if (responseBody == "") {
-        if (httpMethod != "GET" or \
-            httpMethod != "HEAD" or \
-            !(httpMethod == "POST" and locationConfig.isCgi()) or \
-            !(httpMethod == "PUT" and locationConfig.isCgi()))
-        {
-            responseBody = ResponseStatusManager.generateResponseHtml(statusCode);
-        }
+    responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
+    if (autoIndex) {
+        ServerAutoIndexSimulator serverAutoIndexSimulator;
+        responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(resourcePath);
     }
-    else if (responseBody != "" && locationConfig.isCgi()) {
-        parseCgiProduct();
+    else if (statusCode != 200 && responseBody == "") {
+        responseBody = responseStatusManager.generateResponseHtml(statusCode);
     }
-    else {
+    if (httpMethod != "HEAD") {
         responseMessage->setBody(responseBody);
     }
+    contentType = locationConfig.getType(resourcePath); //이따 고치자
     ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, responseBody, resourcePath, contentType);
     responseHeaderAdder.executeAll();
-    if (httpMethod == "HEAD") {
-        responseMessage->setBody("");
-    }
 }
 
 void HttpResponseBuilder::initiate(const string & request)

@@ -1,6 +1,6 @@
 #include "ServerAutoIndexSimulator.hpp"
 
-ServerAutoIndexSimulator::DirectoryEntry::DirectoryEntry(const string & name, const string & date, const size_t & size)
+ServerAutoIndexSimulator::DirectoryEntry::DirectoryEntry(const string name, const string date, const string size)
     : name(name), date(date), size(size) {}
 
 
@@ -14,43 +14,83 @@ string ServerAutoIndexSimulator::DirectoryEntry::getDate() const
     return date;
 }
 
-size_t ServerAutoIndexSimulator::DirectoryEntry::getSize() const
+string ServerAutoIndexSimulator::DirectoryEntry::getSize() const
 {
     return size;
 }
 
-string ServerAutoIndexSimulator::findModifiedDate(const string & name) const
+string ServerAutoIndexSimulator::DirectoryEntry::toString() const
 {
-    return "2021-12-30";
+    return "name is " + name + "date is " + date + "size is " + size;
 }
 
 string ServerAutoIndexSimulator::generateAutoIndexHtml(const string & dirName)
 {
-    std::string html = "<html><head><title>Index of " + dirName + "</title></head><body>";
-        html += "<h1>Index of " + dirName + "</h1><hr>";
+    fillDirectory(dirName);
 
+    string html = "<html><head><title>Index of " + dirName + "</title>";
+        html += "<style>"
+                "table { width: 100%; table-layout: fixed; }"
+                "td, th { width: 33.33%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }"
+                "</style>";
+        html += "</head><body>";
+        html += "<h1>Index of " + dirName + "</h1><hr>";
         html += "<table border=\"1\" cellspacing=\"0\" cellpadding=\"5\">";
-        html += "<thead><tr><th>Date Modified</th><th>Size</th><th>Name</th></tr></thead>";
+        html += "<thead><tr><th>Path</th><th>Date</th><th>Size</th></tr></thead>";
         html += "<tbody>";
         
-        string link;
-        link = "<a href=\"" + dirName + "\">" + dirName + "</a>";
-        html += "<tr>";
-        html += "<td>" + findModifiedDate(dirName) + "</td>";
-        html += "<td>" + "-" + "</td>";
-        html += "<td>" + link + "</td>";
-        html += "</tr>";
-        
-        for (DirectoryEntry entry : directory) {
-            link = "<a href=\"" + dirName + entry.getName() + "\">" + entry.getName() + "</a>";
+        for (size_t i = 0; i < directory.size(); i++) {
+            DirectoryEntry & entry = directory.at(i);
+            string path = entry.getName();
+            string name = entry.getName();
+            if (path == dirName + "..") {
+                name = "Parent directory/";
+            }
+            string link = "<a href=\"" + path + "\">" + name + "</a>";
             html += "<tr>";
-            html += "<td>" + entry.getDate() + "</td>";
-            html += "<td>" + Utils::itoa(entry.getSize()) + "</td>";
             html += "<td>" + link + "</td>";
+            html += "<td>" + entry.getDate() + "</td>";
+            html += "<td>" + entry.getSize() + "</td>";
             html += "</tr>";
         }
-
         html += "</tbody></table><hr></body></html>";
     
     return html;
+}
+
+void ServerAutoIndexSimulator::fillDirectory(const string & dirName)
+{
+    directory.clear();
+    DIR *dirp = opendir(dirName.c_str());
+    struct dirent *direntp;
+
+    string childName;
+    string date;
+    string size;
+
+    while (true)
+    {
+        direntp = readdir(dirp);
+        if (direntp == NULL) {
+            break;
+        }
+        else if (string(direntp->d_name) == "."){
+            continue;
+        }
+        childName = dirName + string(direntp->d_name);
+        struct stat statbuf;
+        if (stat(childName.c_str(), &statbuf) == 0) {
+            char buffer[20];
+            struct tm *timeinfo = localtime(&(statbuf.st_mtime));
+            strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+            if (S_ISDIR(statbuf.st_mode)) {
+                size = "-";
+            }
+            else {
+                size = Utils::itoa(statbuf.st_size);
+            }
+            date = string(buffer);
+            directory.push_back(DirectoryEntry(childName, date, size));
+        }
+    }
 }

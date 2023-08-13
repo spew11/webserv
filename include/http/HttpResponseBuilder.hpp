@@ -13,6 +13,9 @@
 # include <vector>
 # include <sys/stat.h>
 # include <unistd.h>
+# include <dirent.h>
+# include <stdlib.h>
+# include "ServerAutoIndexSimulator.hpp"
 
 class Server;
 
@@ -45,6 +48,7 @@ class HttpResponseBuilder {
         bool needCgi;
         bool end;
         bool connection;
+        bool autoIndex;
 
         void clear();
         void parseRequestUri(const string & requestTarget);
