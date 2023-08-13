@@ -21,7 +21,7 @@ public:
     };
 
     uint32_t getIp( void ) const;
-    int getPort( void ) const;
+    uint16_t getPort( void ) const;
     const vector<string> & getServerNames( void ) const;
     const LocationMap & getLocationMap( void ) const;
 private:

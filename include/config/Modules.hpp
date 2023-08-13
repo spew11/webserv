@@ -79,7 +79,7 @@ class ServerModule : public Module
 {
 private:
     uint32_t    ip;
-    int         port;
+    uint16_t    port;
 
 public:
 	ServerModule( const Derivative & deriv, const vector<Derivative> & subDerivs )
@@ -118,7 +118,7 @@ public:
     }
     
     const uint32_t & getIp( void ) const { return ip; }
-    int getPort( void ) const { return port; }
+    uint16_t getPort( void ) const { return port; }
 };
 
 class ServerNameModule : public Module
