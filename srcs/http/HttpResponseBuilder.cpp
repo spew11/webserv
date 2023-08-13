@@ -91,7 +91,10 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
     struct stat statbuf;
     string tmpPath;
     
+    
     tmpPath = locationConfig.getRoot() + uri;
+    cout << "tmpPath :  " << tmpPath << endl;
+    cout << "uri :  " << uri << endl;
 
     if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi()) \
         or (httpMethod == "PUT" and locationConfig.isCgi()) or httpMethod == "HEAD") { 

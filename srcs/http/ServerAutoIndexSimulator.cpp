@@ -43,7 +43,7 @@ string ServerAutoIndexSimulator::generateAutoIndexHtml(const string & dirName)
             DirectoryEntry & entry = directory.at(i);
             string path = entry.getName();
             string name = entry.getName();
-            if (path == dirName + "..") {
+            if (path == "..") {
                 name = "Parent directory/";
             }
             string link = "<a href=\"" + path + "\">" + name + "</a>";
@@ -77,9 +77,9 @@ void ServerAutoIndexSimulator::fillDirectory(const string & dirName)
         else if (string(direntp->d_name) == "."){
             continue;
         }
-        childName = dirName + string(direntp->d_name);
+        childName = string(direntp->d_name);
         struct stat statbuf;
-        if (stat(childName.c_str(), &statbuf) == 0) {
+        if (stat((dirName + childName).c_str(), &statbuf) == 0) {
             char buffer[20];
             struct tm *timeinfo = localtime(&(statbuf.st_mtime));
             strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
@@ -93,4 +93,5 @@ void ServerAutoIndexSimulator::fillDirectory(const string & dirName)
             directory.push_back(DirectoryEntry(childName, date, size));
         }
     }
+
 }
