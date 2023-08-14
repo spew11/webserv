@@ -203,19 +203,16 @@ CgiModule::CgiModule( const Directive & directive ) : Module(directive, LOC_MOD)
 {
 	checkSyntax(directive, NULL);
 
-	if (directive.arg[1] == "on")
-		isCgi = true;
-	else
-		isCgi = false;
+	cgiType = directive.arg[1];
 }
 
 void CgiModule::checkSyntax( const Directive & directive, const vector<Directive> * subDirectives )
 {
-	if (directive.arg.size() != 2 || !isBoolean(directive.arg[1]))
+	if (directive.arg.size() != 2)
 		throw syntax_error("cgi");
 }
 
-bool CgiModule::getCgi( void ) const { return isCgi; }
+const string & CgiModule::getCgi( void ) const { return cgiType; }
 
 // CgiParamsModule
 CgiParamsModule::CgiParamsModule( const Directive & directive, const vector<Directive> & subDirectives ) : Module(directive, LOC_MOD)

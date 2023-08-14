@@ -143,13 +143,13 @@ public:
 class CgiModule : public Module
 {
 private:
-    bool isCgi; // string으로 변경
+    string cgiType;
 public:
     CgiModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 
-    bool getCgi( void ) const;
+    const string & getCgi( void ) const;
 };
 
 class CgiParamsModule : public Module
