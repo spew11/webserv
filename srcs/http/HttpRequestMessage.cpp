@@ -89,26 +89,6 @@ int HttpRequestMessage::parseRequestMessage(const string &request)
             body = request.substr(byte, bodySize);
         }
     }
-    // else if (this->getHeader("Transfer-Encoding") == "chunked") {
-    //     // chucnk가 1개만 오는 경우도 있고, 여러개가 같이 오는 경우도 있음.
-    //     int chunkSize = 0;
-    //     chunked = true;
-    //     while (i < lst.size()-1) {
-    //         if (Utils::trim(lst.at(i)) == "0") {
-    //             chunked = false;
-    //             break;
-    //         }
-    //         chunkSize = stoi(Utils::rtrim(lst.at(i)), 0, 16);
-    //         bodySize += chunkSize;
-    //         byte += lst.at(i).length() + 2;
-    //         body += request.substr(byte, chunkSize);
-    //         byte += chunkSize + 2;
-    //         i += 2;
-    //     }
-    // }
-    // else {
-    //     body = request.substr(byte, bodySize);
-    // }
     if (this->getHeader("Connection") == "close") {
         connection = false;
     }
