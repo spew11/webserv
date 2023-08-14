@@ -29,6 +29,8 @@ string ResponseStatusManager::findStatusMessage(const int & statusCode) const
             return "The requested HTTP method is not allowed for this resource.";
         case 411:
             return "The request failed. The length of the request body is required, please include the 'Content-Length' header in your request.";
+        case 413:
+            return "The request cannot be processed due to its large size. Please reduce the size of your request body and try again.";
         case 500:
             return "An internal server error occurred. We apologize for the inconvenience. Please try again later.";
         case 503:
@@ -65,7 +67,9 @@ string ResponseStatusManager::findReasonPhrase(const int & statusCode) const
         case 404:
             return "Not Found";
         case 411:
-            return "411 Length Required";
+            return "Length Required";
+        case 413:
+            return "Request Entity Too Large";
         case 405:
             return "Method Not Allowed";
         case 500:

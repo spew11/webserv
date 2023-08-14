@@ -3,7 +3,6 @@
 #include <stdlib.h>
 HttpRequestMessage::HttpRequestMessage(const string &requestMessage)
 {
-    cout << "start" << endl;
     chunked = false;
     connection = true;
     errorCode = 0;
@@ -12,9 +11,6 @@ HttpRequestMessage::HttpRequestMessage(const string &requestMessage)
 
 int HttpRequestMessage::parseRequestMessage(const string &request)
 {
-    // if (request.find("\r\n\r\n") == string::npos) {
-    //     return 400;
-    // } -> 이걸 하면 그냥 처음 get 테스트 부터 터짐
     vector<string> lst = Utils::split(request, "\r\n");
 
     //start line parsing
@@ -22,15 +18,10 @@ int HttpRequestMessage::parseRequestMessage(const string &request)
     httpMethod = tmp.at(0);
     requestTarget = tmp.at(1);
     serverProtocol = tmp.at(2);
-    ofstream outfile("outfile");
-    outfile << serverProtocol << "\n";
     if (serverProtocol != "HTTP/1.1") {
-        if (outfile.is_open()) {
-            outfile << "inVALID!!\n";
-        }
         return 505;
     }
-    int byte = lst.at(0).length()+2; // 나중에 바디 시작 인덱스 알려면 필요
+    int byte = lst.at(0).length()+2; 
     
     //headers parsing 
     int i = 1;
@@ -59,9 +50,6 @@ int HttpRequestMessage::parseRequestMessage(const string &request)
             }
         }
     }
-    for (auto it = this->headers.begin(); it != this->headers.end(); it++) {
-        cout << it->first << " " << it->second << endl;
-    }
     size_t bodySize = 0;
     if (this->getHeader("Content-Length") != "") {
         bodySize = atoi((this->getHeader("Content-Length")).c_str());
@@ -71,9 +59,8 @@ int HttpRequestMessage::parseRequestMessage(const string &request)
             return 411; // " 411 Length Required" 
         }
     }
-    cout << this->getHeader("Transfer-Encoding") << endl;
     ++i;
-    //parse body and check flag
+    //parse body and check chunked
     if (byte == bodySize) {
         body = "";
     }
@@ -81,9 +68,7 @@ int HttpRequestMessage::parseRequestMessage(const string &request)
         // chucnk가 1개만 오는 경우도 있고, 여러개가 같이 오는 경우도 있음.
         int chunkSize = 0;
         chunked = true;
-        // cout << "lis size: " << lst.size() << endl;
         while (i < lst.size()-1) {
-            // cout << "lst.(" << i << ") : " << lst.at(i) << endl;  
             if (Utils::trim(lst.at(i)) == "0") {
                 chunked = false;
                 break;
@@ -92,18 +77,13 @@ int HttpRequestMessage::parseRequestMessage(const string &request)
             bodySize += chunkSize;
             byte += lst.at(i).length() + 2;
             body += request.substr(byte, chunkSize);
-            // cout << "body: " << body << endl;
             byte += chunkSize + 2;
             i += 2;
         }
-        // cout << "Body size: " << bodySize << endl;
-        // cout << "body : " << body << endl;
-        // cout << "chunked:  " << chunked << endl;
     }
     else {
         body = request.substr(byte, bodySize);
     }
-
     if (this->getHeader("Connection") == "close") {
         connection = false;
     }

@@ -40,17 +40,17 @@ int DefaultMethodExecutor::deleteMethod(const string &resourcePath) const
 
 int DefaultMethodExecutor::putMethod(const string & resourcePath, const string & request, string & response)
 {
-    int statusCode;
-    ifstream file(resourcePath);
+    ofstream file(resourcePath);
+    
     if (file.fail()) {
         return 500;
-    }
-    getline(file, response, '\0');
+    }   
+    file << request;
     file.close();
     if (request.length() == 0) {
         return 204;
     }
-    return 200;
+    return 201;
 }
 
 int DefaultMethodExecutor::headMethod(const string & resourcePath, string & response)

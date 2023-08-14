@@ -107,6 +107,7 @@ int HttpResponseBuilder::checkAcceptMethod(const vector<string> & acceptMethods,
 int HttpResponseBuilder::checkClientMaxBodySize(const int & clientMaxBodySize)
 {
     if (requestMessage->getBody().length() > clientMaxBodySize) {
+        statusCode = 413; // "413 Request Entity Too Large" 
         return 1;
     }
     return 0;
@@ -116,16 +117,11 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
 {
     struct stat statbuf;
     string tmpPath = locationConfig.getRoot() + uri;
-    
-    cout << "tmpPath :  " << tmpPath << endl;
-    cout << "uri :  " << uri << endl;
 
     if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi()) \
         or (httpMethod == "PUT" and locationConfig.isCgi()) or httpMethod == "HEAD") { 
-        cout << "here1" << endl;
         
         if (access(tmpPath.c_str(), F_OK) != 0) {
-            cout << "here2" << endl;
             statusCode = 404;
             return 1;
         }
@@ -141,7 +137,6 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
 
         if(S_ISDIR(statbuf.st_mode)) {
 
-            cout << "here3" << endl;
             bool exist = false;
             for (int i = 0; i < indexes.size(); i++) {
                 string resourcePathTmp = tmpPath + indexes.at(i);
@@ -170,7 +165,6 @@ int HttpResponseBuilder::validateResource(const vector<string> & indexes, const 
         }
         else if (S_ISREG(statbuf.st_mode)) { 
             resourcePath = tmpPath;
-            cout << "here4" << endl;
         }
     }
     else if (httpMethod == "POST" or httpMethod == "PUT") {
@@ -252,7 +246,8 @@ void HttpResponseBuilder::parseCgiProduct()
 	responseBody = responseBody.substr(byte, responseBody.length()-byte);
 }
 
-string HttpResponseBuilder::getResponse() const {   
+string HttpResponseBuilder::getResponse() const {
+    
     string response = responseMessage->getServerProtocol() + " ";
     response += Utils::itoa(responseMessage->getStatusCode()) + " ";
     response += responseMessage->getReasonPhrase() + "\r\n";
@@ -301,19 +296,21 @@ void HttpResponseBuilder::initiate(const string & request)
         statusCode = requestMessage->getErrorCode();
         return ;
     }
-    if ((end = parseRequestUri(requestMessage->getRequestTarget())) == 1) {
-        return;
+    if ((end = checkClientMaxBodySize(locationConfig.getClientMaxBodySize())) == true) {
+        createResponseMessage();
+        return ;
+    }
+    if ((end = parseRequestUri(requestMessage->getRequestTarget())) == true) {
+        createResponseMessage();
+        return ;
     }
     locationConfig = server->getConfig(requestMessage->getHeader("Host")).getLocConf(uri);
     if ((end = checkAcceptMethod(locationConfig.getAcceptMethods(), requestMessage->getHttpMethod())) == true) {
         createResponseMessage();
-        return;
+        return ;
     }
     if ((end = validateResource(locationConfig.getIndexes(), requestMessage->getHttpMethod())) == true) {
         createResponseMessage();
-        return;
-    }
-    if ((end = checkClientMaxBodySize(locationConfig.getClientMaxBodySize())) == true) {
         return ;
     }
     initWebservValues();
