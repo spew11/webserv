@@ -11,6 +11,8 @@ CgiMethodExecutor::~CgiMethodExecutor()
 	for (int i = 0; cgiEnv[i] != NULL; i++)
 		delete cgiEnv[i];
 	delete cgiEnv;
+	close(stdin_fd);
+	close(stdout_fd);
 }
 
 int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)

@@ -3,9 +3,14 @@
 HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & webservValues)
     : server(server)
 {
+    requestMessage = NULL;
+    responseMessage = NULL;
     this->webservValues = &webservValues;
     this->webservValues->initEnvList();
     errorCode = 500;
+    needMoreMessageFlag = false;
+    needCgiFlag = false;
+    end = false;
 }
 
 void HttpResponseBuilder::clear()

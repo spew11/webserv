@@ -5,7 +5,12 @@ Server::Server(const ServerConfig &config)
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 	if (sock == -1)
 		throw std::exception();
+#ifdef __APPLE__
 	fcntl(sock, F_SETFL, O_NONBLOCK);
+#elif __linux__
+	int flags = fcntl(sock, F_GETFL, 0);
+	fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+#endif
 
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;

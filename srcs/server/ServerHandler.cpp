@@ -88,6 +88,7 @@ void	ServerHandler::loop()
 			else if (curEvent->filter == EVFILT_READ) //읽기 이벤트 발생
 			{
 				std::map<int, Server*>::iterator it = servers.find(curEvent->ident);
+				std::map<int, Client*>::iterator it2 = clients.find(curEvent->ident);
 				if (it != servers.end()) //연결 요청: client 객체 생성 및  changeList에 추가
 				{
 					Client *cli = new Client(it->second);
@@ -95,17 +96,17 @@ void	ServerHandler::loop()
 					change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
 					change_events(cli->getSock(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
 				}
-				else //클라이언트 소켓 읽기
+				else if (it2 != clients.end()) //클라이언트 소켓 읽기
 				{
-					Client *cli = clients[curEvent->ident];
+					Client *cli = it2->second;
 					cli->communicate();
 				}
 			}
 			else if (curEvent->filter == EVFILT_WRITE)//클라이언트에 데이터 전송 가능
 			{
-				Client *cli = clients[curEvent->ident];
-				if (cli->isSendable())
-					cli->send_msg();
+				std::map<int, Client*>::iterator it2 = clients.find(curEvent->ident);
+				if (it2 != clients.end() && it->second->isSendable())
+					it2->second->send_msg();
 			}
 		}
 	}
@@ -129,6 +130,11 @@ void	ServerHandler::loop()
 		
 		for (int i = 0; i < fds.size(); i++)
 		{
+			if (fds[i].revents & (POLL_ERR | POLL_HUP))
+			{
+				close(fds[i].fd);
+				fds[i].fd = -1;
+			}
 			if (fds[i].revents & POLLIN)
 			{
 				if (i < servers.size())
@@ -140,9 +146,13 @@ void	ServerHandler::loop()
 				}
 				else
 				{
-					Client *cli = clients[fds[i].fd];
-					cli->communicate();
-					cli->send_msg();
+					std::map<int, Client*>::iterator it = clients.find(fds[i].fd);
+					if (it != clients.end())
+					{
+						Client *cli = it->second;
+						cli->communicate();
+						cli->send_msg();
+					}
 				}
 			}
 		}

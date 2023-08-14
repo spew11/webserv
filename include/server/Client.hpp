@@ -27,7 +27,6 @@ private:
 	std::string send_buf;
 	std::string recv_buf;
 
-	ServerConfig::LocationMap lm;
 public:
 	Client(Server *server);
 	~Client();

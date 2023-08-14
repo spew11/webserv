@@ -7,7 +7,12 @@ Client::Client(Server *server): server(server)
 	sock = accept(server->getSock(), (struct sockaddr*)&addr, &cli_size);
 	if (sock == -1)
 		throw std::exception();
+#ifdef __APPLE__
 	fcntl(sock, F_SETFL, O_NONBLOCK);
+#elif __linux__
+	int flags = fcntl(sock, F_GETFL, 0);
+	fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+#endif
 
 	std::cout << "Connet: Client" << sock << std::endl;
 	std::cout << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
@@ -42,7 +47,7 @@ void Client::recv_msg()
 	bzero(tmp, sizeof(char) * 1024);
 	while (true)
 	{
-		ssize_t len = recv(sock, tmp, 1024, 0);
+		ssize_t len = recv(sock, tmp, 1023, 0);
 		if (len >= 0)
 			recv_buf += std::string(tmp);
 		else
@@ -81,8 +86,7 @@ bool Client::isSendable() const
 void Client::communicate()
 {
 	recv_msg();	
-	if (recv_buf.find("\r\n\r\n") == string::npos)
-		return;
+	
 	if (hrb->getNeedMoreMessageFlag() == false)
 	{
 		hrb->initiate(recv_buf);
@@ -110,10 +114,7 @@ void Client::makeResponse()
 	if (hrb->getNeedCgiFlag() == true)
 	{
 		LocationConfig lc = hrb->getLocationConfig();
-		char **tmp = lc.getCgiParams(webVal);
-		executor = new CgiMethodExecutor(tmp);
-		// excutor = lm.getLocConf("")
-		// executor = new CgiMethodExecutor(hrb->getEnv()); ///?
+		executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
 	}
 	else
 		executor = new DefaultMethodExecutor();
