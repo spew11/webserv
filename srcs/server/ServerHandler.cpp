@@ -150,8 +150,10 @@ void	ServerHandler::loop()
 					if (it != clients.end())
 					{
 						Client *cli = it->second;
+
 						cli->communicate();
-						cli->send_msg();
+						if (cli->isSendable())
+							cli->send_msg();
 					}
 				}
 			}

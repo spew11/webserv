@@ -44,11 +44,11 @@ void Client::recv_msg()
 {
 	char tmp[1024];
 
-	bzero(tmp, sizeof(char) * 1024);
 	while (true)
 	{
+		bzero(tmp, sizeof(char) * 1024);
 		ssize_t len = recv(sock, tmp, 1023, 0);
-		if (len >= 0)
+		if (len > 0)
 			recv_buf += std::string(tmp);
 		else
 			break;
@@ -86,7 +86,9 @@ bool Client::isSendable() const
 void Client::communicate()
 {
 	recv_msg();	
-	
+	if (recv_buf.find("\r\n\r\n") == std::string::npos)
+		return;
+
 	if (hrb->getNeedMoreMessageFlag() == false)
 	{
 		hrb->initiate(recv_buf);
