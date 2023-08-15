@@ -187,6 +187,12 @@ ErrorPageModule::ErrorPageModule( const Directive & directive ) : Module(directi
 
 void ErrorPageModule::checkSyntax( const Directive & directive, const vector<Directive> * subDirectives )
 {
+	if (directive.arg.size() < 3)
+		throw syntax_error("error_page");
+
+	// arg의 마지막을 제외한 인자에 숫자가 아닌 string이 있다면 에러.
+	if (find_if_not(directive.arg.begin() + 1, directive.arg.end() - 1, isNumeric) != directive.arg.end() - 1)
+		throw syntax_error("error_page");
 }
 
 bool ErrorPageModule::isErrCode( int code ) const 

@@ -28,8 +28,8 @@ protected:
         syntax_error( const string & directive );
     };
 
-    bool isBoolean( const string & str );
-    bool isNumeric( const string & str );
+    static bool isBoolean( const string & str );
+    static bool isNumeric( const string & str );
 
 public:
     Module ( Directive const & directive, enum ModuleType type );
