@@ -31,6 +31,7 @@ protected:
     static bool isBoolean( const string & str );
     static bool isNumeric( const string & str );
 
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives ) = 0;
 public:
     Module ( Directive const & directive, enum ModuleType type );
     virtual ~Module( void ) {}
@@ -40,15 +41,14 @@ public:
     const vector<Module*> & getSubMods( void ) const;
 
     void addModule( Module * m );
-    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives ) = 0;
 };
 
 class MainModule : public Module
 {
+private:
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 public:
 	MainModule( const Directive & directive );
-
-    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 };
 
 class ServerModule : public Module
@@ -57,10 +57,9 @@ private:
     uint32_t    ip;
     uint16_t    port;
 
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
 public:
 	ServerModule( const Directive & directive, const vector<Directive> & subDirectives );
-
-    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
     
     uint32_t getIp( void ) const;
     uint16_t getPort( void ) const;
@@ -70,10 +69,10 @@ class ServerNameModule : public Module
 {
 private:
     vector<string> serverNames;
-public:
-    ServerNameModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    ServerNameModule( const Directive & directive );
 
     const vector<string> & getServerNames( void ) const;
 };
@@ -82,10 +81,10 @@ class LocationModule : public Module
 {
 private:
     string uri;
-public:
-    LocationModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    LocationModule( const Directive & directive );
 
     const string & getUri( void ) const;
 };
@@ -94,10 +93,10 @@ class RootModule : public Module
 {
 private:
     string root;
-public:
-    RootModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    RootModule( const Directive & directive );
 
     const string & getRoot( void ) const;
 };
@@ -106,10 +105,10 @@ class TypesModule : public Module
 {
 private:
     map<string, string> typesMap;
-public:
-    TypesModule( const Directive & directive, vector<Directive> subDirectives );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    TypesModule( const Directive & directive, vector<Directive> subDirectives );
 
     const map<string, string> & getTypesMap( void ) const;
 };
@@ -118,10 +117,10 @@ class IndexModule : public Module
 {
 private:
     vector<string> indexes;
-public:
-    IndexModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    IndexModule( const Directive & directive );
 
     const vector<string> & getIndexes( void ) const;
 };
@@ -131,10 +130,10 @@ class ErrorPageModule : public Module
 private:
     vector<int> errCodes;
     string      uri;
-public:
-    ErrorPageModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    ErrorPageModule( const Directive & directive );
 
     bool isErrCode( int code ) const;
     const string & getUri( void ) const;
@@ -144,10 +143,10 @@ class CgiModule : public Module
 {
 private:
     string cgiType;
-public:
-    CgiModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    CgiModule( const Directive & directive );
 
     const string & getCgi( void ) const;
 };
@@ -156,10 +155,10 @@ class CgiParamsModule : public Module
 {
 private:
     vector<pair<string, string> > params;
-public:
-    CgiParamsModule( const Directive & directive, const vector<Directive> & subDirectives );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    CgiParamsModule( const Directive & directive, const vector<Directive> & subDirectives );
 
     const vector<pair<string, string> > & getParams( void ) const;
 };
@@ -168,10 +167,10 @@ class AutoIndexModule : public Module
 {
 private:
     bool isAutoIndex;
-public:
-    AutoIndexModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    AutoIndexModule( const Directive & directive );
 
     bool getAutoIndex( void ) const;
 };
@@ -180,10 +179,10 @@ class ClientMaxBodySizeModule : public Module
 {
 private:
     int maxSize;
-public:
-    ClientMaxBodySizeModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    ClientMaxBodySizeModule( const Directive & directive );
 
     int getClientMaxBodySize( void ) const;
 };
@@ -192,10 +191,10 @@ class AcceptMethodModule : public Module
 {
 private:
     vector<string> methods;
-public:
-    AcceptMethodModule( const Directive & directive );
 
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    AcceptMethodModule( const Directive & directive );
 
     const vector<string> & getAcceptMethods( void ) const;
 };
