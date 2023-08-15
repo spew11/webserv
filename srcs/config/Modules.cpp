@@ -67,7 +67,7 @@ ServerModule::ServerModule( const Directive & directive, const vector<Directive>
         else
             ip = ntohl(inet_addr(ipStr.c_str()));
 
-        if (!isNumeric(portStr.c_str())) // port값이 숫자인지 확인
+        if (!isNumeric(portStr)) // port값이 숫자인지 확인
             throw syntax_error("server");
 
         port = atoi(listenArg.substr(delimIdx + 1).c_str());
@@ -290,3 +290,21 @@ AcceptMethodModule::AcceptMethodModule( const Directive & directive ) : Module(d
 void AcceptMethodModule::checkSyntax( const Directive & directive, const vector<Directive> * subDirectives ) {}
 
 const vector<string> & AcceptMethodModule::getAcceptMethods( void ) const { return methods; }
+
+// ReturnModule
+ReturnModule::ReturnModule( const Directive & directive ) : Module(directive, LOC_MOD)
+{
+	checkSyntax(directive, NULL);
+
+	statusCode = atoi(directive.arg[1].c_str());
+	uri = directive.arg[2];
+}
+
+void ReturnModule::checkSyntax( const Directive & directive, const vector<Directive> * subDirectives )
+{
+	if (directive.arg.size() != 3 || !isNumeric(directive.arg[1]))
+		throw syntax_error("return");
+}
+
+int ReturnModule::getStatusCode( void ) const { return statusCode; }
+const string & ReturnModule::getUri( void ) const { return uri; }

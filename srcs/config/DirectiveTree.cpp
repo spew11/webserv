@@ -39,6 +39,8 @@ Module * DirectiveTree::createModule()
 		return createClienMaxBodySize();
 	else if (directive.name == "accept_method")
 		return createAcceptMethod();
+	else if (directive.name == "return")
+		return createReturn();
 	else
 		throw runtime_error("Config error: Uknown direction name in the config file");
 		
@@ -160,4 +162,9 @@ Module * DirectiveTree::createClienMaxBodySize()
 Module * DirectiveTree::createAcceptMethod()
 {
 	return new AcceptMethodModule(directive);
+}
+
+Module * DirectiveTree::createReturn()
+{
+	return new ReturnModule(directive);
 }

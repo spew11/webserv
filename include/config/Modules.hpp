@@ -198,3 +198,17 @@ public:
 
     const vector<string> & getAcceptMethods( void ) const;
 };
+
+class ReturnModule : public Module
+{
+private:
+    int     statusCode;
+    string  uri;
+
+    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+public:
+    ReturnModule( const Directive & directive );
+
+    int getStatusCode( void ) const; 
+    const string & getUri( void ) const;
+};
