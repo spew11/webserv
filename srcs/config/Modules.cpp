@@ -187,6 +187,12 @@ ErrorPageModule::ErrorPageModule( const Directive & directive ) : Module(directi
 
 void ErrorPageModule::checkSyntax( const Directive & directive, const vector<Directive> * subDirectives )
 {
+	if (directive.arg.size() < 3)
+		throw syntax_error("error_page");
+
+	// arg의 마지막을 제외한 인자에 숫자가 아닌 string이 있다면 에러.
+	if (find_if_not(directive.arg.begin() + 1, directive.arg.end() - 1, isNumeric) != directive.arg.end() - 1)
+		throw syntax_error("error_page");
 }
 
 bool ErrorPageModule::isErrCode( int code ) const 
@@ -203,19 +209,16 @@ CgiModule::CgiModule( const Directive & directive ) : Module(directive, LOC_MOD)
 {
 	checkSyntax(directive, NULL);
 
-	if (directive.arg[1] == "on")
-		isCgi = true;
-	else
-		isCgi = false;
+	cgiType = directive.arg[1];
 }
 
 void CgiModule::checkSyntax( const Directive & directive, const vector<Directive> * subDirectives )
 {
-	if (directive.arg.size() != 2 || !isBoolean(directive.arg[1]))
+	if (directive.arg.size() != 2)
 		throw syntax_error("cgi");
 }
 
-bool CgiModule::getCgi( void ) const { return isCgi; }
+const string & CgiModule::getCgi( void ) const { return cgiType; }
 
 // CgiParamsModule
 CgiParamsModule::CgiParamsModule( const Directive & directive, const vector<Directive> & subDirectives ) : Module(directive, LOC_MOD)
