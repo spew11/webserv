@@ -66,15 +66,21 @@ void	ServerHandler::loop()
 {
 	while (true)
 	{
-		int new_events = kevent(kq_fd, &changeList[0], changeList.size(), eventList, NEVENTS, NULL);
+		struct timespec timeout = {5, 0};
+		int new_events = kevent(kq_fd, &changeList[0], changeList.size(), eventList, NEVENTS, &timeout);
 		if (new_events == -1)
 			throw std::exception();
+		else if (new_events == 0)
+		{
+			cout << "timeout" << endl;
+			continue;
+		}
 
 		changeList.clear();
 		for (int i = 0; i < new_events; i++)
 		{
 			struct kevent *curEvent = &eventList[i];
-			if (curEvent->flags & EV_EOF || curEvent->flags & EV_ERROR) //에러 발생한 경우
+			if (curEvent->flags & (EV_EOF | EV_ERROR)) //에러 발생한 경우
 			{
 				if (servers.find(curEvent->ident) != servers.end())
 					throw std::exception();

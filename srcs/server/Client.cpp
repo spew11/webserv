@@ -26,6 +26,7 @@ Client::Client(Server *server): server(server)
 
 Client::~Client()
 {
+	cout << "Connection Close: " << sock << std::endl;
 	close(sock);
 }
 
