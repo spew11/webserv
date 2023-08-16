@@ -37,3 +37,12 @@ webserv
 #directory
 objs
 .vscode
+
+# tester
+tester
+ubuntu_tester
+cgi_tester
+ubuntu_cgi_tester
+
+# etc
+*.txt
