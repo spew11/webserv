@@ -22,10 +22,11 @@ HTTP		:=	\
 				HttpRequestMessage \
 				HttpResponseBuilder \
 				HttpResponseMessage \
+				ServerAutoIndexSimulator \
 				ResponseHeaderAdder \
-        		ServerErrors \
+        ResponseStatusManager \
 				Utils \
-				WebservValues
+				WebservValues \
         
 SERVER		:=	\
  				Client \

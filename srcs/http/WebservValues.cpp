@@ -10,7 +10,7 @@ string WebservValues::getValue(const string &key) const
 
 void WebservValues::insert(const string &key, const string &value)
 {
-    envList.insert(pair<string, string>(key, value));
+    envList[key] = value;
 }
 
 void WebservValues::insert(const string &key, const uint16_t &value)
