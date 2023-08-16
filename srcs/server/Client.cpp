@@ -28,6 +28,8 @@ Client::~Client()
 {
 	cout << "Connection Close: " << sock << std::endl;
 	close(sock);
+	delete hrb;
+	
 }
 
 void Client::send_msg()
@@ -117,7 +119,7 @@ void Client::makeResponse()
 	if (hrb->getNeedCgiFlag() == true)
 	{
 		LocationConfig lc = hrb->getLocationConfig();
-		executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
+		executor = new CgiMethodExecutor(webVal.getValue("PATH_INFO"), lc.getCgiParams(webVal));
 	}
 	else
 		executor = new DefaultMethodExecutor();
