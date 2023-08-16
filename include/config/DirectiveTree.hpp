@@ -3,17 +3,17 @@
 #include "Modules.hpp"
 #include "ConfigUtils.hpp"
 
-class DerivTree
+class DirectiveTree
 {
 private:
-    Derivative deriv;
-    vector<DerivTree> subTree;
+    Directive directive;
+    vector<DirectiveTree> subTree;
 
 public:
-    DerivTree( const Derivative & deriv ) : deriv(deriv) {}
+    DirectiveTree( const Directive & directive );
 
-    DerivTree * addSubTree( const DerivTree & tree );
-    const Derivative & getDeriv( void ) const { return this->deriv; }
+    DirectiveTree * addSubTree( const DirectiveTree & tree );
+    const Directive & getDirective( void ) const;
     Module * createModule();
 
     Module * createMain();

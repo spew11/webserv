@@ -43,24 +43,21 @@ bool ServerConfig::operator==( const string & host ) const
 
 const LocationConfig & ServerConfig::LocationMap::getLocConf( string uri ) const
 {
-	while (!uri.empty())
+	while (true)
 	{
 		map<string, LocationConfig>::const_iterator it = uriMap.find(uri);
 
 		// uri가 있다면 value반환
-		if (it != uriMap.end()) {
+		if (it != uriMap.end())
 			return it->second;
-		}
-		else { // uri가 없다면 '/'기준으로 잘라서 uri를 수정해 찾는다.
-			size_t slashIdx = uri.find_last_of('/');
 
-			if (slashIdx == string::npos) {
-				uri = "";
-			}
-			else {
-				uri = uri.substr(0, slashIdx);
-			}
-		}
+		// uri가 없다면 '/'기준으로 잘라서 uri를 수정한다.
+		size_t slashIdx = uri.find_last_of('/');
+
+		if (slashIdx == string::npos)
+			break;
+		
+		uri = uri.substr(0, slashIdx);
 	}
 
 	return defaultLocConf;
@@ -74,7 +71,7 @@ uint32_t ServerConfig::getIp(void) const
 	return srvMod->getIp();
 }
 
-int ServerConfig::getPort(void) const
+uint16_t ServerConfig::getPort(void) const
 {
 	if (srvMod == NULL)// 생성자에서 반드시 srvMod 초기화 해줘야한다.
 		return -1;
