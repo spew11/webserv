@@ -105,7 +105,7 @@ void	ServerHandler::loop()
 			else if (curEvent->filter == EVFILT_WRITE)//클라이언트에 데이터 전송 가능
 			{
 				std::map<int, Client*>::iterator it2 = clients.find(curEvent->ident);
-				if (it2 != clients.end() && it->second->isSendable())
+				if (it2 != clients.end() && it2->second->isSendable())
 					it2->second->send_msg();
 			}
 		}
@@ -150,8 +150,10 @@ void	ServerHandler::loop()
 					if (it != clients.end())
 					{
 						Client *cli = it->second;
+
 						cli->communicate();
-						cli->send_msg();
+						if (cli->isSendable())
+							cli->send_msg();
 					}
 				}
 			}
