@@ -1,8 +1,7 @@
 #include "ResponseHeaderAdder.hpp"
 ResponseHeaderAdder::ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, \
-    const LocationConfig & locationConfig, const string & responseBody, const string & resourcePath, const string & contentType)
-    : requestMessage(requestMessage), responseMessage(responseMessage), locationConfig(locationConfig), \
-        responseBody(responseBody), resourcePath(resourcePath), contentType(contentType) {}
+    const LocationConfig & locationConfig, const string & resourcePath)
+    : requestMessage(requestMessage), responseMessage(responseMessage), locationConfig(locationConfig), resourcePath(resourcePath) {}
 
 
 void ResponseHeaderAdder::executeAll()
@@ -15,11 +14,12 @@ void ResponseHeaderAdder::executeAll()
     else if (statusCode == 405) { // 허락하지 않은 메소드를 받음
         addAllowHeader(locationConfig.getAcceptMethods());
     }
-    if (responseBody != "") {
-        addContentTypeHeader(contentType);
-        addContentLengthHeader(responseBody);
-    }
+    addContentTypeHeader(locationConfig.getType(resourcePath));
+    addContentLengthHeader(responseMessage.getBody());
     addDateHeader();
+    if (requestMessage.getHeader("Connection") == "close") {
+        addConnectionHeader(false);
+    }
 }
 
 void ResponseHeaderAdder::addContentTypeHeader(const string & contentType)
@@ -57,16 +57,12 @@ void ResponseHeaderAdder::addDateHeader()
     responseMessage.addHeader("Date", string(buffer));
 }
 
-void ResponseHeaderAdder::parseCgiProduct(string & response, string & contentType)
+void ResponseHeaderAdder::addConnectionHeader(const bool & connect)
 {
-    size_t newline = response.find("\n\n");
-    if (newline != string::npos) {
-        string header = response.substr(0, newline);
-        if (header.find(":") != string::npos) {
-            if (header.substr(0, 12) == "Content-type") {
-                contentType = Utils::ltrim(header.substr(13, header.length()-13));
-                response = response.substr(newline+2, response.length()-newline-2);
-            }
-        }
+    if (connect == false) {
+        responseMessage.addHeader("Connection", "close");
+    }
+    else {
+        responseMessage.addHeader("Connection", "keep-alive");
     }
 }

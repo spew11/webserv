@@ -6,12 +6,12 @@
 
 using namespace std;
 
-class ServerErrors
+class ResponseStatusManager
 {
     public:
         string findReasonPhrase(const int &statusCode) const;
-        string findErrorMessage(const int &statusCode) const;
-        string generateErrorHtml(const int & statusCode) const;
+        string findStatusMessage(const int &statusCode) const;
+        string generateResponseHtml(const int & statusCode) const;
 };
 
 #endif
