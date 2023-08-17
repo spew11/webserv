@@ -10,6 +10,7 @@
 # include "DefaultMethodExecutor.hpp"
 # include "CgiMethodExecutor.hpp"
 # include "WebservValues.hpp"
+# include "HttpRequestBuilder.hpp"
 
 class HttpResponseBuilder;
 class Server;
@@ -19,6 +20,7 @@ class Client
 private:
 	Server *server;
 	HttpResponseBuilder *hrb;
+	HttpRequestBuilder *httpRequestBuilder;
 	WebservValues webVal;
 
 	int sock;

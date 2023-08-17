@@ -21,6 +21,7 @@ class Utils
         static string rtrim(string s);
         static string trim(string s);
         static string itoa(const int & num);
+        static string Utils::str_join(vector<string>lines, string delim, int start_idx);
+        static bool Utils::is_digit_string(string s);
 };
-
 #endif

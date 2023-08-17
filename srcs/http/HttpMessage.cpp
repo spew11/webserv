@@ -1,5 +1,11 @@
 #include "HttpMessage.hpp"
 
+HttpMessage::HttpMessage(const string serverProtocol, const map<string, string> headers, const string body)
+ : serverProtocol(serverProtocol), headers(headers), body(body)
+{
+
+}
+
 string HttpMessage::getBody() const
 {
     return body;

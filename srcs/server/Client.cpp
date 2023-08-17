@@ -17,6 +17,9 @@ Client::Client(Server *server): server(server)
 	webVal.insert("remote_port", addr.sin_port);
 	
 	hrb = new HttpResponseBuilder(server, webVal);
+
+	// annotation is from eunji!!
+	httpRequestBuilder = new HttpRequestBuilder();
 }
 
 Client::~Client()
@@ -81,12 +84,16 @@ bool Client::isSendable() const
 void Client::communicate()
 {
 	recv_msg();	
-	if (recv_buf.find("\r\n\r\n") == string::npos) {
-		return;
+	int ret = httpRequestBuilder->isHttp(recv_buf);
+	if (ret == 1) {
+		return ;
+	}
+	else if (ret == -1) {
+		// invalid request 
 	}
 	if (hrb->getNeedMoreMessage() == false)
 	{
-		hrb->initiate(recv_buf);
+		hrb->initiate(httpRequestBuilder->createRequestMessage());
 		// 아래 if문 하나 추가 (은지가)
 		if (hrb->getEnd())
 		{
@@ -96,7 +103,7 @@ void Client::communicate()
 	}
 	else
 	{
-		hrb->addRequestMessage(recv_buf);
+		hrb->addRequestMessage(httpRequestBuilder->createRequestMessage());
 		if (hrb->getEnd()) {
 			send_buf = hrb->getResponse();
 			return ;

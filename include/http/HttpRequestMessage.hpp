@@ -13,6 +13,8 @@ class HttpRequestMessage : public HttpMessage
         int errorCode;
         int parseRequestMessage(const string &requestMessage);
     public:
+        HttpRequestMessage(const string httpMethod, const string requestTarget, \
+        string serverProtocol, map<string, string> headers, string body);
         HttpRequestMessage(const string &requestMessage);
         string getHttpMethod() const;
         string getRequestTarget() const;

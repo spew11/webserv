@@ -1,11 +1,17 @@
 #include "HttpRequestMessage.hpp"
 #include <fstream>
 #include <stdlib.h>
-HttpRequestMessage::HttpRequestMessage(const string &requestMessage)
+
+HttpRequestMessage::HttpRequestMessage(const string httpMethod, const string requestTarget, \
+string serverProtocol, map<string, string> headers, string body)
+ : HttpMessage(serverProtocol, headers, body), httpMethod(httpMethod), requestTarget(requestTarget),
+   chunked(false), connection(true), errorCode(0)
 {
-    chunked = false;
-    connection = true;
-    errorCode = 0;
+    
+}
+
+HttpRequestMessage::HttpRequestMessage(const string &requestMessage) : chunked(false), connection(true), errorCode(0)
+{
     errorCode = parseRequestMessage(requestMessage);
 }
 
