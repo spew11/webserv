@@ -7,10 +7,15 @@ Client::Client(Server *server): server(server)
 	sock = accept(server->getSock(), (struct sockaddr*)&addr, &cli_size);
 	if (sock == -1)
 		throw std::exception();
+#ifdef __APPLE__
 	fcntl(sock, F_SETFL, O_NONBLOCK);
+#elif __linux__
+	int flags = fcntl(sock, F_GETFL, 0);
+	fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+#endif
 
 	std::cout << "Connet: Client" << sock << std::endl;
-	std::cout << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
+	std::cout << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
 	webVal.insert("server_addr", server->getIP());
 	webVal.insert("server_port", server->getPort());
 	webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
@@ -21,7 +26,10 @@ Client::Client(Server *server): server(server)
 
 Client::~Client()
 {
+	cout << "Connection Close: " << sock << std::endl;
 	close(sock);
+	delete hrb;
+	
 }
 
 void Client::send_msg()
@@ -39,11 +47,11 @@ void Client::recv_msg()
 {
 	char tmp[1024];
 
-	bzero(tmp, sizeof(char) * 1024);
 	while (true)
 	{
-		ssize_t len = recv(sock, tmp, 1024, 0);
-		if (len >= 0)
+		bzero(tmp, sizeof(char) * 1024);
+		ssize_t len = recv(sock, tmp, 1023, 0);
+		if (len > 0)
 			recv_buf += std::string(tmp);
 		else
 			break;
@@ -81,6 +89,7 @@ bool Client::isSendable() const
 void Client::communicate()
 {
 	recv_msg();	
+
 	if (recv_buf.find("\r\n\r\n") == string::npos) {
 		return;
 	}
@@ -105,7 +114,8 @@ void Client::communicate()
 	if (hrb->getNeedMoreMessage() == false)
 	{
 		makeResponse();
-		send_buf = hrb->getResponse();
+		send_buf += hrb->getResponse();
+
 	}
 }
 
@@ -115,10 +125,7 @@ void Client::makeResponse()
 	if (hrb->getNeedCgi() == true)
 	{
 		LocationConfig lc = hrb->getLocationConfig();
-		char **tmp = lc.getCgiParams(webVal);
-		executor = new CgiMethodExecutor(tmp);
-		// excutor = lm.getLocConf("")
-		// executor = new CgiMethodExecutor(hrb->getEnv()); ///?
+		executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
 	}
 	else
 		executor = new DefaultMethodExecutor();

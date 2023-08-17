@@ -11,6 +11,8 @@ CgiMethodExecutor::~CgiMethodExecutor()
 	for (int i = 0; cgiEnv[i] != NULL; i++)
 		delete cgiEnv[i];
 	delete cgiEnv;
+	close(stdin_fd);
+	close(stdout_fd);
 }
 
 int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
@@ -32,7 +34,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		char **args = new char*[3];
+		char **args = new char*[2];
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
 		execve(args[0], args, cgiEnv);

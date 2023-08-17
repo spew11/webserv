@@ -33,6 +33,7 @@ class HttpResponseBuilder {
         string filename;
         string args;
         string queryString;
+		string pathInfo;
         
         // request info
         string resourcePath;
