@@ -27,6 +27,7 @@ void HttpResponseBuilder::clear()
     requestUri = "";
     uri = "";
     filename = "";
+	pathInfo = "";
     args = "";
     queryString = "";
     resourcePath = "";
@@ -50,8 +51,32 @@ void HttpResponseBuilder::parseRequestUri(const string & requestTarget)
     else {
         uri = requestUri.substr(0, pos);
     }
-    
-    filename = uri;
+
+	filename = uri;
+	// string root = locationConfig.getRoot();
+	// while(true)
+	// {
+	// 	int idx = uri.find_first_of("/", idx + 1);
+	// 	if (idx == string::npos)
+	// 		break;
+	// 	string tmp = root + uri.substr(0, idx);
+	// 	if (access(tmp.c_str(), F_OK) == 0)
+	// 	{
+	// 		struct stat statbuf;
+	// 		if (stat(tmp.c_str(), &statbuf) < 0)
+	// 		{
+	// 			throw std::exception(); //?
+	// 		}
+	// 		if (S_ISDIR(statbuf.st_mode))
+	// 			filename += uri.substr(0, idx) + "/";
+	// 		else if (S_ISREG(statbuf.st_mode))
+	// 		{
+	// 			filename = tmp;
+	// 			pathInfo = uri.substr(idx); //webservValue에 인자로 넣어야 함!
+	// 			break;
+	// 		}
+	// 	}
+	// }
 
     pos = requestUri.find(";");
     if (pos != string::npos) {
@@ -154,6 +179,7 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("request_uri", requestUri);
     webservValues->insert("uri", uri);
     webservValues->insert("document_uri", uri);
+	// webservValues->insert("path_info", pathInfo);
 }
 
 void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)

@@ -30,6 +30,7 @@ class HttpResponseBuilder {
         string filename;
         string args;
         string queryString;
+		string pathInfo;
         
         // request info
         string resourcePath; // locations를 거쳐 찾은 진짜 경로
