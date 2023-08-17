@@ -26,7 +26,7 @@ Server::Server(const ServerConfig &config)
 		throw std::exception();
 
 	configs.push_back(config);
-	std::cout << "create Server:" << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
+	std::cout << "create Server:" << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
 }
 
 bool Server::isSame(const uint32_t &ip, const uint16_t &port)

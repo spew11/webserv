@@ -226,14 +226,14 @@ void HttpResponseBuilder::initWebservValues()
 {    
     webservValues->insert("args", args);
     webservValues->insert("query_string", queryString);
-    webservValues->insert("method", requestMessage->getHttpMethod());
+    webservValues->insert("request_method", requestMessage->getHttpMethod());
     webservValues->insert("host", requestMessage->getHeader("Host"));
     webservValues->insert("content_type", locationConfig.getType(resourcePath));
     webservValues->insert("request_filename", resourcePath);
     webservValues->insert("request_uri", requestUri);
     webservValues->insert("uri", uri);
     webservValues->insert("document_uri", uri);
-	// webservValues->insert("path_info", pathInfo);
+	// webservValues->insert("fastcgi_path_info", pathInfo);
 }
 
 void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)

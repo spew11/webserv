@@ -15,7 +15,7 @@ Client::Client(Server *server): server(server)
 #endif
 
 	std::cout << "Connet: Client" << sock << std::endl;
-	std::cout << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
+	std::cout << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
 	webVal.insert("server_addr", server->getIP());
 	webVal.insert("server_port", server->getPort());
 	webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
@@ -114,7 +114,7 @@ void Client::communicate()
 	if (hrb->getNeedMoreMessage() == false)
 	{
 		makeResponse();
-		send_buf += hrb->getResponseMessage().toString();
+		send_buf += hrb->getResponse();
 
 	}
 }
