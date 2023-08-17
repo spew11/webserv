@@ -119,7 +119,7 @@ void Client::makeResponse()
 	if (hrb->getNeedCgiFlag() == true)
 	{
 		LocationConfig lc = hrb->getLocationConfig();
-		executor = new CgiMethodExecutor(webVal.getValue("PATH_INFO"), lc.getCgiParams(webVal));
+		executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
 	}
 	else
 		executor = new DefaultMethodExecutor();
