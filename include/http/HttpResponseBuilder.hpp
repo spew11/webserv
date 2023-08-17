@@ -9,10 +9,13 @@
 # include "Server.hpp"
 # include "LocationConfig.hpp"
 # include "ResponseHeaderAdder.hpp"
-# include "ServerErrors.hpp"
+# include "ResponseStatusManager.hpp"
 # include <vector>
 # include <sys/stat.h>
 # include <unistd.h>
+# include <dirent.h>
+# include <stdlib.h>
+# include "ServerAutoIndexSimulator.hpp"
 
 class Server;
 
@@ -33,22 +36,25 @@ class HttpResponseBuilder {
 		string pathInfo;
         
         // request info
-        string resourcePath; // locations를 거쳐 찾은 진짜 경로
+        string resourcePath;
         string requestBody;
         
         // reponse information 
         string contentType;
         string responseBody;
-        int errorCode; // statudCode
+        int statusCode;
 
         // flag
-        bool needMoreMessageFlag;
-        bool needCgiFlag;
+        bool needMoreMessage;
+        bool needCgi;
         bool end;
+        bool connection;
+        bool autoIndex;
 
         void clear();
-        void parseRequestUri(const string & requestTarget);
+        int parseRequestUri(const string & requestTarget);
         int checkAcceptMethod(const vector<string> & acceptMethods, const string & httpMethod);
+        int checkClientMaxBodySize(const int & clientMaxBodySize);
         int validateResource(const vector<string> & indexes, const string & httpMethod);
         void initWebservValues();
         void execute(IMethodExecutor & methodExecutor);
@@ -59,14 +65,15 @@ class HttpResponseBuilder {
         void initiate(const string & request);
         void addRequestMessage(const string &request);
         void build(IMethodExecutor & methodExecutor);
-        
+        string getResponse() const; 
         //getter setter
         HttpResponseMessage getResponseMessage() const;
         HttpRequestMessage getRequestMessage() const;
         LocationConfig getLocationConfig() const;
-        bool getNeedMoreMessageFlag() const;
-        bool getNeedCgiFlag() const;
+        bool getNeedMoreMessage() const;
+        bool getNeedCgi() const;
         bool getEnd() const;
+        bool getConnection() const;
 };
 
 #endif

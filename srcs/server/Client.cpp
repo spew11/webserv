@@ -89,34 +89,40 @@ bool Client::isSendable() const
 void Client::communicate()
 {
 	recv_msg();	
-	if (recv_buf.find("\r\n\r\n") == std::string::npos)
-		return;
 
-	if (hrb->getNeedMoreMessageFlag() == false)
+	if (recv_buf.find("\r\n\r\n") == string::npos) {
+		return;
+	}
+	if (hrb->getNeedMoreMessage() == false)
 	{
 		hrb->initiate(recv_buf);
 		// 아래 if문 하나 추가 (은지가)
 		if (hrb->getEnd())
 		{
-			send_buf = hrb->getResponseMessage().toString();
+			send_buf = hrb->getResponse(); // hrb에서 응답스트링 만들어주는 걸로 바꿨음.
 			return;
 		}
 	}
 	else
 	{
 		hrb->addRequestMessage(recv_buf);
+		if (hrb->getEnd()) {
+			send_buf = hrb->getResponse();
+			return ;
+		}
 	}
-	if (hrb->getNeedMoreMessageFlag() == false)
+	if (hrb->getNeedMoreMessage() == false)
 	{
 		makeResponse();
 		send_buf += hrb->getResponseMessage().toString();
+
 	}
 }
 
 void Client::makeResponse()
 {
 	IMethodExecutor *executor;
-	if (hrb->getNeedCgiFlag() == true)
+	if (hrb->getNeedCgi() == true)
 	{
 		LocationConfig lc = hrb->getLocationConfig();
 		executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
