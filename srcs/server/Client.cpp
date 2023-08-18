@@ -85,31 +85,34 @@ void Client::communicate()
 {
 	recv_msg();	
 	int ret = httpRequestBuilder->isHttp(recv_buf);
-	if (ret == 1) {
-		cout << "넘긴다." << endl;
+	if (ret == 1)
+	{
 		return ;
 	}
-	if (ret == -1) {
+	if (ret == -1)
+	{
 		// invalid request
-		cout << "400 응답을 만든다." << endl;
+		cout << "HERE" << endl;
+		hrb->createInvalidResponseMessage();
+		send_buf = hrb->getResponse();
 		return ;
 	}
 	if (ret == 0) {
 		if (hrb->getNeedMoreMessage() == false)
 		{
-			cout << "response builder 본격 가동" << endl;
 			hrb->initiate(httpRequestBuilder->createRequestMessage());
-			// 아래 if문 하나 추가 (은지가)
+
 			if (hrb->getEnd())
 			{
-				send_buf = hrb->getResponse(); // hrb에서 응답스트링 만들어주는 걸로 바꿨음.
+				send_buf = hrb->getResponse();
 				return;
 			}
 		}
 		else
 		{
 			hrb->addRequestMessage(httpRequestBuilder->createRequestMessage());
-			if (hrb->getEnd()) {
+			if (hrb->getEnd())
+			{
 				send_buf = hrb->getResponse();
 				return ;
 			}

@@ -70,13 +70,16 @@ int HttpResponseBuilder::parseRequestUri()
     requestUri = requestTarget;
     
     size_t pos = requestUri.find_first_of(";?#");
-    if (pos == string::npos) {
+    if (pos == string::npos)
+    {
         uri = requestUri;
     }
-    else {
+    else
+    {
         uri = requestUri.substr(0, pos);
     }
 
+    // filename은, 아니 이걸 왜 만들었는지 기억이 안남
     filename = uri;
 
     pos = requestUri.find(";");
@@ -197,30 +200,136 @@ void HttpResponseBuilder::initWebservValues()
     webservValues->insert("document_uri", uri);
 }
 
+void HttpResponseBuilder::setSpecifiedErrorPage(const int & errorCode)
+{
+    cout << "특별 커스톰 함수 들어옴" << endl;
+    string errorPage = locationConfig.getErrPage(statusCode);
+    ResponseStatusManager responseStatusManager;
+    ServerAutoIndexSimulator serverAutoIndexSimulator;
+    LocationConfig redirectedLocationConfig;
+    redirectedLocationConfig = server->getConfig(requestMessage->getHeader("host")).getLocConf(errorPage);
+    string root = redirectedLocationConfig.getRoot();
+
+    string path = root + errorPage;
+    // 1. 에러페이지 경로 존재 유무 확인
+    if (access(path.c_str(), F_OK) != 0)
+    {
+        // a. 경로가 존재하지 않으면 기본 내장 파일 사용 (but, fall back 에러 페이지가 있다면 그걸 사용)
+        responseBody = responseStatusManager.generateResponseHtml(errorCode);
+        return ;
+    }
+    // 2. 에러페이지 읽기 권한 확인
+    if (access(path.c_str(), R_OK) != 0)
+    {
+        // a. 권한없으면 403 에러 대신 띄움 (but, fall back 에러 페이지가 있다면 그걸 사용)
+        statusCode = 403;
+        if (locationConfig.isErrCode(statusCode) == true)
+        {
+            setSpecifiedErrorPage(statusCode);
+        }
+        return ;
+    }
+    // 여기서 부터 에러페이지가 실존하고 권한도 있는 상태
+    struct stat statbuf;
+    if (stat(path.c_str(), &statbuf) < 0)
+    {
+        statusCode = 500;
+        if (locationConfig.isErrCode(statusCode) == true)
+        {
+            setSpecifiedErrorPage(statusCode);
+        }
+        return ;
+    }
+    // 3. 에러페이지가 폴더다
+    if (S_ISDIR(statbuf.st_mode))
+    {
+        // a. index지시어가 지정되어 있고, index파일이 있다면 그 파일로 대체
+        const vector<string> & indexes = redirectedLocationConfig.getIndexes();
+        bool exist = false;
+        for (size_t i = 0; i < indexes.size(); i++)
+        {
+            string tmpPath = path + indexes.at(i);
+            if (access(tmpPath.c_str(), R_OK) == 0)
+            {
+                exist = true;
+                // reponse body에 저장(GET Method와 동일)
+                ifstream file(tmpPath);
+                if (file.fail())
+                {
+                    if (redirectedLocationConfig.isErrCode(500) == true)
+                    {
+                        statusCode = 500;
+                        setSpecifiedErrorPage(statusCode);
+                        return;
+                    }
+                }
+                getline(file, responseBody, '\0');
+                file.close();
+                return ;
+            }
+        }
+        // b. index지시어가 없거나 유효한 index.html이 없다.
+        if(exist == false)
+        {
+            if (redirectedLocationConfig.isAutoIndex() == true)
+            {
+                // auto index가 on 이면 폴더의 내용을 나열한다.
+                responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(root, errorPage);
+            }
+            else {
+                // 모두 다 해당하지 않는다면 내장 에러페이지 사용한다.
+                responseBody = responseStatusManager.generateResponseHtml(statusCode);
+            }
+        }
+    }
+    else if(S_ISREG(statbuf.st_mode))
+    {
+        // 4. 에러페이지가 파일이면 바로 저장한다.
+        ifstream file(path);
+        if (file.fail())
+        {
+            if (redirectedLocationConfig.isErrCode(500) == true)
+            {
+                statusCode = 500;
+                setSpecifiedErrorPage(statusCode);
+                return;
+            }
+        }
+        getline(file, responseBody, '\0');
+        file.close();
+    }
+}
+
 void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)
 {
     string httpMethod = requestMessage->getHttpMethod();
     
     // 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
-    if (httpMethod == "GET") {
+    if (httpMethod == "GET")
+    {
         statusCode = methodExecutor.getMethod(resourcePath, responseBody);
     }
-    else if(httpMethod == "POST") {
+    else if(httpMethod == "POST")
+    {
         statusCode = methodExecutor.postMethod(resourcePath, requestBody, responseBody);
     }
-    else if(httpMethod == "DELETE") {
+    else if(httpMethod == "DELETE")
+    {
         statusCode = methodExecutor.deleteMethod(resourcePath);
     }
-    else if(httpMethod == "PUT") {
+    else if(httpMethod == "PUT")
+    {
         statusCode = methodExecutor.putMethod(resourcePath, requestBody, responseBody);
     }
-    else if (httpMethod == "HEAD") {
+    else if (httpMethod == "HEAD")
+    {
         statusCode = methodExecutor.headMethod(resourcePath, responseBody);
     }
 }
 
 void HttpResponseBuilder::parseCgiProduct()
 {
+    // \n\n이 없다면 header가 없는 것으로 정하였음
     size_t lflf = responseBody.find("\n\n");
     if (lflf != string::npos) {
         string headersLine = responseBody.substr(0, lflf);
@@ -235,47 +344,83 @@ void HttpResponseBuilder::parseCgiProduct()
 }
 
 string HttpResponseBuilder::getResponse() const {
-    
+    cout << "getResponse() 호출 " << endl;
+    cout << "ReponseMessage 살아있니? " << responseMessage->getHeader("Content-Length") << endl;
     string response = responseMessage->getServerProtocol() + " ";
     response += Utils::itoa(responseMessage->getStatusCode()) + " ";
     response += responseMessage->getReasonPhrase() + "\r\n";
-    
+    cout << "HEADER_SIZE " << responseMessage->getHeaders().size() << endl;
     map<string, string> headers = responseMessage->getHeaders();
+    cout << "헤더들 가져옴" << endl;
     for (map<string, string>::iterator it = headers.begin(); it != headers.end(); it++) {
+        cout << "반복문 하나 시작" << endl;
         if (it->second != "") {
             response += it->first + ": " + it->second + "\r\n";
+            cout << "인자: " << it->second << endl;
         }
+        cout << "반복문 하나 끝" << endl;
     }
     response += "\r\n";
-    if (requestMessage->getHttpMethod() != "HEAD") {
+    if (requestMessage && requestMessage->getHttpMethod() != "HEAD") {
+        cout << "리퀘스트 메시지의 메소드를 체크!" << requestMessage->getHttpMethod() << endl;
         response += responseMessage->getBody();
     }
+    else if (!requestMessage) {
+        response += responseMessage->getBody();
+    }
+    cout << "getReponse() 끝" << endl;
     return response;
 }
 
 void HttpResponseBuilder::createInvalidResponseMessage()
 {
     ResponseStatusManager responseStatusManager;
-    ServerAutoIndexSimulator serverAutoIndexSimulator;
-
+    
     responseMessage = new HttpResponseMessage();
+    cout << "여기서 생성" << endl;
+    // ResponseHeaderAdder responseHeaderAdder(*responseMessage);
+
     statusCode = 400;
-    responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(locationConfig.getRoot(), uri);
-    responseMessage->setStatusCode(statusCode);
-    responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
-    responseMessage->setBody(responseBody);
-    // 에러 리다이렉션 있으면 여기서 체크 (따로 모듈화하기)
-    if (locationConfig.isErrCode(statusCode)) {
-        string errPageUrl = locationConfig.getErrPage(statusCode);
-        // 폴더인지 파일인지 체크하고 열고 읽을수있는지 체크하고 리스폰스바디에 저장하고...
+    connection = false; // 커넥션 끊기
+    if (locationConfig.isErrCode(statusCode))
+    {
+        cout << "특별 커스텀 에러 페이지 함수 호출 전" << endl;
+        setSpecifiedErrorPage(statusCode);
+        cout << "특별 커스텀 에러 페이지 함수 호출 후" << endl;
+
     }
+    else {
+        responseBody = responseStatusManager.generateResponseHtml(statusCode);
+        cout << "ResponseBody :: " << responseBody << endl;
+    }
+    cout << "응답 코드 세팅 전 " << endl;
+    responseMessage->setStatusCode(statusCode);
+    cout << "응답 코드 세팅 후, 응답코드:  " <<  responseMessage->getStatusCode() <<  endl;
+    cout << "응답 사유 구절 세팅 전" << endl;
+    responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
+    cout << "응답 사유 구절 세팅 후, 사유 구절: " << responseMessage->getReasonPhrase() << endl;
+    cout << "응답 바디 세팅 전" << endl;
+    responseMessage->setBody(responseBody);
+    cout << "응답 바디 세팅 후, 바디: " << responseMessage->getBody() << endl;
+    cout << "콘텐트 타입 세팅 전" << endl;
+    responseMessage->addHeader("Content-Type", "html/text");
+    cout << "콘텐트 타입 세팅 후, 콘텐트타입: " << responseMessage->getHeader("Content-Type");
+    cout << "콘텐트 렝스 세팅 전" << endl;
+    responseMessage->addHeader("Content-Length", Utils::itoa(responseBody.length()));
+    cout << "콘텐트 렝스 세팅 후: 콘텐스 렝스" << responseMessage->getHeader("Content-Length") << endl;
+    // responseHeaderAdder.addContentTypeHeader("html/text");
+    // responseHeaderAdder.addContentLengthHeader(responseBody);
+    // responseHeaderAdder.addDateHeader();
 }
 
 void HttpResponseBuilder::createResponseMessage() {
     string httpMethod = requestMessage->getHttpMethod();
     responseMessage = new HttpResponseMessage();
     ResponseStatusManager responseStatusManager;
-
+    //커스텀 에러페이지 있는지 체크
+    if (locationConfig.isErrCode(statusCode)) {
+        setSpecifiedErrorPage(statusCode);
+    }
     responseMessage->setStatusCode(statusCode);
     responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
     if (autoIndex) {
@@ -364,9 +509,6 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     needMoreMessage = requestMessage->getChunked();
     connection = requestMessage->getConnection();
     needCgi = locationConfig.isCgi();
-    string cgiXX = locationConfig.getCgi();
-    cout << "CGI 확장자" << cgiXX << endl;
-
     requestBody = requestMessage->getBody();
 }
 

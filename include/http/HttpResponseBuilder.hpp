@@ -59,8 +59,9 @@ class HttpResponseBuilder {
         void parseCgiProduct();
         void createResponseMessage();
         int isAllowedRequestMessage();
-        void createInvalidResponseMessage();
+        void setSpecifiedErrorPage(const int & errorCode);
     public:
+        void createInvalidResponseMessage();
         HttpResponseBuilder(const Server *server, WebservValues & webservValues);
         ~HttpResponseBuilder();
         void initiate(HttpRequestMessage * requestMessage);

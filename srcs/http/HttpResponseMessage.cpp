@@ -3,6 +3,7 @@
 HttpResponseMessage::HttpResponseMessage()
 {
     this->serverProtocol = "HTTP/1.1";
+    cout << "HttpResponseMessage 생성자 호출" << endl;
 }
 
 int HttpResponseMessage::getStatusCode() const
@@ -15,7 +16,7 @@ string HttpResponseMessage::getReasonPhrase() const
     return reasonPhrase;
 }
 
-void HttpResponseMessage::setStatusCode(const int &statusCode)
+void HttpResponseMessage::setStatusCode(int statusCode)
 {
     this->statusCode = statusCode;
 }

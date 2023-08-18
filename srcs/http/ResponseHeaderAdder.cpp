@@ -1,4 +1,10 @@
 #include "ResponseHeaderAdder.hpp"
+
+// ResponseHeaderAdder::ResponseHeaderAdder(HttpResponseMessage & responseMessage)
+// {
+
+// }
+
 ResponseHeaderAdder::ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, \
     const LocationConfig & locationConfig, const string & resourcePath)
     : requestMessage(requestMessage), responseMessage(responseMessage), locationConfig(locationConfig), resourcePath(resourcePath) {}
@@ -66,3 +72,4 @@ void ResponseHeaderAdder::addConnectionHeader(const bool & connect)
         responseMessage.addHeader("Connection", "keep-alive");
     }
 }
+

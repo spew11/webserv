@@ -18,6 +18,7 @@ class ResponseHeaderAdder
         const LocationConfig & locationConfig;
         const string & resourcePath;
     public:
+        // ResponseHeaderAdder(HttpResponseMessage & responseMessage);
         ResponseHeaderAdder(const HttpRequestMessage & requestMessage, \
             HttpResponseMessage & responseMessage, \
             const LocationConfig & locationConfig, \
