@@ -543,14 +543,14 @@ vector<string> HttpRequestBuilder::split(const string& s, const string& delim)
         end = s.find(delim, start);
         if (end == string::npos)
 		{
-			// if (start >= s.length())
-			// {
-			// 	result.push_back(""); // \r\n 으로 끝난 문자열이면 result 맨마지막에 "" 요소 추가
-			// }
-			// else
-			// {
+			if (start >= s.length())
+			{
+				result.push_back(""); // \r\n 으로 끝난 문자열이면 result 맨마지막에 "" 요소 추가
+			}
+			else
+			{
 				result.push_back(s.substr(start, s.length()));
-			// }
+			}
             break;
         }
     }
