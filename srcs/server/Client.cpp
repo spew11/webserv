@@ -36,7 +36,6 @@ Client::~Client()
 
 void Client::send_msg()
 {
-	// cout << send_buf << endl;
 	cout << "***********send_buf***********" << endl;
 	cout << send_buf << endl;
 	cout << "******************************" << endl << endl;
@@ -60,8 +59,8 @@ void Client::recv_msg()
 		else
 			break;
 	}
+	cout << "***************[" << sock << "]recv_buf***************" << endl;
 	// cout << sock << ">> " << recv_buf << endl;
-	cout << "***********recv_buf***********" << endl;
 	cout << recv_buf << endl;
 	cout << "******************************" << endl << endl;
 }

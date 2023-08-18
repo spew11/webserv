@@ -11,6 +11,7 @@ HttpRequestBuilder::HttpRequestBuilder()
 	this->contentLength = 0;
 	this->isChunked = false;
 	this->body = "";
+	this->needMoreChunk = false;
 }
 
 HttpRequestBuilder::~HttpRequestBuilder()
@@ -32,6 +33,7 @@ void HttpRequestBuilder::erase(void)
 	this->contentLength = 0;
 	this->isChunked = false;
 	this->body = "";
+	this->needMoreChunk = false;
 }
 
 HttpRequestBuilder::HttpRequestBuilderBuildStep HttpRequestBuilder::getBuildStep(void)
@@ -43,42 +45,52 @@ void HttpRequestBuilder::setMethodType(HttpMethodType methodType)
 {
 	this->methodType = methodType;
 }
+
 HttpRequestBuilder::HttpMethodType HttpRequestBuilder::getMethodType(void)
 {
 	return this->methodType;
 }
+
 void HttpRequestBuilder::setPath(string path)
 {
 	this->path = path;
 }
+
 string HttpRequestBuilder::getPath(void)
 {
 	return this->path;
 }
+
 void HttpRequestBuilder::setHttpVersion(string httpVersion)
 {
 	this->httpVersion = httpVersion;
 }
+
 string HttpRequestBuilder::getHttpVersion(void)
 {
 	return this->httpVersion;
 }
+
 int HttpRequestBuilder::getContentLength(void)
 {
 	return this->contentLength;
 }
+
 bool HttpRequestBuilder::getIsChunked(void)
 {
 	return this->isChunked;
 }
+
 void HttpRequestBuilder::setBody(string body)
 {
 	this->body = body;
 }
+
 void HttpRequestBuilder::appendBody(string body)
 {
 	this->body += body;
 }
+
 string HttpRequestBuilder::getBody(void)
 {
 	return this->body;
@@ -88,23 +100,23 @@ string HttpRequestBuilder::getMethod(const HttpMethodType &methodType) const
 {
 	switch(methodType)
 	{
-		case 0:
+		case METHOD_TYPE_NONE:
 			return "NONE";
-		case 1:
+		case GET:
 			return "GET";
-		case 2:
+		case POST:
 			return "POST";
-		case 3:
+		case PUT:
 			return "PUT";
-		case 4:
+		case HEAD:
 			return "HEAD";
-		case 5:
+		case DELETE:
 			return "DELETE";
-		case 6:
+		case OPTIONS:
 			return "OPTIONS";
-		case 7:
+		case PATCH:
 			return "PATCH";
-		case 8:
+		case TRACE:
 			return "TRACE";
 	}
 }
@@ -251,7 +263,7 @@ bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 		return false;
 	}
 	// first line의 경우 반드시 공백 문자가 1개 이상 필요한데, key의 경우 공백문자 포함될 경우 이미 이전에 필터링됨
-	// 때문에 key에 대해서는 first line인지 다시 확인할 필요가 없음
+	// 때문에 key에 대해서는 first line인지 다시 확인할 필요가 없음, key에는 공백문자가 있으면 안되기 때문
 	for(size_t i = 0; i < value.length(); i++)
 	{
 		if (this->buildFirstLine(value.substr(i, value.length()), true))
@@ -286,16 +298,13 @@ bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 				this->contentLength = atoi(value.c_str());
 			}
 		}
-		else if (!lowerKey.compare("transfer-encoding"))
+		else if (!lowerKey.compare("transfer-encoding") && !value.compare("chunked")) //새로고침!
 		{  // isChunked 갱신
 			if (this->contentLength > 0)
 			{  // isChunked인 경우 Content-Length header는 없어야 함
 				return false;
 			}
-			if (!value.compare("chunked"))
-			{
-				this->isChunked = true;
-			}
+			this->isChunked = true;
 		}
 	}
 
@@ -379,17 +388,24 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 	for(size_t i = lines_index; i < lines.size()-1; i++)
 	{
 		if (lines[i].length() == 0)
-		{  // empty line, header finish
+		{  // empty line //size -1 까지만 보기 때문에 \r\n으로 끝난놈과 \r\n\r\n으로 끝난 놈을 구별할 필요X 무조건 \r\n\r\n으로 끝난 놈임
 			cout << "EMPTY LINE" << i << endl;
 			if (getBuildStep() == BUILD_HEADER && body_required)
-			{  // header를 완성한 뒤 body로 넘어가는 경우
+			{  
+				// header finish
+				// header를 완성한 뒤 body로 넘어가는 경우
 				setBuildStep(BUILD_BODY);
 			}
 			else if (getBuildStep() == BUILD_BODY && body_required)
 			{  // 이미 body를 완성중이었던 경우
 				if (getIsChunked())
-				{
-					return buildChunkedBody(recvBuf, body, lines, i);
+				{  // chunked 1번, 4번
+					// 빈문자열이 올경우 이전까지만 정상적인 요청으로 하고 리턴 0
+					needMoreChunk = true;
+					appendBody(body);
+					recvBuf = Utils::stringJoin(lines, "\r\n", i);
+					cout << "[RETURN 0] chunked body success" << endl;
+					return 0;
 				}
 				else
 				{
@@ -402,10 +418,8 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 				cout << "[RETURN 0] header is finished. (body is not required.)" << endl;
 				return 0;  // 온전한 request 완성 (body 없는 method)
 			}
-			continue;
 		}
-
-		if (getBuildStep() == BUILD_BODY)
+		else if (getBuildStep() == BUILD_BODY)
 		{  // body를 완성중이던 경우
 			if (getIsChunked())
 			{
@@ -415,19 +429,27 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 					{
 						chunked_number = stoi(lines[i], 0, 16);
 						if (chunked_number == 0)
-						{  // chunked number가 0이면 request가 끝이라는 의미
-							return buildChunkedBody(recvBuf, body, lines, i+1);  // return 0
+						{  // chunked 2번, chunked number가 0이면 request가 끝이라는 의미
+							needMoreChunk = false;
+							appendBody(body);
+							recvBuf = Utils::stringJoin(lines, "\r\n", i+1);
+							cout << "[RETURN 0] chunked body success" << endl;
+							return 0;
 						}
 					}
 					else
-					{  // chunked number가 나올 차례인데 다른 문자열이 나온 경우, 이전까지의 body로 request가 끝났다고 가정
-						return buildChunkedBody(recvBuf, body, lines, i);  // return -1
+					{  // chunked 3번, chunked number가 나올 차례인데 다른 문자열이 나온 경우, 이전까지의 body로 request가 끝났다고 가정
+						needMoreChunk = true;
+						appendBody(body);
+						recvBuf = Utils::stringJoin(lines, "\r\n", i);
+						cout << "[RETURN 0] chunked body success" << endl;
+						return 0;
 					}
 				}
 				else
 				{  // chunked string이 나올 차례인 경우
 					if (lines[i].length() != chunked_number)
-					{
+					{  // chunked 5번
 						erase();
 						recvBuf = Utils::stringJoin(lines, "\r\n", i);  // recvBuf에 현재 line부터 추가
 						cout << "[RETURN -1] chunked length mismatch: " << chunked_number << " vs " << lines[i].length() << endl;
@@ -457,13 +479,14 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 		}
 	}
 
+	// 마지막라인 처리(\r\n으로 끝났을 때 마지막라인이 빈문자열이라는 것이 핵심)
 	if (body_required && getBuildStep() == BUILD_BODY)
 	{  // 마지막 line까지 포함해 body 완성 후 content-length와 비교
 		if (getIsChunked())
 		{  // chunked인 경우 마지막 line을 recvBuf에 남긴 뒤에 이후 다시 판단
 			appendBody(body);
 			recvBuf = "";
-			if (chunked_number != -1)
+			if (chunked_number != -1) // 이제 문자열이 나올차례다
 			{
 				recvBuf += to_string(chunked_number) + "\r\n";
 			}
@@ -490,7 +513,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 			}
 			else
 			{  // body가 충분히 모인 경우
-				setBody(body.substr(0, getContentLength()));  // 완성된 body를 content-length만큼 slicing해 request_buf에 추가
+				setBody(body.substr(0, getContentLength()));  // 완성된 body를 content-length만큼 slicing해 body에 추가
 				recvBuf = body.substr(getContentLength(), body.length()-getContentLength());  // 잔여물 body는 recvBuf에 덮어씌움
 				cout << "[RETURN 0] body is sufficient." << endl;
 				return 0;
@@ -508,29 +531,6 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 	return 0;
 }
 
-// chunkedBody를 완성하는 함수
-// body의 길이에 따라 실패(body_length=0)/성공(body_length>0) 판단해 return (실패: -1, 성공: 0)
-// recvBuf는 "\r\n".join(lines[startIdx:])로 갱신됨
-int HttpRequestBuilder::buildChunkedBody(string &recvBuf, string &body, vector<string> &lines, int startIdx)
-{
-	appendBody(body);
-	recvBuf = Utils::stringJoin(lines, "\r\n", startIdx);
-	cout << "[RETURN 0] chunked body success" << endl;
-	return 0;
-	// if (getBody().length() == 0 && body.length() == 0) {
-	// 	erase();
-	// 	recvBuf = Utils::stringJoin(lines, "\r\n", startIdx);
-	// 	cout << "[RETURN -1] chunked body empty" << endl;
-	// 	return -1;
-	// }
-	// else {
-	// 	appendBody(body);
-	// 	recvBuf = Utils::stringJoin(lines, "\r\n", startIdx);
-	// 	cout << "[RETURN 0] chunked body success" << endl;
-	// 	return 0;
-	// }
-}
-
 vector<string> HttpRequestBuilder::split(const string& s, const string& delim)
 {
 	vector<string> result;
@@ -540,17 +540,17 @@ vector<string> HttpRequestBuilder::split(const string& s, const string& delim)
 	{
         result.push_back(s.substr(start, end - start));
         start = end + delim.size();
-        end = s.find_first_of(delim, start);
+        end = s.find(delim, start);
         if (end == string::npos)
 		{
-			if (start >= s.length())
-			{
-				result.push_back("");
-			}
-			else
-			{
+			// if (start >= s.length())
+			// {
+			// 	result.push_back(""); // \r\n 으로 끝난 문자열이면 result 맨마지막에 "" 요소 추가
+			// }
+			// else
+			// {
 				result.push_back(s.substr(start, s.length()));
-			}
+			// }
             break;
         }
     }
@@ -563,7 +563,7 @@ HttpRequestMessage *HttpRequestBuilder::createRequestMessage()
 	string serverProtocol = "HTTP/" + httpVersion;
 	string method = getMethod(methodType);
 	string requestbody = body;
-	requestMessage = new HttpRequestMessage(method, path, serverProtocol, headers, body);
+	requestMessage = new HttpRequestMessage(method, path, serverProtocol, headers, body, needMoreChunk);
 	erase();
 	return requestMessage;
 }

@@ -10,6 +10,7 @@ class HttpRequestMessage : public HttpMessage
 private:
     string httpMethod;
     string requestTarget;
+    bool needMoreChunk;
     bool chunked;
     bool connection;
     int errorCode;
@@ -20,11 +21,13 @@ public:
                        const string requestTarget,
                        string serverProtocol,
                        map<string, string> headers,
-                       string body);
+                       string body,
+                       bool needMoreChunk);
     string getHttpMethod() const;
     string getRequestTarget() const;
-    bool getChunked() const;
+    bool getNeedMoreChunked() const;
     bool getConnection() const;
+    bool isChunked() const;
     int getErrorCode() const;
 };
 

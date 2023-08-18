@@ -546,6 +546,7 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     
     clear();
     this->requestMessage = requestMessage;
+    this->needMoreMessage = requestMessage->getNeedMoreChunked();
     // 1. uri 구하기
     if ((end = parseRequestUri()) == 1)
     {
@@ -593,7 +594,7 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     // 7. webserv 변수 초기화하기
     initWebservValues();
     // 8. ResponseBuilder 클래스 플래그들 초기화하기
-    needMoreMessage = requestMessage->getChunked();
+    needMoreMessage = requestMessage->getNeedMoreChunked();
     connection = requestMessage->getConnection();
     needCgi = locationConfig.isCgi();
     requestBody = requestMessage->getBody();
@@ -605,7 +606,7 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
     {
         return ;
     }
-    needMoreMessage = newRequestMessage->getChunked();
+    needMoreMessage = newRequestMessage->getNeedMoreChunked();
     connection = newRequestMessage->getConnection();
     requestBody.append(newRequestMessage->getBody());
 

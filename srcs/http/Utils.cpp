@@ -19,7 +19,7 @@ vector<string> Utils::split(const string &s, const string &delim)
 	{
 		result.push_back(s.substr(start, end - start));
 		start = end + delim.size();
-		end = s.find_first_of(delim, start);
+		end = s.find(delim, start);
 		if (end == string::npos)
 		{
 			result.push_back(s.substr(start, s.length()));
