@@ -1,6 +1,6 @@
 #include "LocationConfig.hpp"
 
-LocationConfig::LocationConfig( void )
+LocationConfig::LocationConfig(void)
 {
 	rootMod = NULL;
 	indexMod = NULL;
@@ -13,36 +13,36 @@ LocationConfig::LocationConfig( void )
 	errorPageMods.clear();
 }
 
-void LocationConfig::addModules( const vector<Module*> & modules )
+void LocationConfig::addModules(const vector<Module *> &modules)
 {
 	for (size_t i = 0; i < modules.size(); i++)
 	{
-		Module * mod = modules[i];
+		Module *mod = modules[i];
 
 		if (mod->getName() == "root")
-        {
-            rootMod = dynamic_cast<RootModule *>(mod);
-            // check casting
-        }
-        else if (mod->getName() == "index")
-        {
-            indexMod = dynamic_cast<IndexModule *>(mod);
-            // check casting
-        }
-        else if (mod->getName() == "types")
-        {
-            typesMod = dynamic_cast<TypesModule *>(mod);
-            // check casting
-        }
-        else if (mod->getName() == "error_page")
-        {
-            errorPageMods.push_back(dynamic_cast<ErrorPageModule *>(mod));
-            // check casting
-        }
+		{
+			rootMod = dynamic_cast<RootModule *>(mod);
+			// check casting
+		}
+		else if (mod->getName() == "index")
+		{
+			indexMod = dynamic_cast<IndexModule *>(mod);
+			// check casting
+		}
+		else if (mod->getName() == "types")
+		{
+			typesMod = dynamic_cast<TypesModule *>(mod);
+			// check casting
+		}
+		else if (mod->getName() == "error_page")
+		{
+			errorPageMods.push_back(dynamic_cast<ErrorPageModule *>(mod));
+			// check casting
+		}
 		else if (mod->getName() == "cgi")
 		{
 			cgiMod = dynamic_cast<CgiModule *>(mod);
-		}	
+		}
 		else if (mod->getName() == "cgi_params")
 		{
 			cgiParamsMod = dynamic_cast<CgiParamsModule *>(mod);
@@ -50,29 +50,29 @@ void LocationConfig::addModules( const vector<Module*> & modules )
 		else if (mod->getName() == "autoindex")
 		{
 			autoIndexMod = dynamic_cast<AutoIndexModule *>(mod);
-		}	
+		}
 		else if (mod->getName() == "client_max_body_size")
 		{
 			cliMaxBodyMod = dynamic_cast<ClientMaxBodySizeModule *>(mod);
-		}	
+		}
 		else if (mod->getName() == "accept_method")
 		{
 			acceptMethodMod = dynamic_cast<AcceptMethodModule *>(mod);
-		}	
+		}
 	}
 }
 
-const string & LocationConfig::getRoot( void ) const
+const string &LocationConfig::getRoot(void) const
 {
 	static const string defaultRoot = "html";
 
 	if (rootMod == NULL)
 		return defaultRoot; // default값
-	
+
 	return rootMod->getRoot();
 }
 
-const vector<string> & LocationConfig::getIndexes( void ) const
+const vector<string> &LocationConfig::getIndexes(void) const
 {
 	static const vector<string> defaultIndexes = vector<string>(1, "index");
 
@@ -82,9 +82,9 @@ const vector<string> & LocationConfig::getIndexes( void ) const
 	return indexMod->getIndexes();
 }
 
-const string & LocationConfig::getType( const string & scriptName ) const
+const string &LocationConfig::getType(const string &scriptName) const
 {
-	static const string defaultType = "text/html";// 나중에 defaultType모듈로 변경
+	static const string defaultType = "text/html"; // 나중에 defaultType모듈로 변경
 
 	if (typesMod == NULL)
 		return defaultType;
@@ -104,40 +104,40 @@ const string & LocationConfig::getType( const string & scriptName ) const
 	return defaultType;
 }
 
-bool LocationConfig::isErrCode( int code ) const
+bool LocationConfig::isErrCode(int code) const
 {
 	for (int i = 0; errorPageMods.size(); i++)
 	{
-		if (errorPageMods[i]->isErrCode( code ))
+		if (errorPageMods[i]->isErrCode(code))
 			return true;
 	}
 
 	return false;
 }
 
-const string & LocationConfig::getErrPage( int code ) const
+const string &LocationConfig::getErrPage(int code) const
 {
 	static const string defaultErrPage = "";
 
 	for (int i = 0; errorPageMods.size(); i++)
 	{
-		if (errorPageMods[i]->isErrCode( code ))
+		if (errorPageMods[i]->isErrCode(code))
 			return errorPageMods[i]->getUri();
 	}
 
 	return defaultErrPage;
 }
 
-bool LocationConfig::isCgi( void ) const
+bool LocationConfig::isCgi(void) const
 {
 	if (cgiMod == NULL)
 		return false;
-	
+
 	return true;
 }
 
 // getCgi메소드를 사용하기전 isCgi를 확인해주는게 좋음
-const string & LocationConfig::getCgi( void ) const
+const string &LocationConfig::getCgi(void) const
 {
 	static const string defaultCgi = "";
 
@@ -148,23 +148,23 @@ const string & LocationConfig::getCgi( void ) const
 }
 
 // mallllllllloc const를 붙여서 반환하는 방법은 모르겟음
-char ** LocationConfig::getCgiParams( const WebservValues & env ) const 
+char **LocationConfig::getCgiParams(const WebservValues &env) const
 {
 	if (cgiParamsMod == NULL)
 	{
-		char ** paramArr = new char*[1];
+		char **paramArr = new char *[1];
 		*paramArr = NULL;
-		
+
 		return paramArr;
 	}
-		
-	const vector<pair<string, string> > & params = cgiParamsMod->getParams();
 
-	char ** paramArr = new char*[params.size() + 1];
+	const vector<pair<string, string>> &params = cgiParamsMod->getParams();
+
+	char **paramArr = new char *[params.size() + 1];
 
 	for (int i = 0; i < params.size(); i++)
 	{
-		const string & key = params[i].first;
+		const string &key = params[i].first;
 		string value = env.convert(params[i].second);
 
 		size_t keySize = params[i].first.size();
@@ -176,19 +176,19 @@ char ** LocationConfig::getCgiParams( const WebservValues & env ) const
 	}
 
 	paramArr[params.size()] = NULL;
-	
+
 	return paramArr;
 }
 
-bool LocationConfig::isAutoIndex( void ) const
+bool LocationConfig::isAutoIndex(void) const
 {
 	if (autoIndexMod == NULL)
 		return false;
-	
+
 	return autoIndexMod->getAutoIndex();
 }
 
-int LocationConfig::getClientMaxBodySize( void ) const
+int LocationConfig::getClientMaxBodySize(void) const
 {
 	if (cliMaxBodyMod == NULL)
 		return 1024;
@@ -196,7 +196,7 @@ int LocationConfig::getClientMaxBodySize( void ) const
 	return cliMaxBodyMod->getClientMaxBodySize();
 }
 
-const vector<string> & LocationConfig::getAcceptMethods( void ) const
+const vector<string> &LocationConfig::getAcceptMethods(void) const
 {
 	const static vector<string> defaultMethod = vector<string>(1, "GET");
 

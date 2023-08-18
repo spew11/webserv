@@ -1,5 +1,5 @@
 #ifndef SERVER_HPP
-# define SERVER_HPP
+#define SERVER_HPP
 
 #include <iostream>
 #include <vector>
@@ -10,28 +10,30 @@
 #include <exception>
 #include <unistd.h>
 
-# include "Client.hpp"
-# include "ServerConfig.hpp"
+#include "Client.hpp"
+#include "ServerConfig.hpp"
+
+using namespace std;
 
 class Client;
 
 class Server
 {
 private:
-	int			sock;
+	int sock;
 	struct sockaddr_in addr;
-	std::vector<ServerConfig>	configs;
+	vector<ServerConfig> configs;
 
 public:
 	Server(const ServerConfig &config);
 	~Server();
 
-	bool	isSame(const uint32_t &ip, const uint16_t &port);
-	void	addConfig(const ServerConfig &config);
-	int		getSock(void) const;
-	ServerConfig::LocationMap	getConfig(std::string host) const;
-	std::string	getIP(void) const;
-	uint16_t	getPort(void) const;
+	bool isSame(const uint32_t &ip, const uint16_t &port);
+	void addConfig(const ServerConfig &config);
+	int getSock(void) const;
+	ServerConfig::LocationMap getConfig(string host) const;
+	string getIP(void) const;
+	uint16_t getPort(void) const;
 };
 
 #endif
