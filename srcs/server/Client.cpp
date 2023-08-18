@@ -15,7 +15,7 @@ Client::Client(Server *server): server(server)
 #endif
 
 	std::cout << "Connet: Client" << sock << std::endl;
-	std::cout << inet_ntoa(addr.sin_addr) << ":" << addr.sin_port << std::endl;
+	std::cout << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
 	webVal.insert("server_addr", server->getIP());
 	webVal.insert("server_port", server->getPort());
 	webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
@@ -26,7 +26,10 @@ Client::Client(Server *server): server(server)
 
 Client::~Client()
 {
+	cout << "Connection Close: " << sock << std::endl;
 	close(sock);
+	delete hrb;
+	
 }
 
 void Client::send_msg()
@@ -86,34 +89,39 @@ bool Client::isSendable() const
 void Client::communicate()
 {
 	recv_msg();	
-	if (recv_buf.find("\r\n\r\n") == std::string::npos)
+	if (recv_buf.find("\r\n\r\n") == string::npos) {
 		return;
-
-	if (hrb->getNeedMoreMessageFlag() == false)
+	}
+	if (hrb->getNeedMoreMessage() == false)
 	{
 		hrb->initiate(recv_buf);
 		// 아래 if문 하나 추가 (은지가)
 		if (hrb->getEnd())
 		{
-			send_buf = hrb->getResponseMessage().toString();
+			send_buf = hrb->getResponse(); // hrb에서 응답스트링 만들어주는 걸로 바꿨음.
 			return;
 		}
 	}
 	else
 	{
 		hrb->addRequestMessage(recv_buf);
+		if (hrb->getEnd()) {
+			send_buf = hrb->getResponse();
+			return ;
+		}
 	}
-	if (hrb->getNeedMoreMessageFlag() == false)
+	if (hrb->getNeedMoreMessage() == false)
 	{
 		makeResponse();
-		send_buf = hrb->getResponseMessage().toString();
+		send_buf += hrb->getResponse();
+
 	}
 }
 
 void Client::makeResponse()
 {
 	IMethodExecutor *executor;
-	if (hrb->getNeedCgiFlag() == true)
+	if (hrb->getNeedCgi() == true)
 	{
 		LocationConfig lc = hrb->getLocationConfig();
 		executor = new CgiMethodExecutor(lc.getCgiParams(webVal));

@@ -133,6 +133,17 @@ bool LocationConfig::isCgi( void ) const
 	if (cgiMod == NULL)
 		return false;
 	
+	return true;
+}
+
+// getCgi메소드를 사용하기전 isCgi를 확인해주는게 좋음
+const string & LocationConfig::getCgi( void ) const
+{
+	static const string defaultCgi = "";
+
+	if (cgiMod == NULL)
+		return defaultCgi;
+
 	return cgiMod->getCgi();
 }
 
