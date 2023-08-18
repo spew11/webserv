@@ -365,6 +365,9 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     needMoreMessage = requestMessage->getChunked();
     connection = requestMessage->getConnection();
     needCgi = locationConfig.isCgi();
+    string cgiXX = locationConfig.getCgi();
+    cout << "CGI 확장자" << cgiXX << endl;
+
     requestBody = requestMessage->getBody();
 }
 
