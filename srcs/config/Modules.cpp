@@ -1,8 +1,17 @@
 #include "Modules.hpp"
 
 // Module
-Module::Module ( Directive const & directive, enum ModuleType type )
+Module::Module( Directive const & directive, enum ModuleType type )
     : name(directive.name), type(type) {}
+
+Module::~Module()
+{
+	for (size_t i = 0; i < subMods.size(); ++i)
+	{
+		delete subMods[i];
+		subMods[i] = NULL;
+	}
+}
 
 Module::syntax_error::syntax_error( const string & directive )
 	: runtime_error("Config error: The \"" + directive + "\" directive has an incorrect syntax") {}

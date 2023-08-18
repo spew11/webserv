@@ -24,3 +24,8 @@ Config::Config( Module *_mainMod ) : mainMod(_mainMod)
 	}
 }
 
+Config::~Config()
+{
+	delete mainMod;
+	mainMod = NULL;
+}
