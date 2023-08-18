@@ -1,5 +1,10 @@
 #include "HttpResponseMessage.hpp"
 
+HttpResponseMessage::HttpResponseMessage()
+{
+    this->serverProtocol = "HTTP/1.1";
+}
+
 int HttpResponseMessage::getStatusCode() const
 {
     return statusCode;

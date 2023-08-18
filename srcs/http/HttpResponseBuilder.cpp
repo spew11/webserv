@@ -24,6 +24,18 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & w
     autoIndex = false;
 }
 
+HttpResponseBuilder::~HttpResponseBuilder()
+{
+    if (responseMessage) {
+        delete responseMessage;
+        responseMessage = 0;
+    }
+    if (requestMessage) {
+        delete requestMessage;
+        responseMessage = 0;
+    }
+}
+
 void HttpResponseBuilder::clear()
 {
     if (responseMessage) {
@@ -52,9 +64,9 @@ void HttpResponseBuilder::clear()
     autoIndex = false;
 }
 
-int HttpResponseBuilder::parseRequestUri(const string & requestTarget)
+int HttpResponseBuilder::parseRequestUri()
 {
-    
+    const string & requestTarget = requestMessage->getRequestTarget();
     requestUri = requestTarget;
     
     size_t pos = requestUri.find_first_of(";?#");
@@ -63,22 +75,6 @@ int HttpResponseBuilder::parseRequestUri(const string & requestTarget)
     }
     else {
         uri = requestUri.substr(0, pos);
-    }
-
-    //폴더면 '/' 붙이기
-    if (uri[uri.length()-1] != '/') {
-        string absolutePath = locationConfig.getRoot() + uri;
-        if (access(absolutePath.c_str(), F_OK) == 0) {
-            struct stat statbuf;
-            if (stat(absolutePath.c_str(), &statbuf) < 0) {
-                statusCode = 500;
-                return 1;           
-            }
-            if (S_ISDIR(statbuf.st_mode)) {
-                uri += "/";
-            }
-
-        }
     }
 
     filename = uri;
@@ -95,26 +91,20 @@ int HttpResponseBuilder::parseRequestUri(const string & requestTarget)
     return 0;
 }
 
-int HttpResponseBuilder::checkAcceptMethod(const vector<string> & acceptMethods, const string & httpMethod)
-{
-    if (find(acceptMethods.begin(), acceptMethods.end(), httpMethod) == acceptMethods.end()) {
-        statusCode = 405;
-        return 1;
-    }
-    return 0;
-}
-
 int HttpResponseBuilder::checkClientMaxBodySize(const int & clientMaxBodySize)
 {
-    if (requestMessage->getBody().length() > clientMaxBodySize) {
+    if (requestMessage->getBody().length() > clientMaxBodySize)
+    {
         statusCode = 413; // "413 Request Entity Too Large" 
         return 1;
     }
     return 0;
 }
 
-int HttpResponseBuilder::validateResource(const vector<string> & indexes, const string & httpMethod)
+int HttpResponseBuilder::isValidateResource()
 {
+    const vector<string> & indexes = locationConfig.getIndexes();
+    const string & httpMethod = requestMessage->getHttpMethod();
     struct stat statbuf;
     string tmpPath = locationConfig.getRoot() + uri;
 
@@ -227,7 +217,6 @@ void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)
     else if (httpMethod == "HEAD") {
         statusCode = methodExecutor.headMethod(resourcePath, responseBody);
     }
-
 }
 
 void HttpResponseBuilder::parseCgiProduct()
@@ -265,12 +254,29 @@ string HttpResponseBuilder::getResponse() const {
     return response;
 }
 
+void HttpResponseBuilder::createInvalidResponseMessage()
+{
+    ResponseStatusManager responseStatusManager;
+    ServerAutoIndexSimulator serverAutoIndexSimulator;
+
+    responseMessage = new HttpResponseMessage();
+    statusCode = 400;
+    responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(locationConfig.getRoot(), uri);
+    responseMessage->setStatusCode(statusCode);
+    responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
+    responseMessage->setBody(responseBody);
+    // 에러 리다이렉션 있으면 여기서 체크 (따로 모듈화하기)
+    if (locationConfig.isErrCode(statusCode)) {
+        string errPageUrl = locationConfig.getErrPage(statusCode);
+        // 폴더인지 파일인지 체크하고 열고 읽을수있는지 체크하고 리스폰스바디에 저장하고...
+    }
+}
+
 void HttpResponseBuilder::createResponseMessage() {
     string httpMethod = requestMessage->getHttpMethod();
     responseMessage = new HttpResponseMessage();
     ResponseStatusManager responseStatusManager;
 
-    responseMessage->setServerProtocol(requestMessage->getServerProtocol());
     responseMessage->setStatusCode(statusCode);
     responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
     if (autoIndex) {
@@ -288,47 +294,88 @@ void HttpResponseBuilder::createResponseMessage() {
     responseHeaderAdder.executeAll();
 }
 
-void HttpResponseBuilder::initiate(const string & request)
+int HttpResponseBuilder::isAllowedRequestMessage()
+{
+    const vector<string> & acceptMethods = locationConfig.getAcceptMethods();
+    const string & httpMethod = requestMessage->getHttpMethod();
+    const string & serverProtocol = requestMessage->getServerProtocol();
+    // protocol version check
+    if (serverProtocol != "HTTP/1.1")
+    {
+        statusCode = 505;
+        return 1;
+    }
+    // method check
+    if (find(acceptMethods.begin(), acceptMethods.end(), httpMethod) == acceptMethods.end())
+    {
+        statusCode = 405;
+        return 1;
+    }
+    // client max body size check
+    if (checkClientMaxBodySize(locationConfig.getClientMaxBodySize()))
+    {
+        return 1;
+    }
+    return 0;
+}
+
+void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
 {
     clear();
-    requestMessage = new HttpRequestMessage(request);
-    if (requestMessage->getErrorCode() > 0) {
-        statusCode = requestMessage->getErrorCode();
-        return ;
-    }
-    if ((end = checkClientMaxBodySize(locationConfig.getClientMaxBodySize())) == true) {
+    this->requestMessage = requestMessage;
+    cout << requestMessage->getHttpMethod() << endl;
+    // 1. uri 구하기
+    if ((end = parseRequestUri()) == 1) {
         createResponseMessage();
         return ;
     }
-    if ((end = parseRequestUri(requestMessage->getRequestTarget())) == true) {
+    // 2. uri 바탕으로 locationConfig 구하기
+    locationConfig = server->getConfig(requestMessage->getHeader("host")).getLocConf(uri);
+    // 3. locationConfig 메서드를 이용해서 accept_method, client_max_body_size 체크
+    if ((end = isAllowedRequestMessage()) == 1)
+    {
         createResponseMessage();
         return ;
     }
-    locationConfig = server->getConfig(requestMessage->getHeader("Host")).getLocConf(uri);
-    if ((end = checkAcceptMethod(locationConfig.getAcceptMethods(), requestMessage->getHttpMethod())) == true) {
+    // 4. 폴더면 '/' 붙이기
+    if (uri[uri.length()-1] != '/') {
+        string absolutePath = locationConfig.getRoot() + uri;
+        if (access(absolutePath.c_str(), F_OK) == 0) {
+            struct stat statbuf;
+            if (stat(absolutePath.c_str(), &statbuf) < 0) {
+                statusCode = 500;
+                end = 1;
+                createResponseMessage();
+                return ;           
+            }
+            if (S_ISDIR(statbuf.st_mode)) {
+                uri += "/";
+            }
+        }
+    }
+    // 5. uri 경로 유효성 검사하기
+    if ((end = isValidateResource()) == 1)
+    {
         createResponseMessage();
         return ;
     }
-    if ((end = validateResource(locationConfig.getIndexes(), requestMessage->getHttpMethod())) == true) {
-        createResponseMessage();
-        return ;
-    }
+    // 6. webserv 변수 초기화하기
     initWebservValues();
+    // 7. ResponseBuilder 클래스 플래그들 초기화하기
     needMoreMessage = requestMessage->getChunked();
     connection = requestMessage->getConnection();
     needCgi = locationConfig.isCgi();
     requestBody = requestMessage->getBody();
 }
 
-void HttpResponseBuilder::addRequestMessage(const string &request)
+void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessage)
 {
-    HttpRequestMessage newRequestMessage(request);
-    if ((end = checkClientMaxBodySize(newRequestMessage.getBody().length())) == 1) {
+    if ((end = checkClientMaxBodySize(newRequestMessage->getBody().length() + requestBody.length())) == 1) {
         return ;
     }
-    needMoreMessage = newRequestMessage.getChunked();
-    connection = newRequestMessage.getConnection();
-    requestBody.append(newRequestMessage.getBody());
+    needMoreMessage = newRequestMessage->getChunked();
+    connection = newRequestMessage->getConnection();
+    requestBody.append(newRequestMessage->getBody());
 
     /* 이전과 같은 chunk 요청인지 구별하는 방법은 HTTP 메서드와 requestTarget이 동일함을 확인, Contetn-Length 헤더가 없는것을 확인
     Transfer-Encoding: chunked 헤더가 지정되어 있는지를 확인하면 됌 */

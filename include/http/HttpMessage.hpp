@@ -13,7 +13,6 @@ class HttpMessage
         string body;
         string serverProtocol;
     public:
-        HttpMessage(const string serverProtocol, const map<string, string> headers, const string body);
         string getBody() const;
         string getServerProtocol() const;
         map<string, string> getHeaders() const;

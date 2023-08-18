@@ -1,5 +1,6 @@
 #ifndef HTTP_RESPONSE_MESSAGE_HPP
 #define HTTP_RESPONSE_MESSAGE_HPP
+#include "ResponseStatusManager.hpp"
 #include "HttpMessage.hpp"
 #include "Utils.hpp"
 
@@ -9,6 +10,7 @@ class HttpResponseMessage : public HttpMessage
         int statusCode;
         string reasonPhrase;
     public:
+        HttpResponseMessage();
         int getStatusCode() const;
         string getReasonPhrase() const;
         void setStatusCode(const int &statusCode);

@@ -27,6 +27,7 @@ HTTP		:=	\
         ResponseStatusManager \
 				Utils \
 				WebservValues \
+				HttpRequestBuilder \
         
 SERVER		:=	\
  				Client \

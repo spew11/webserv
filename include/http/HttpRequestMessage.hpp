@@ -11,11 +11,11 @@ class HttpRequestMessage : public HttpMessage
         bool chunked;
         bool connection;
         int errorCode;
-        int parseRequestMessage(const string &requestMessage);
     public:
+        void setFlag();
         HttpRequestMessage(const string httpMethod, const string requestTarget, \
         string serverProtocol, map<string, string> headers, string body);
-        HttpRequestMessage(const string &requestMessage);
+        // HttpRequestMessage(const string &requestMessage);
         string getHttpMethod() const;
         string getRequestTarget() const;
         bool getChunked() const;

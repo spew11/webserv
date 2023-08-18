@@ -85,6 +85,8 @@ string HttpRequestBuilder::getBody(void)
 string HttpRequestBuilder::getMethod(const HttpMethodType & method_type) const
 {
 	switch(method_type) {
+		case 0:
+			return "NONE";
 		case 1:
 			return "GET";
 		case 2:
@@ -139,7 +141,7 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool check_only)
 		return false;
 	}
 	int http_idx = str.find("HTTP/", now);
-	if (http_idx < 0) {
+	if (http_idx == string::npos) {
 		// cout << "HTTP/ is not exist." << endl;
 		return false;
 	}
@@ -187,16 +189,23 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool check_only)
 
 bool HttpRequestBuilder::setHeader(string str, bool check_only)
 {
-	int idx = str.find(":");
-	if (!check_only) cout << "@@@@@" << str << endl;
-	if (idx == -1 || str.find(":", idx+1) != -1) {
+	
+	size_t idx = str.find(':');
+
+	// if (!check_only) cout << "SETHEADER@@@@@@@@@@@@" << str << endl;
+	// if (idx == -1 || str.find(":", idx+1) != -1) {
+	// 	// cout << "delimeter : is invalid." << endl;
+	// 	return false;
+	// }
+
+	if (idx == string::npos) {
 		// cout << "delimeter : is invalid." << endl;
 		return false;
 	}
 
 	string key = str.substr(0, idx);
 	bool is_valid_key = true;
-	for (int i = 0; i < key.length(); i++) {
+	for (size_t i = 0; i < key.length(); i++) {
 		if (!(key[i] >= 33 && key[i] <= 126) || key[i] == ':') {
 			is_valid_key = false;
 			break;
@@ -229,6 +238,7 @@ bool HttpRequestBuilder::setHeader(string str, bool check_only)
 
 	if (!check_only) {
 		this->headers[key] = value;
+		// this->headers[key] = Utils::toLowerCase(value);
 
 		string upper_key = key;
 		for (int i = 0; i < upper_key.length(); i++) {
@@ -250,7 +260,7 @@ bool HttpRequestBuilder::setHeader(string str, bool check_only)
 				this->content_length = atoi(value.c_str());
 			}
 		}
-		else if (!upper_key.compare("TRANSFER-ENCODING")) {  // is_chunked 갱신
+		else if (!upper_key.compare("TRANSFET-ENCODING")) {  // is_chunked 갱신
 			if (this->content_length > 0) {  // is_chunked인 경우 Content-Length header는 없어야 함
 				return false;
 			}
@@ -352,7 +362,7 @@ int HttpRequestBuilder::isHttp(string &recv_buf)
 			if (getIsChunked()) {
 				if (chunked_number == -1) {  // chunked number가 나올 차례인 경우
 					if (Utils::is_digit_string(lines[i])) {
-						chunked_number = atoi(lines[i].c_str());
+						chunked_number = stoi(lines[i], 0, 16);
 						if (chunked_number == 0) {  // chunked number가 0이면 request가 끝이라는 의미
 							return buildChunkedBody(recv_buf, body, lines, i+1);  // return 0
 						}
@@ -477,6 +487,7 @@ HttpRequestMessage *HttpRequestBuilder::createRequestMessage()
 	HttpRequestMessage *requestMessage;
 	string serverProtocol = "HTTP/" + http_version;
 	string method = getMethod(method_type);
+	string requestbody = body;
 	requestMessage = new HttpRequestMessage(method, path, serverProtocol, headers, body);
 	erase();
 	return requestMessage;

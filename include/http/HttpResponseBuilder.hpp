@@ -21,7 +21,7 @@ class Server;
 
 class HttpResponseBuilder {
     private:
-        HttpRequestMessage * requestMessage;
+        HttpRequestMessage *requestMessage;
         HttpResponseMessage *responseMessage;
         LocationConfig locationConfig;
         const Server *server;
@@ -51,18 +51,20 @@ class HttpResponseBuilder {
         bool autoIndex;
 
         void clear();
-        int parseRequestUri(const string & requestTarget);
-        int checkAcceptMethod(const vector<string> & acceptMethods, const string & httpMethod);
+        int parseRequestUri();
         int checkClientMaxBodySize(const int & clientMaxBodySize);
-        int validateResource(const vector<string> & indexes, const string & httpMethod);
+        int isValidateResource();
         void initWebservValues();
         void execute(IMethodExecutor & methodExecutor);
         void parseCgiProduct();
         void createResponseMessage();
+        int isAllowedRequestMessage();
+        void createInvalidResponseMessage();
     public:
         HttpResponseBuilder(const Server *server, WebservValues & webservValues);
-        void initiate(const string & request);
-        void addRequestMessage(const string &request);
+        ~HttpResponseBuilder();
+        void initiate(HttpRequestMessage * requestMessage);
+        void addRequestMessage(HttpRequestMessage *newRequestMessage);
         void build(IMethodExecutor & methodExecutor);
         string getResponse() const; 
         //getter setter
