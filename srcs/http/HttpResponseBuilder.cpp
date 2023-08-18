@@ -101,6 +101,24 @@ int HttpResponseBuilder::parseRequestUri(const string &requestTarget)
 		}
 	}
 
+	if (idx == string::npos && uri[uri.length() - 1] != '/')
+	{
+		string absolutePath = root + uri;
+		if (access(absolutePath.c_str(), F_OK) == 0)
+		{
+			struct stat statbuf;
+			if (stat(absolutePath.c_str(), &statbuf) < 0)
+			{
+				statusCode = 500;
+				return 1;
+			}
+			if (S_ISDIR(statbuf.st_mode))
+			{
+				uri += "/";
+			}
+		}
+	}
+
 	pos = requestUri.find(";");
 	if (pos != string::npos)
 	{
