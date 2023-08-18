@@ -221,18 +221,17 @@ void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)
 
 void HttpResponseBuilder::parseCgiProduct()
 {
-    vector<string> lst = Utils::split(responseBody, "\n");
-	int byte = 0;
-    for (int i = 0; i < lst.size(); i++) {
-		if (lst.at(i) == "") {
-			byte += 1;
-			break;
-		}
-		vector<string> tmp = Utils::split(lst.at(i), ":");
-        responseMessage->addHeader(tmp.at(0), tmp.at(1));
-		byte += lst.at(i).length()+1;
-	}
-	responseBody = responseBody.substr(byte, responseBody.length()-byte);
+    size_t lflf = responseBody.find("\n\n");
+    if (lflf != string::npos) {
+        string headersLine = responseBody.substr(0, lflf);
+        vector<string> headers = Utils::split(headersLine, "\n");
+        for (size_t i = 0; i < headers.size(); i++) 
+        {
+            vector<string> header = Utils::split(headers[i], ":");
+            responseMessage->addHeader(header[0], Utils::ltrim(header[1]));
+        }
+        responseBody = responseBody.substr(lflf+2, -1);
+    }
 }
 
 string HttpResponseBuilder::getResponse() const {
