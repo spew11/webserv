@@ -34,8 +34,8 @@ protected:
 	virtual void checkSyntax(const Directive &directive, const vector<Directive> *subDirectives) = 0;
 
 public:
-  Module ( Directive const & directive, enum ModuleType type );
-  virtual ~Module();
+	Module(Directive const &directive, enum ModuleType type);
+	virtual ~Module();
 
 	const string &getName(void) const;
 	const enum ModuleType &getType(void) const;
@@ -164,14 +164,14 @@ public:
 class CgiParamsModule : public Module
 {
 private:
-	vector<pair<string, string>> params;
+	vector<pair<string, string> > params;
 
 	virtual void checkSyntax(const Directive &directive, const vector<Directive> *subDirectives);
 
 public:
 	CgiParamsModule(const Directive &directive, const vector<Directive> &subDirectives);
 
-	const vector<pair<string, string>> &getParams(void) const;
+	const vector<pair<string, string> > &getParams(void) const;
 };
 
 class AutoIndexModule : public Module
@@ -216,13 +216,14 @@ public:
 class ReturnModule : public Module
 {
 private:
-    int     statusCode;
-    string  uri;
+	int statusCode;
+	string uri;
 
-    virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives );
+	virtual void checkSyntax(const Directive &directive, const vector<Directive> *subDirectives);
+
 public:
-    ReturnModule( const Directive & directive );
+	ReturnModule(const Directive &directive);
 
-    int getStatusCode( void ) const; 
-    const string & getUri( void ) const;
+	int getStatusCode(void) const;
+	const string &getUri(void) const;
 };
