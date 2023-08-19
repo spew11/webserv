@@ -1,27 +1,27 @@
 #include "HttpResponseBuilder.hpp"
 
-HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues & webservValues)
-    : server(server)
+HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues &webservValues)
+	: server(server)
 {
-    this->webservValues = &webservValues;
-    this->webservValues->initEnvList();
-    requestMessage = NULL;
-    responseMessage = NULL;
-    requestUri = "";
-    uri = "";
-    filename = "";
-    args = "";
-    queryString = "";
-    resourcePath = "";
-    requestBody = "";
-    contentType = "";
-    responseBody = "";
-    statusCode = 500;
-    needMoreMessage = false;
-    needCgi = false;
-    end = false;
-    connection = true;
-    autoIndex = false;
+	this->webservValues = &webservValues;
+	this->webservValues->initEnvList();
+	requestMessage = NULL;
+	responseMessage = NULL;
+	requestUri = "";
+	uri = "";
+	filename = "";
+	args = "";
+	queryString = "";
+	resourcePath = "";
+	requestBody = "";
+	contentType = "";
+	responseBody = "";
+	statusCode = 500;
+	needMoreMessage = false;
+	needCgi = false;
+	end = false;
+	connection = true;
+	autoIndex = false;
 }
 
 HttpResponseBuilder::~HttpResponseBuilder()
@@ -38,30 +38,33 @@ HttpResponseBuilder::~HttpResponseBuilder()
 
 void HttpResponseBuilder::clear()
 {
-    if (responseMessage) {
-        delete responseMessage;
-        responseMessage = 0;
-    }
-    if (requestMessage) {
-        delete requestMessage;
-        responseMessage = 0;
-    }
-    webservValues->clear();
-    requestUri = "";
-    uri = "";
-    filename = "";
-    args = "";
-    queryString = "";
-    resourcePath = "";
-    requestBody = "";
-    contentType = "";
-    responseBody = "";
-    statusCode = 500;
-    needMoreMessage = false;
-    needCgi = false;
-    end = false;
-    connection = true;
-    autoIndex = false;
+	if (responseMessage)
+	{
+		delete responseMessage;
+		responseMessage = 0;
+	}
+	if (requestMessage)
+	{
+		delete requestMessage;
+		responseMessage = 0;
+	}
+	webservValues->clear();
+	requestUri = "";
+	uri = "";
+	filename = "";
+	pathInfo = "";
+	args = "";
+	queryString = "";
+	resourcePath = "";
+	requestBody = "";
+	contentType = "";
+	responseBody = "";
+	statusCode = 500;
+	needMoreMessage = false;
+	needCgi = false;
+	end = false;
+	connection = true;
+	autoIndex = false;
 }
 
 int HttpResponseBuilder::parseRequestUri()
@@ -79,9 +82,54 @@ int HttpResponseBuilder::parseRequestUri()
         uri = requestUri.substr(0, pos);
     }
 
-    // filename은 왜 만들었는지 기억이 잘 안남..
+    // filename 필요을 듯
     filename = uri;
+  
+    string root = locationConfig.getRoot();
+	int idx = 0;
+	while (true)
+	{
+		idx = uri.find_first_of("/", idx + 1);
+		if (idx == string::npos)
+			break;
+		string tmp = root + uri.substr(0, idx);
+		if (access(tmp.c_str(), F_OK) == 0)
+		{
+			struct stat statbuf;
+			if (stat(tmp.c_str(), &statbuf) < 0)
+			{
+				statusCode = 500;
+				return 1;
+			}
+			if (S_ISDIR(statbuf.st_mode))
+				filename += uri.substr(0, idx) + "/";
+			else if (S_ISREG(statbuf.st_mode))
+			{
+				filename = uri.substr(0, idx);
+				pathInfo = uri.substr(idx);
+				uri = filename;
+				break;
+			}
+		}
+	}
 
+	if (idx == string::npos && uri[uri.length() - 1] != '/')
+	{
+		string absolutePath = root + uri;
+		if (access(absolutePath.c_str(), F_OK) == 0)
+		{
+			struct stat statbuf;
+			if (stat(absolutePath.c_str(), &statbuf) < 0)
+			{
+				statusCode = 500;
+				return 1;
+			}
+			if (S_ISDIR(statbuf.st_mode))
+			{
+				uri += "/";
+			}
+		}
+	}
     pos = requestUri.find(";");
     if (pos != string::npos) {
         args = requestUri.substr(pos+1, min(requestUri.find("?"), requestUri.length()));
@@ -185,19 +233,19 @@ int HttpResponseBuilder::isValidateResource()
         resourcePath = tmpPath;
     }
     return 0;
-}
 
 void HttpResponseBuilder::initWebservValues()
-{    
-    webservValues->insert("args", args);
-    webservValues->insert("query_string", queryString);
-    webservValues->insert("method", requestMessage->getHttpMethod());
-    webservValues->insert("host", requestMessage->getHeader("Host"));
-    webservValues->insert("content_type", locationConfig.getType(resourcePath));
-    webservValues->insert("request_filename", resourcePath);
-    webservValues->insert("request_uri", requestUri);
-    webservValues->insert("uri", uri);
-    webservValues->insert("document_uri", uri);
+{
+	webservValues->insert("args", args);
+	webservValues->insert("query_string", queryString);
+	webservValues->insert("request_method", requestMessage->getHttpMethod());
+	webservValues->insert("host", requestMessage->getHeader("Host"));
+	webservValues->insert("content_type", locationConfig.getType(resourcePath));
+	webservValues->insert("request_filename", resourcePath);
+	webservValues->insert("request_uri", requestUri);
+	webservValues->insert("uri", uri);
+	webservValues->insert("document_uri", uri);
+	webservValues->insert("fastcgi_path_info", pathInfo);
 }
 
 void HttpResponseBuilder::setSpecifiedErrorPage(const int & errorCode)
@@ -300,31 +348,31 @@ void HttpResponseBuilder::setSpecifiedErrorPage(const int & errorCode)
     }
 }
 
-void HttpResponseBuilder::execute(IMethodExecutor & methodExecutor)
+void HttpResponseBuilder::execute(IMethodExecutor &methodExecutor)
 {
-    string httpMethod = requestMessage->getHttpMethod();
-    
-    // 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
-    if (httpMethod == "GET")
-    {
-        statusCode = methodExecutor.getMethod(resourcePath, responseBody);
-    }
-    else if(httpMethod == "POST")
-    {
-        statusCode = methodExecutor.postMethod(resourcePath, requestBody, responseBody);
-    }
-    else if(httpMethod == "DELETE")
-    {
-        statusCode = methodExecutor.deleteMethod(resourcePath);
-    }
-    else if(httpMethod == "PUT")
-    {
-        statusCode = methodExecutor.putMethod(resourcePath, requestBody, responseBody);
-    }
-    else if (httpMethod == "HEAD")
-    {
-        statusCode = methodExecutor.headMethod(resourcePath, responseBody);
-    }
+	string httpMethod = requestMessage->getHttpMethod();
+
+	// 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
+	if (httpMethod == "GET")
+	{
+		statusCode = methodExecutor.getMethod(resourcePath, responseBody);
+	}
+	else if (httpMethod == "POST")
+	{
+		statusCode = methodExecutor.postMethod(resourcePath, requestBody, responseBody);
+	}
+	else if (httpMethod == "DELETE")
+	{
+		statusCode = methodExecutor.deleteMethod(resourcePath);
+	}
+	else if (httpMethod == "PUT")
+	{
+		statusCode = methodExecutor.putMethod(resourcePath, requestBody, responseBody);
+	}
+	else if (httpMethod == "HEAD")
+	{
+		statusCode = methodExecutor.headMethod(resourcePath, responseBody);
+	}
 }
 
 void HttpResponseBuilder::parseCgiProduct()
@@ -493,7 +541,6 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     // uri에 지정된 리다이렉트가 있는지 확인
     // 2. uri 바탕으로 locationConfig 구하기
     locationConfig = server->getConfig(requestMessage->getHeader("host")).getLocConf(uri);
-    locationConfig.
     // 3. locationConfig 메서드를 이용해서 accept_method, client_max_body_size 체크
     if ((end = isAllowedRequestMessage()) == 1)
     {
@@ -544,7 +591,7 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
     Transfer-Encoding: chunked 헤더가 지정되어 있는지를 확인하면 됌 */
 }
 
-void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
+void HttpResponseBuilder::build(IMethodExecutor &methodExecutor)
 {
     execute(methodExecutor);
     cout << "createResponseMessae 호출 전" << endl;
@@ -555,32 +602,32 @@ void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
 
 HttpRequestMessage HttpResponseBuilder::getRequestMessage() const
 {
-    return *requestMessage;
+	return *requestMessage;
 }
 
 HttpResponseMessage HttpResponseBuilder::getResponseMessage() const
 {
-    return *responseMessage;
+	return *responseMessage;
 }
 
 LocationConfig HttpResponseBuilder::getLocationConfig() const
 {
-    return locationConfig;
+	return locationConfig;
 }
 
 bool HttpResponseBuilder::getNeedCgi() const
 {
-    return needCgi;
+	return needCgi;
 }
 
 bool HttpResponseBuilder::getEnd() const
 {
-    return end;   
+	return end;
 }
 
 bool HttpResponseBuilder::getNeedMoreMessage() const
 {
-    return needMoreMessage;
+	return needMoreMessage;
 }
 
 bool HttpResponseBuilder::getConnection() const

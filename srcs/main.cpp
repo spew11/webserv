@@ -7,6 +7,9 @@
 #include "CgiMethodExecutor.hpp"
 #include "WebservValues.hpp"
 #include "ServerConfig.hpp"
+#include "Config.hpp"
+
+using namespace std;
 
 int main(void)
 {
@@ -16,10 +19,10 @@ int main(void)
 		ServerHandler sh(parser.get());
 		sh.loop();
 	}
-	catch(const std::exception& e)
+	catch (const exception &e)
 	{
-		std::cerr << e.what() << std::endl;
-		std::cerr << errno << ": " << strerror(errno) << '\n';
+		cerr << e.what() << endl;
+		cerr << errno << ": " << strerror(errno) << '\n';
 	}
 	return 0;
 }

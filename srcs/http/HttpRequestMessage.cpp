@@ -36,25 +36,25 @@ void HttpRequestMessage::setFlag()
 
 string HttpRequestMessage::getHttpMethod() const
 {
-    return httpMethod;
+	return httpMethod;
 }
 
 string HttpRequestMessage::getRequestTarget() const
 {
-    return requestTarget;
+	return requestTarget;
 }
 
 bool HttpRequestMessage::getChunked() const
 {
-    return chunked;
+	return chunked;
 }
 
 bool HttpRequestMessage::getConnection() const
 {
-    return connection;
+	return connection;
 }
 
 int HttpRequestMessage::getErrorCode() const
 {
-    return errorCode;
+	return errorCode;
 }

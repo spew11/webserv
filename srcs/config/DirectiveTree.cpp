@@ -1,17 +1,17 @@
 #include "DirectiveTree.hpp"
 
-DirectiveTree::DirectiveTree( const Directive & directive ) : directive(directive) {}
+DirectiveTree::DirectiveTree(const Directive &directive) : directive(directive) {}
 
-const Directive & DirectiveTree::getDirective( void ) const { return this->directive; }
+const Directive &DirectiveTree::getDirective(void) const { return this->directive; }
 
-DirectiveTree * DirectiveTree::addSubTree( const DirectiveTree & tree )
+DirectiveTree *DirectiveTree::addSubTree(const DirectiveTree &tree)
 {
 	subTree.push_back(tree);
-	
+
 	return &(subTree.back());
 }
 
-Module * DirectiveTree::createModule()
+Module *DirectiveTree::createModule()
 {
 	if (directive.name == "main")
 		return createMain();
@@ -39,25 +39,36 @@ Module * DirectiveTree::createModule()
 		return createClienMaxBodySize();
 	else if (directive.name == "accept_method")
 		return createAcceptMethod();
+	else if (directive.name == "return")
+		return createReturn();
 	else
-		throw runtime_error("Config error: Uknown direction name in the config file");
-		
+		throw runtime_error("Config error: Uknown directive name in the config file: " + directive.name);
+
 	return NULL;
 }
 
-Module * DirectiveTree::createMain()
+Module *DirectiveTree::createMain()
 {
-	Module * m = new MainModule(directive);
+	Module *m = new MainModule(directive);
 
-	for (int i = 0; i < subTree.size(); i++)
-		m->addModule(subTree[i].createModule());
+	try
+	{
+		for (int i = 0; i < subTree.size(); i++)
+			m->addModule(subTree[i].createModule());
+	}
+	catch (const exception &e)
+	{
+		delete m;
+		m = NULL;
+		throw runtime_error(e.what());
+	}
 
 	return m;
 }
 
-Module * DirectiveTree::createServer()
+Module *DirectiveTree::createServer()
 {
-	const Directive * listenDirective = NULL;
+	const Directive *listenDirective = NULL;
 	vector<DirectiveTree *> subModDirectives;
 
 	for (int i = 0; i < subTree.size(); i++)
@@ -65,7 +76,7 @@ Module * DirectiveTree::createServer()
 		const Directive &directive = subTree[i].getDirective();
 
 		if (directive.name == "listen") // listen지시어를 저장
-		{ 
+		{
 			if (listenDirective != NULL)
 				throw runtime_error("Config error: only one 'listen' directive is allowed within a 'server' block.");
 			listenDirective = &directive;
@@ -81,83 +92,108 @@ Module * DirectiveTree::createServer()
 	vector<Directive> subDirectives;
 	subDirectives.push_back(*listenDirective);
 
-	ServerModule * m = new ServerModule(directive, subDirectives);
+	ServerModule *m = new ServerModule(directive, subDirectives);
 
 	// listen이외에 지시어는 sub모듈을 생성한다.
-	for (int i = 0; i < subModDirectives.size(); i++)
-		m->addModule(subModDirectives[i]->createModule());
+	try
+	{
+		for (int i = 0; i < subModDirectives.size(); i++)
+			m->addModule(subModDirectives[i]->createModule());
+	}
+	catch (const exception &e)
+	{
+		delete m;
+		m = NULL;
+		throw runtime_error(e.what());
+	};
 
 	return m;
 }
 
-Module * DirectiveTree::createServerName()
+Module *DirectiveTree::createServerName()
 {
 	return new ServerNameModule(directive);
 }
 
-Module * DirectiveTree::createLocation()
+Module *DirectiveTree::createLocation()
 {
-	LocationModule * m = new LocationModule(directive);
+	LocationModule *m = new LocationModule(directive);
 
-	for (int i = 0; i < subTree.size(); i++)
-		m->addModule(subTree[i].createModule());
+	try
+	{
+		for (int i = 0; i < subTree.size(); i++)
+			m->addModule(subTree[i].createModule());
+	}
+	catch (const exception &e)
+	{
+		delete m;
+		m = NULL;
+		throw runtime_error(e.what());
+	}
 
 	return m;
 }
 
-Module * DirectiveTree::createRoot()
+Module *DirectiveTree::createRoot()
 {
-	return (new RootModule(directive));
+	return new RootModule(directive);
 }
 
-Module * DirectiveTree::createTypes()
+Module *DirectiveTree::createTypes()
 {
 	vector<Directive> subDirectives;
 
-	for (int i = 0; i < subTree.size(); i++) {
+	for (int i = 0; i < subTree.size(); i++)
+	{
 		subDirectives.push_back(subTree[i].getDirective());
 	}
 
 	return new TypesModule(directive, subDirectives);
 }
 
-Module * DirectiveTree::createIndex()
+Module *DirectiveTree::createIndex()
 {
 	return new IndexModule(directive);
 }
 
-Module * DirectiveTree::createErrorPage()
+Module *DirectiveTree::createErrorPage()
 {
 	return new ErrorPageModule(directive);
 }
 
-Module * DirectiveTree::createCgi()
+Module *DirectiveTree::createCgi()
 {
 	return new CgiModule(directive);
 }
 
-Module * DirectiveTree::createCgiParams()
+Module *DirectiveTree::createCgiParams()
 {
 	vector<Directive> subDirectives;
 
-	for (int i = 0; i < subTree.size(); i++) {
+	for (int i = 0; i < subTree.size(); i++)
+	{
 		subDirectives.push_back(subTree[i].getDirective());
 	}
 
 	return new CgiParamsModule(directive, subDirectives);
 }
 
-Module * DirectiveTree::createAutoIndex()
+Module *DirectiveTree::createAutoIndex()
 {
 	return new AutoIndexModule(directive);
 }
 
-Module * DirectiveTree::createClienMaxBodySize()
+Module *DirectiveTree::createClienMaxBodySize()
 {
 	return new ClientMaxBodySizeModule(directive);
 }
 
-Module * DirectiveTree::createAcceptMethod()
+Module *DirectiveTree::createAcceptMethod()
 {
 	return new AcceptMethodModule(directive);
+}
+
+Module *DirectiveTree::createReturn()
+{
+	return new ReturnModule(directive);
 }

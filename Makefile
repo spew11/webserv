@@ -8,17 +8,17 @@ CPPFLAGS	= -I ./include -I ./include/config -I ./include/http -I ./include/serve
 RM			= rm -rf
 
 CONFIG		:=	\
- 				Config \
+				Config \
 				ConfigParser \
- 				DirectiveTree \
- 				LocationConfig \
- 				ServerConfig \
+				DirectiveTree \
+				LocationConfig \
+				ServerConfig \
 				Modules
 
 HTTP		:=	\
 				CgiMethodExecutor \
 				DefaultMethodExecutor \
-               	HttpMessage \
+				HttpMessage \
 				HttpRequestMessage \
 				HttpResponseBuilder \
 				HttpResponseMessage \
@@ -30,12 +30,12 @@ HTTP		:=	\
 				HttpRequestBuilder \
         
 SERVER		:=	\
- 				Client \
- 				Server \
+				Client \
+				Server \
 				ServerHandler
 
 FILENAME	=	\
- 				main \
+				main \
 				$(CONFIG)	\
 				$(HTTP)		\
 				$(SERVER)

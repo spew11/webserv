@@ -5,25 +5,26 @@
 
 using namespace std;
 
-enum ModuleType {
-    NO_TYPE,
-    MAIN_MOD,
-    SRV_MOD,
-    LOC_MOD,
+enum ModuleType
+{
+	NO_TYPE,
+	MAIN_MOD,
+	SRV_MOD,
+	LOC_MOD,
 };
 
 enum DirectiveName
 {
-    ROOT,
+	ROOT,
 };
 
-struct Directive {
-    string              name;
-    enum DirectiveName  e_name;
-    vector<string>      arg;
-    char                delim;
+struct Directive
+{
+	string name;
+	enum DirectiveName e_name;
+	vector<string> arg;
+	char delim;
 
-    Directive( void ) {}
-    Directive( const string & name ) : name(name) {}
+	Directive(void) {}
+	Directive(const string &name) : name(name) {}
 };
-

@@ -1,12 +1,12 @@
 #include "Config.hpp"
 
-Config::Config( Module *_mainMod ) : mainMod(_mainMod)
+Config::Config(Module *_mainMod) : mainMod(_mainMod)
 {
-	vector<Module*> mainSubMods = mainMod->getSubMods();
+	vector<Module *> mainSubMods = mainMod->getSubMods();
 
 	for (size_t i = 0; i < mainSubMods.size(); i++)
 	{
-		Module * subMod = mainSubMods[i];
+		Module *subMod = mainSubMods[i];
 
 		if (subMod->getName() == "server")
 		{
@@ -20,7 +20,11 @@ Config::Config( Module *_mainMod ) : mainMod(_mainMod)
 		// 	// check casting
 		// 	mainConf.workConnMod = m;
 		// }
-		
 	}
 }
 
+Config::~Config()
+{
+	delete mainMod;
+	mainMod = NULL;
+}

@@ -1,9 +1,9 @@
 #ifndef CLIENT_HPP
-# define CLIENT_HPP
+#define CLIENT_HPP
 
-# include <iostream>
-# include <exception>
-# include <sys/socket.h>
+#include <iostream>
+#include <exception>
+#include <sys/socket.h>
 
 # include "Server.hpp"
 # include "HttpResponseBuilder.hpp"
@@ -11,6 +11,8 @@
 # include "CgiMethodExecutor.hpp"
 # include "WebservValues.hpp"
 # include "HttpRequestBuilder.hpp"
+
+using namespace std;
 
 class HttpResponseBuilder;
 class Server;
@@ -26,10 +28,9 @@ private:
 	int sock;
 	struct sockaddr_in addr;
 
-	std::string send_buf;
-	std::string recv_buf;
+	string send_buf;
+	string recv_buf;
 
-	ServerConfig::LocationMap lm;
 public:
 	Client(Server *server);
 	~Client();
@@ -40,8 +41,8 @@ public:
 
 	int getSock() const;
 	Server *getServer() const;
-	std::string getRecvBuf() const;
-	void setSendBuf(std::string send_buf);
+	string getRecvBuf() const;
+	void setSendBuf(string send_buf);
 	bool isSendable() const;
 
 private:
