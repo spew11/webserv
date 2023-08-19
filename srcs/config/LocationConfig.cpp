@@ -205,3 +205,26 @@ const vector<string> &LocationConfig::getAcceptMethods(void) const
 
 	return acceptMethodMod->getAcceptMethods();
 }
+
+bool LocationConfig::isRedirect( void ) const { return (returnMod != NULL); }
+
+// return이 config에 정의되지 않았을 때는 이 메소드를 사용하면 안됨(반드시 isRedirct이후에 사용)
+int LocationConfig::getRedirectStatusCode( void ) const
+{
+	static const int defalutCode = 500; // 기본값이 존재할 수 없기에 서버에러로 일단 설정
+
+	if (returnMod == NULL)
+		return defalutCode;
+	
+	return returnMod->getStatusCode();
+}
+
+const string & LocationConfig::getRedirectUri( void ) const
+{
+	static const string defalutUri = "";
+
+	if (returnMod == NULL)
+		return defalutUri;
+
+	return returnMod->getUri();
+}

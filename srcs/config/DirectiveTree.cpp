@@ -39,18 +39,29 @@ Module *DirectiveTree::createModule()
 		return createClienMaxBodySize();
 	else if (directive.name == "accept_method")
 		return createAcceptMethod();
+	else if (directive.name == "return")
+		return createReturn();
 	else
-		throw runtime_error("Config error: Uknown direction name in the config file");
+		throw runtime_error("Config error: Uknown directive name in the config file: " + directive.name);
 
 	return NULL;
 }
 
 Module *DirectiveTree::createMain()
 {
-	Module *m = new MainModule(directive);
-
-	for (int i = 0; i < subTree.size(); i++)
-		m->addModule(subTree[i].createModule());
+	Module * m = new MainModule(directive);
+	
+	try
+	{
+		for (int i = 0; i < subTree.size(); i++)
+			m->addModule(subTree[i].createModule());
+	}
+	catch(const exception& e)
+	{
+		delete m;
+		m = NULL;
+		throw runtime_error(e.what());
+	}
 
 	return m;
 }
@@ -84,8 +95,17 @@ Module *DirectiveTree::createServer()
 	ServerModule *m = new ServerModule(directive, subDirectives);
 
 	// listen이외에 지시어는 sub모듈을 생성한다.
-	for (int i = 0; i < subModDirectives.size(); i++)
-		m->addModule(subModDirectives[i]->createModule());
+	try
+	{
+		for (int i = 0; i < subModDirectives.size(); i++)
+			m->addModule(subModDirectives[i]->createModule());
+	}
+	catch(const exception& e)
+	{
+		delete m;
+		m = NULL;
+		throw runtime_error(e.what());
+	};
 
 	return m;
 }
@@ -99,15 +119,24 @@ Module *DirectiveTree::createLocation()
 {
 	LocationModule *m = new LocationModule(directive);
 
-	for (int i = 0; i < subTree.size(); i++)
-		m->addModule(subTree[i].createModule());
+	try
+	{
+		for (int i = 0; i < subTree.size(); i++)
+			m->addModule(subTree[i].createModule());
+	}
+	catch (const exception &e)
+	{
+		delete m;
+		m = NULL;
+		throw runtime_error(e.what());
+	}
 
 	return m;
 }
 
 Module *DirectiveTree::createRoot()
 {
-	return (new RootModule(directive));
+	return new RootModule(directive);
 }
 
 Module *DirectiveTree::createTypes()
@@ -162,4 +191,9 @@ Module *DirectiveTree::createClienMaxBodySize()
 Module *DirectiveTree::createAcceptMethod()
 {
 	return new AcceptMethodModule(directive);
+}
+
+Module * DirectiveTree::createReturn()
+{
+	return new ReturnModule(directive);
 }

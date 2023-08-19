@@ -2,7 +2,16 @@
 
 // Module
 Module::Module(Directive const &directive, enum ModuleType type)
-	: name(directive.name), type(type) {}
+  : name(directive.name), type(type) {}
+
+Module::~Module()
+{
+	for (size_t i = 0; i < subMods.size(); ++i)
+	{
+		delete subMods[i];
+		subMods[i] = NULL;
+	}
+}
 
 Module::syntax_error::syntax_error(const string &directive)
 	: runtime_error("Config error: The \"" + directive + "\" directive has an incorrect syntax") {}
@@ -290,3 +299,21 @@ AcceptMethodModule::AcceptMethodModule(const Directive &directive) : Module(dire
 void AcceptMethodModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives) {}
 
 const vector<string> &AcceptMethodModule::getAcceptMethods(void) const { return methods; }
+
+// ReturnModule
+ReturnModule::ReturnModule(const Directive &directive) : Module(directive, LOC_MOD)
+{
+	checkSyntax(directive, NULL);
+
+	statusCode = atoi(directive.arg[1].c_str());
+	uri = directive.arg[2];
+}
+
+void ReturnModule::checkSyntax(const Directive &directive, const vector<Directive> * subDirectives)
+{
+	if (directive.arg.size() != 3 || !isNumeric(directive.arg[1]))
+		throw syntax_error("return");
+}
+
+int ReturnModule::getStatusCode(void) const { return statusCode; }
+const string & ReturnModule::getUri(void) const { return uri; }
