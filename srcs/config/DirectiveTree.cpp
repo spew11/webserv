@@ -49,14 +49,14 @@ Module *DirectiveTree::createModule()
 
 Module *DirectiveTree::createMain()
 {
-	Module * m = new MainModule(directive);
-	
+	Module *m = new MainModule(directive);
+
 	try
 	{
 		for (int i = 0; i < subTree.size(); i++)
 			m->addModule(subTree[i].createModule());
 	}
-	catch(const exception& e)
+	catch (const exception &e)
 	{
 		delete m;
 		m = NULL;
@@ -100,7 +100,7 @@ Module *DirectiveTree::createServer()
 		for (int i = 0; i < subModDirectives.size(); i++)
 			m->addModule(subModDirectives[i]->createModule());
 	}
-	catch(const exception& e)
+	catch (const exception &e)
 	{
 		delete m;
 		m = NULL;
@@ -193,7 +193,7 @@ Module *DirectiveTree::createAcceptMethod()
 	return new AcceptMethodModule(directive);
 }
 
-Module * DirectiveTree::createReturn()
+Module *DirectiveTree::createReturn()
 {
 	return new ReturnModule(directive);
 }

@@ -2,7 +2,7 @@
 
 // Module
 Module::Module(Directive const &directive, enum ModuleType type)
-  : name(directive.name), type(type) {}
+	: name(directive.name), type(type) {}
 
 Module::~Module()
 {
@@ -249,7 +249,7 @@ void CgiParamsModule::checkSyntax(const Directive &directive, const vector<Direc
 	}
 }
 
-const vector<pair<string, string>> &CgiParamsModule::getParams(void) const { return params; }
+const vector<pair<string, string> > &CgiParamsModule::getParams(void) const { return params; }
 
 // AutoIndexModule
 AutoIndexModule::AutoIndexModule(const Directive &directive) : Module(directive, LOC_MOD)
@@ -309,11 +309,11 @@ ReturnModule::ReturnModule(const Directive &directive) : Module(directive, LOC_M
 	uri = directive.arg[2];
 }
 
-void ReturnModule::checkSyntax(const Directive &directive, const vector<Directive> * subDirectives)
+void ReturnModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
 	if (directive.arg.size() != 3 || !isNumeric(directive.arg[1]))
 		throw syntax_error("return");
 }
 
 int ReturnModule::getStatusCode(void) const { return statusCode; }
-const string & ReturnModule::getUri(void) const { return uri; }
+const string &ReturnModule::getUri(void) const { return uri; }

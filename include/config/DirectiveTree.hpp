@@ -29,4 +29,5 @@ public:
 	Module *createAutoIndex();
 	Module *createClienMaxBodySize();
 	Module *createAcceptMethod();
+	Module *createReturn();
 };
