@@ -1,27 +1,28 @@
 #include "ResponseHeaderAdder.hpp"
-ResponseHeaderAdder::ResponseHeaderAdder(const HttpRequestMessage &requestMessage, HttpResponseMessage &responseMessage,
-										const LocationConfig &locationConfig, const string &resourcePath)
-	: requestMessage(requestMessage), responseMessage(responseMessage), locationConfig(locationConfig), resourcePath(resourcePath) {}
+
+ResponseHeaderAdder::ResponseHeaderAdder(const HttpRequestMessage & requestMessage, HttpResponseMessage & responseMessage, \
+    const LocationConfig & locationConfig, const string & resourcePath)
+    : requestMessage(requestMessage), responseMessage(responseMessage), locationConfig(locationConfig), resourcePath(resourcePath) {}
+
 
 void ResponseHeaderAdder::executeAll()
 {
-	const int statusCode = responseMessage.getStatusCode();
-
-	if (statusCode == 201)
-	{ // 리소스 생성 성공
-		addLocationHeader(resourcePath);
-	}
-	else if (statusCode == 405)
-	{ // 허락하지 않은 메소드를 받음
-		addAllowHeader(locationConfig.getAcceptMethods());
-	}
-	addContentTypeHeader(locationConfig.getType(resourcePath));
-	addContentLengthHeader(responseMessage.getBody());
-	addDateHeader();
-	if (requestMessage.getHeader("Connection") == "close")
-	{
-		addConnectionHeader(false);
-	}
+    cout << "ReposneHeaderAdder::executeAll() 시작" << endl;
+    const int statusCode = responseMessage.getStatusCode();
+    
+    if (statusCode == 201) { // 리소스 생성 성공
+        addLocationHeader(resourcePath); 
+    }
+    else if (statusCode == 405) { // 허락하지 않은 메소드를 받음
+        addAllowHeader(locationConfig.getAcceptMethods());
+    }
+    addContentTypeHeader(locationConfig.getType(resourcePath));
+    addContentLengthHeader(responseMessage.getBody());
+    addDateHeader();
+    if (requestMessage.getHeader("Connection") == "close") {
+        addConnectionHeader(false);
+    }
+    cout << "ReposneHeaderAdder::executeAll() 끝" << endl;
 }
 
 void ResponseHeaderAdder::addContentTypeHeader(const string &contentType)

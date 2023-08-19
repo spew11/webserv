@@ -44,7 +44,34 @@ string Utils::trim(string s)
 
 string Utils::itoa(const int &num)
 {
-	stringstream ss;
-	ss << num;
-	return ss.str();
+    stringstream ss;
+    ss << num;
+    return ss.str();
+}
+
+bool Utils::is_digit_string(string s)
+{
+	for (int i = 0; i < s.length(); i++) {
+		if (!isdigit(s[i])) {
+			return false;
+		}
+	}
+	return true;
+}
+
+string Utils::str_join(vector<string>lines, string delim, int start_idx) {
+	string result = "";
+	for (int i = start_idx; i < lines.size()-1; i++) {
+		result += lines[i] + delim;
+	}
+	result += lines[lines.size()-1];
+
+	return result;
+}
+
+string Utils::toLowerCase(const string & input)
+{
+    string res;
+    transform(res.begin(), res.end(), res.begin(), static_cast<int(*)(int)>(std::tolower));
+    return res;
 }

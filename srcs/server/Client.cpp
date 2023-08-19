@@ -23,6 +23,9 @@ Client::Client(Server *server) : server(server)
 	webVal.insert("remote_port", addr.sin_port);
 
 	hrb = new HttpResponseBuilder(server, webVal);
+
+	// annotation is from eunji!!
+	httpRequestBuilder = new HttpRequestBuilder();
 }
 
 Client::~Client()
@@ -88,34 +91,45 @@ bool Client::isSendable() const
 
 void Client::communicate()
 {
-	recv_msg();
-	if (recv_buf.find("\r\n\r\n") == string::npos)
+	recv_msg();	
+	int ret = httpRequestBuilder->isHttp(recv_buf);
+	if (ret == 1)
 	{
-		return;
+		return ;
 	}
-	if (hrb->getNeedMoreMessage() == false)
+	if (ret == -1)
 	{
-		hrb->initiate(recv_buf);
-		// 아래 if문 하나 추가 (은지가)
-		if (hrb->getEnd())
+		// invalid request
+		cout << "HERE" << endl;
+		hrb->createInvalidResponseMessage();
+		send_buf = hrb->getResponse();
+		return ;
+	}
+	if (ret == 0) {
+		if (hrb->getNeedMoreMessage() == false)
 		{
-			send_buf = hrb->getResponse(); // hrb에서 응답스트링 만들어주는 걸로 바꿨음.
-			return;
+			hrb->initiate(httpRequestBuilder->createRequestMessage());
+
+			if (hrb->getEnd())
+			{
+				send_buf = hrb->getResponse();
+				return;
+			}
 		}
-	}
-	else
-	{
-		hrb->addRequestMessage(recv_buf);
-		if (hrb->getEnd())
+		else
 		{
+			hrb->addRequestMessage(httpRequestBuilder->createRequestMessage());
+			if (hrb->getEnd())
+			{
+				send_buf = hrb->getResponse();
+				return ;
+			}
+		}
+		if (hrb->getNeedMoreMessage() == false)
+		{
+			makeResponse();
 			send_buf = hrb->getResponse();
-			return;
 		}
-	}
-	if (hrb->getNeedMoreMessage() == false)
-	{
-		makeResponse();
-		send_buf += hrb->getResponse();
 	}
 }
 

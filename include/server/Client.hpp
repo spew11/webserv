@@ -5,11 +5,12 @@
 #include <exception>
 #include <sys/socket.h>
 
-#include "Server.hpp"
-#include "HttpResponseBuilder.hpp"
-#include "DefaultMethodExecutor.hpp"
-#include "CgiMethodExecutor.hpp"
-#include "WebservValues.hpp"
+# include "Server.hpp"
+# include "HttpResponseBuilder.hpp"
+# include "DefaultMethodExecutor.hpp"
+# include "CgiMethodExecutor.hpp"
+# include "WebservValues.hpp"
+# include "HttpRequestBuilder.hpp"
 
 using namespace std;
 
@@ -21,6 +22,7 @@ class Client
 private:
 	Server *server;
 	HttpResponseBuilder *hrb;
+	HttpRequestBuilder *httpRequestBuilder;
 	WebservValues webVal;
 
 	int sock;
