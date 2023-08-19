@@ -16,10 +16,11 @@ private:
     ClientMaxBodySizeModule*    cliMaxBodyMod;
     vector<ErrorPageModule*>    errorPageMods;
     ReturnModule*               returnMod;
-public:
-    LocationConfig( void );
 
-    void addModules( const vector<Module*> & );
+public:
+	LocationConfig(void);
+
+	void addModules(const vector<Module *> &);
 
     bool isErrCode( int code ) const;
     bool isCgi( void ) const;
@@ -38,5 +39,5 @@ public:
     const vector<string> & getIndexes( void ) const;
     const vector<string> & getAcceptMethods( void ) const;
 
-    char ** getCgiParams( const WebservValues & ) const;
+	char **getCgiParams(const WebservValues &) const;
 };

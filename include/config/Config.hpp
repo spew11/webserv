@@ -13,14 +13,15 @@ using namespace std;
 class Config
 {
 private:
-    friend class ConfigParser;
-    Module *    mainMod;
-    vector<ServerConfig> srvConfs;
+	friend class ConfigParser;
+	Module *mainMod;
+	vector<ServerConfig> srvConfs;
 
-    Config( Module * mainMod );
+	Config(Module *mainMod);
+
 public:
-    ~Config();
-    // void getMainConf();
-    const vector<ServerConfig> & getSrvConf( void ) const {	return srvConfs; }
+  ~Config();
+  
+	// void getMainConf();
+	const vector<ServerConfig> &getSrvConf(void) const { return srvConfs; }
 };
-

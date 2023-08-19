@@ -1,6 +1,6 @@
 #include "CgiMethodExecutor.hpp"
 
-CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv): READ(0), WRITE(1), cgiEnv(cgiEnv)
+CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv) : READ(0), WRITE(1), cgiEnv(cgiEnv)
 {
 	stdin_fd = dup(STDIN_FILENO);
 	stdout_fd = dup(STDOUT_FILENO);
@@ -20,13 +20,13 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 	int child_to_parent_pipe[2];
 
 	if (pipe(child_to_parent_pipe) == -1)
-		throw std::exception();
+		throw exception();
 	int pid = fork();
 	if (pid == -1)
 	{
-		throw std::exception();
+		throw exception();
 	}
-	else if (pid  == 0)
+	else if (pid == 0)
 	{
 		signal(SIGINT, SIG_DFL);
 		signal(SIGQUIT, SIG_DFL);
@@ -34,7 +34,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		char **args = new char*[2];
+		char **args = new char *[2];
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
 		execve(args[0], args, cgiEnv);
@@ -64,17 +64,17 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 {
 	int parent_to_child_pipe[2];
 	int child_to_parent_pipe[2];
-	
+
 	if (pipe(parent_to_child_pipe) == -1)
-		throw std::exception();
+		throw exception();
 	if (pipe(child_to_parent_pipe) == -1)
-		throw std::exception();
+		throw exception();
 	int pid = fork();
 	if (pid == -1)
 	{
-		throw std::exception();
+		throw exception();
 	}
-	else if (pid  == 0)
+	else if (pid == 0)
 	{
 		dup2(parent_to_child_pipe[READ], STDIN_FILENO);
 		dup2(child_to_parent_pipe[WRITE], STDOUT_FILENO);
@@ -82,8 +82,8 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		close(parent_to_child_pipe[WRITE]);
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
-		
-		char **args = new char*[2];
+
+		char **args = new char *[2];
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
 		execve(resourcePath.c_str(), args, cgiEnv);
@@ -114,16 +114,16 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 	}
 }
 
-int CgiMethodExecutor::deleteMethod(const string & resourcePath) const
+int CgiMethodExecutor::deleteMethod(const string &resourcePath) const
 {
-	return 501; //Not Implement
+	return 501;
 }
 
 string CgiMethodExecutor::read_from_pipe()
 {
 	char buf[1024];
 	bzero(buf, 1024 * sizeof(char));
-	
+
 	int ret;
 	string res;
 	while ((ret = read(STDIN_FILENO, buf, 1024)) > 0)
@@ -132,32 +132,31 @@ string CgiMethodExecutor::read_from_pipe()
 		bzero(buf, 1024 * sizeof(char));
 	}
 	if (ret == -1)
-		throw std::exception();
+		throw exception();
 	return res;
 }
 
 void CgiMethodExecutor::write_to_pipe(string body)
 {
 	if (write(STDOUT_FILENO, body.c_str(), body.size() + 1) == -1)
-		throw std::exception();
+		throw exception();
 }
 
-
-int CgiMethodExecutor::putMethod(const string & resourcePath, const string & request, string & response)
+int CgiMethodExecutor::putMethod(const string &resourcePath, const string &request, string &response)
 {
 	int parent_to_child_pipe[2];
 	int child_to_parent_pipe[2];
-	
+
 	if (pipe(parent_to_child_pipe) == -1)
-		throw std::exception();
+		throw exception();
 	if (pipe(child_to_parent_pipe) == -1)
-		throw std::exception();
+		throw exception();
 	int pid = fork();
 	if (pid == -1)
 	{
-		throw std::exception();
+		throw exception();
 	}
-	else if (pid  == 0)
+	else if (pid == 0)
 	{
 		dup2(parent_to_child_pipe[READ], STDIN_FILENO);
 		dup2(child_to_parent_pipe[WRITE], STDOUT_FILENO);
@@ -165,8 +164,8 @@ int CgiMethodExecutor::putMethod(const string & resourcePath, const string & req
 		close(parent_to_child_pipe[WRITE]);
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
-		
-		char **args = new char*[2];
+
+		char **args = new char *[2];
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
 		execve(resourcePath.c_str(), args, cgiEnv);
@@ -197,18 +196,18 @@ int CgiMethodExecutor::putMethod(const string & resourcePath, const string & req
 	}
 }
 
-int CgiMethodExecutor::headMethod(const string & resourcePath, string & response)
+int CgiMethodExecutor::headMethod(const string &resourcePath, string &response)
 {
 	int child_to_parent_pipe[2];
 
 	if (pipe(child_to_parent_pipe) == -1)
-		throw std::exception();
+		throw exception();
 	int pid = fork();
 	if (pid == -1)
 	{
-		throw std::exception();
+		throw exception();
 	}
-	else if (pid  == 0)
+	else if (pid == 0)
 	{
 		signal(SIGINT, SIG_DFL);
 		signal(SIGQUIT, SIG_DFL);
@@ -216,7 +215,7 @@ int CgiMethodExecutor::headMethod(const string & resourcePath, string & response
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		char **args = new char*[3];
+		char **args = new char *[3];
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
 		execve(args[0], args, cgiEnv);

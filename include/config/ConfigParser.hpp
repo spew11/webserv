@@ -19,16 +19,17 @@ using namespace std;
 class ConfigParser
 {
 private:
-    list<string>            tokenList;
-    stack<DirectiveTree *>  blocks;
-    DirectiveTree           mainTree;
+	list<string> tokenList;
+	stack<DirectiveTree *> blocks;
+	DirectiveTree mainTree;
 
-    void    read( const string & file, string & buffer );
-    void    tokenize( const string & file, list<string> & list );
-    bool    createDirective( Directive & );
-    void    setTree( void );
+	void read(const string &file, string &buffer);
+	void tokenize(const string &file, list<string> &list);
+	bool createDirective(Directive &);
+	void setTree(void);
+
 public:
-    ConfigParser( const string & file );
+	ConfigParser(const string &file);
 
-    Config * get( void );
+	Config *get(void);
 };

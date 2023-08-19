@@ -1,10 +1,9 @@
 #include "ServerConfig.hpp"
 
-ServerConfig::ServerConfig( const ServerModule & _srvMod )
- : srvMod(&_srvMod),
-   srvNameMod(NULL)
+ServerConfig::ServerConfig(const ServerModule &_srvMod)
+	: srvMod(&_srvMod), srvNameMod(NULL)
 {
-	const vector<Module *> & srvSubMods = srvMod->getSubMods();
+	const vector<Module *> &srvSubMods = srvMod->getSubMods();
 
 	// server블록에 정의된 location설정. (location블록에 상속된다.)
 	// uri에 맞는 location 블록이 없을때 사용되는 default설정으로도 쓰인다.
@@ -31,17 +30,17 @@ ServerConfig::ServerConfig( const ServerModule & _srvMod )
 	}
 }
 
-bool ServerConfig::operator==( const string & host ) const
+bool ServerConfig::operator==(const string &host) const
 {
-	const vector<string> & serverNames = getServerNames();
+	const vector<string> &serverNames = getServerNames();
 
 	if (find(serverNames.begin(), serverNames.end(), host) == serverNames.end())
 		return false;
-	
+
 	return true;
 }
 
-const LocationConfig & ServerConfig::LocationMap::getLocConf( string uri ) const
+const LocationConfig &ServerConfig::LocationMap::getLocConf(string uri) const
 {
 	while (true)
 	{
@@ -56,7 +55,7 @@ const LocationConfig & ServerConfig::LocationMap::getLocConf( string uri ) const
 
 		if (slashIdx == string::npos)
 			break;
-		
+
 		uri = uri.substr(0, slashIdx);
 	}
 
@@ -65,7 +64,7 @@ const LocationConfig & ServerConfig::LocationMap::getLocConf( string uri ) const
 
 uint32_t ServerConfig::getIp(void) const
 {
-	if (srvMod == NULL)// 생성자에서 반드시 srvMod 초기화 해줘야한다.
+	if (srvMod == NULL) // 생성자에서 반드시 srvMod 초기화 해줘야한다.
 		return INADDR_NONE;
 
 	return srvMod->getIp();
@@ -73,23 +72,23 @@ uint32_t ServerConfig::getIp(void) const
 
 uint16_t ServerConfig::getPort(void) const
 {
-	if (srvMod == NULL)// 생성자에서 반드시 srvMod 초기화 해줘야한다.
+	if (srvMod == NULL) // 생성자에서 반드시 srvMod 초기화 해줘야한다.
 		return -1;
 
 	return srvMod->getPort();
 }
 
-const vector<string> & ServerConfig::getServerNames( void ) const
+const vector<string> &ServerConfig::getServerNames(void) const
 {
-	static const vector<string> defaultSrvName;// = 빈 벡터.
+	static const vector<string> defaultSrvName; // = 빈 벡터.
 
 	if (srvNameMod == NULL)
 		return defaultSrvName;
-	
+
 	return srvNameMod->getServerNames();
 }
 
-const ServerConfig::LocationMap & ServerConfig::getLocationMap( void ) const
+const ServerConfig::LocationMap &ServerConfig::getLocationMap(void) const
 {
 	return locMap;
 }

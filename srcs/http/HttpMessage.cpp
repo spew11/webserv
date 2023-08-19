@@ -2,23 +2,24 @@
 
 string HttpMessage::getBody() const
 {
-    return body;
+	return body;
 }
 
 string HttpMessage::getServerProtocol() const
 {
-    return serverProtocol;
+	return serverProtocol;
 }
 
 map<string, string> HttpMessage::getHeaders() const
 {
-    return headers;
+	return headers;
 }
 
-string HttpMessage::getHeader(const string & headerType) const
+string HttpMessage::getHeader(const string &headerType) const
 {
-    if (headers.find(headerType) != headers.end()) {
-        return headers.at(headerType);
-    }
-    return "";
+	if (headers.find(headerType) != headers.end())
+	{
+		return headers.at(headerType);
+	}
+	return "";
 }
