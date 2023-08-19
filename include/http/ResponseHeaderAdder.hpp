@@ -6,30 +6,23 @@
 #include "HttpResponseMessage.hpp"
 #include "ResponseHeaderAdder.hpp"
 #include "ServerConfig.hpp"
+#include "HttpResponseBuilder.hpp"
 #include "Utils.hpp"
 
 using namespace std;
 
+class HttpResponseBuilder;
+
 class ResponseHeaderAdder
 {
-private:
-	const HttpRequestMessage &requestMessage;
-	HttpResponseMessage &responseMessage;
-	const LocationConfig &locationConfig;
-	const string &resourcePath;
-
 public:
-	ResponseHeaderAdder(const HttpRequestMessage &requestMessage,
-						HttpResponseMessage &responseMessage,
-						const LocationConfig &locationConfig,
-						const string &resourcePath);
-	void executeAll();
-	void addContentTypeHeader(const string &contentType);
-	void addContentLengthHeader(const string &responseBody);
-	void addLocationHeader(const string &location);
-	void addAllowHeader(const vector<string> &acceptMethods);
-	void addConnectionHeader(const bool &connect);
-	void addDateHeader();
+	void executeAll(HttpResponseBuilder &reponseBuilder);
+	void addContentTypeHeader(HttpResponseMessage &responseMessage, const string &contentType);
+	void addContentLengthHeader(HttpResponseMessage &responseMessage, const string &responseBody);
+	void addLocationHeader(HttpResponseMessage &responseMessage, const string &location);
+	void addAllowHeader(HttpResponseMessage &responseMessage, const vector<string> &acceptMethods);
+	void addConnectionHeader(HttpResponseMessage &responseMessage, const bool &connect);
+	void addDateHeader(HttpResponseMessage &responseMessage);
 };
 
 #endif

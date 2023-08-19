@@ -30,10 +30,12 @@ private:
   // requestUril parsing 결과
   string requestUri;
   string uri;
-  string filename; // 진짜 순수 레귤러 파일이름으로 쓰기로 정했음.
+  string filename;
   string args;
   string queryString;
-  string pathInfo
+  string pathInfo;
+  
+  string redirectUri;
 
   // request info
   string resourcePath;
@@ -61,6 +63,7 @@ private:
   void createResponseMessage();
   int isAllowedRequestMessage();
   void setSpecifiedErrorPage(const int & errorCode);
+  int isRedirectRequest();
 public:
   void createInvalidResponseMessage();
   HttpResponseBuilder(const Server *server, WebservValues & webservValues);
@@ -70,7 +73,7 @@ public:
   void build(IMethodExecutor & methodExecutor);
   string getResponse() const;
   //getter setter
-  HttpResponseMessage getResponseMessage() const;
+  HttpResponseMessage &getResponseMessage();
   HttpRequestMessage getRequestMessage() const;
   LocationConfig getLocationConfig() const;
   bool getNeedMoreMessage() const;
@@ -78,6 +81,9 @@ public:
   bool getEnd() const;
   bool getConnection() const;
   void print();
+  string getResourcePath() const;
+  string getRedirectUri() const;
+  string getContentType() const;
 };
 
 #endif

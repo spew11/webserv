@@ -237,15 +237,10 @@ bool HttpRequestBuilder::setHeader(string str, bool check_only)
 	}
 
 	if (!check_only) {
-		this->headers[key] = value;
-		// this->headers[key] = Utils::toLowerCase(value);
+		string lowerKey = Utils::toLowerCase(key);
+		this->headers[lowerKey] = value;
 
-		string upper_key = key;
-		for (int i = 0; i < upper_key.length(); i++) {
-			upper_key[i] = toupper(upper_key[i]);
-		}
-
-		if (!upper_key.compare("CONTENT-LENGTH")) { // content_length 갱신
+		if (!lowerKey.compare("content-length")) { // content_length 갱신
 			if (this->is_chunked) {  // is_chunked인 경우 Content-Length header는 없어야 함
 				return false;
 			}
@@ -260,7 +255,7 @@ bool HttpRequestBuilder::setHeader(string str, bool check_only)
 				this->content_length = atoi(value.c_str());
 			}
 		}
-		else if (!upper_key.compare("TRANSFET-ENCODING")) {  // is_chunked 갱신
+		else if (!lowerKey.compare("transfer-encoding")) {  // is_chunked 갱신
 			if (this->content_length > 0) {  // is_chunked인 경우 Content-Length header는 없어야 함
 				return false;
 			}
@@ -446,18 +441,22 @@ int HttpRequestBuilder::isHttp(string &recv_buf)
 // recv_buf는 "\r\n".join(lines[start_idx:])로 갱신됨
 int HttpRequestBuilder::buildChunkedBody(string &recv_buf, string &body, vector<string> &lines, int start_idx)
 {
-	if (getBody().length() == 0 && body.length() == 0) {
-		erase();
-		recv_buf = Utils::str_join(lines, "\r\n", start_idx);
-		cout << "[RETURN -1] chunked body empty" << endl;
-		return -1;
-	}
-	else {
-		appendBody(body);
-		recv_buf = Utils::str_join(lines, "\r\n", start_idx);
-		cout << "[RETURN 0] chunked body success" << endl;
-		return 0;
-	}
+	appendBody(body);
+	recv_buf = Utils::str_join(lines, "\r\n", start_idx);
+	cout << "[RETURN 0] chunked body success" << endl;
+	return 0;
+	// if (getBody().length() == 0 && body.length() == 0) {
+	// 	erase();
+	// 	recv_buf = Utils::str_join(lines, "\r\n", start_idx);
+	// 	cout << "[RETURN -1] chunked body empty" << endl;
+	// 	return -1;
+	// }
+	// else {
+	// 	appendBody(body);
+	// 	recv_buf = Utils::str_join(lines, "\r\n", start_idx);
+	// 	cout << "[RETURN 0] chunked body success" << endl;
+	// 	return 0;
+	// }
 }
 
 vector<string> HttpRequestBuilder::split(const string& s, const string& delim)

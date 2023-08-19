@@ -82,7 +82,7 @@ int HttpResponseBuilder::parseRequestUri()
         uri = requestUri.substr(0, pos);
     }
 
-    // filename 필요을 듯
+    // filename 필요없을 듯
     filename = uri;
   
     string root = locationConfig.getRoot();
@@ -233,13 +233,14 @@ int HttpResponseBuilder::isValidateResource()
         resourcePath = tmpPath;
     }
     return 0;
+}
 
 void HttpResponseBuilder::initWebservValues()
 {
 	webservValues->insert("args", args);
 	webservValues->insert("query_string", queryString);
 	webservValues->insert("request_method", requestMessage->getHttpMethod());
-	webservValues->insert("host", requestMessage->getHeader("Host"));
+	webservValues->insert("host", requestMessage->getHeader("host"));
 	webservValues->insert("content_type", locationConfig.getType(resourcePath));
 	webservValues->insert("request_filename", resourcePath);
 	webservValues->insert("request_uri", requestUri);
@@ -250,7 +251,6 @@ void HttpResponseBuilder::initWebservValues()
 
 void HttpResponseBuilder::setSpecifiedErrorPage(const int & errorCode)
 {
-    cout << "특별 커스톰 함수 들어옴" << endl;
     string errorPage = locationConfig.getErrPage(statusCode);
     ResponseStatusManager responseStatusManager;
     ServerAutoIndexSimulator serverAutoIndexSimulator;
@@ -394,31 +394,23 @@ void HttpResponseBuilder::parseCgiProduct()
 }
 
 string HttpResponseBuilder::getResponse() const {
-    cout << "getResponse() 호출 " << endl;
-    cout << "ReponseMessage 살아있니? " << responseMessage->getHeader("Content-Length") << endl;
     string response = responseMessage->getServerProtocol() + " ";
     response += Utils::itoa(responseMessage->getStatusCode()) + " ";
     response += responseMessage->getReasonPhrase() + "\r\n";
-    cout << "HEADER_SIZE " << responseMessage->getHeaders().size() << endl;
     map<string, string> headers = responseMessage->getHeaders();
-    cout << "헤더들 가져옴" << endl;
+    
     for (map<string, string>::iterator it = headers.begin(); it != headers.end(); it++) {
-        cout << "반복문 하나 시작" << endl;
         if (it->second != "") {
             response += it->first + ": " + it->second + "\r\n";
-            cout << "인자: " << it->second << endl;
         }
-        cout << "반복문 하나 끝" << endl;
     }
     response += "\r\n";
     if (requestMessage && requestMessage->getHttpMethod() != "HEAD") {
-        cout << "리퀘스트 메시지의 메소드를 체크!" << requestMessage->getHttpMethod() << endl;
         response += responseMessage->getBody();
     }
     else if (!requestMessage) {
         response += responseMessage->getBody();
     }
-    cout << "getReponse() 끝" << endl;
     return response;
 }
 
@@ -427,80 +419,47 @@ void HttpResponseBuilder::createInvalidResponseMessage()
     ResponseStatusManager responseStatusManager;
     
     responseMessage = new HttpResponseMessage();
-    cout << "여기서 생성" << endl;
-    // ResponseHeaderAdder responseHeaderAdder(*responseMessage);
+    ResponseHeaderAdder responseHeaderAdder;
 
     statusCode = 400;
     connection = false; // 커넥션 끊기
     if (locationConfig.isErrCode(statusCode))
     {
-        cout << "특별 커스텀 에러 페이지 함수 호출 전" << endl;
         setSpecifiedErrorPage(statusCode);
-        cout << "특별 커스텀 에러 페이지 함수 호출 후" << endl;
-
     }
     else {
         responseBody = responseStatusManager.generateResponseHtml(statusCode);
-        cout << "ResponseBody :: " << responseBody << endl;
     }
-    cout << "응답 코드 세팅 전 " << endl;
     responseMessage->setStatusCode(statusCode);
-    cout << "응답 코드 세팅 후, 응답코드:  " <<  responseMessage->getStatusCode() <<  endl;
-    cout << "응답 사유 구절 세팅 전" << endl;
     responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
-    cout << "응답 사유 구절 세팅 후, 사유 구절: " << responseMessage->getReasonPhrase() << endl;
-    cout << "응답 바디 세팅 전" << endl;
     responseMessage->setBody(responseBody);
-    cout << "응답 바디 세팅 후, 바디: " << responseMessage->getBody() << endl;
-    cout << "콘텐트 타입 세팅 전" << endl;
-    responseMessage->addHeader("Content-Type", "html/text");
-    cout << "콘텐트 타입 세팅 후, 콘텐트타입: " << responseMessage->getHeader("Content-Type");
-    cout << "콘텐트 렝스 세팅 전" << endl;
-    responseMessage->addHeader("Content-Length", Utils::itoa(responseBody.length()));
-    cout << "콘텐트 렝스 세팅 후: 콘텐스 렝스" << responseMessage->getHeader("Content-Length") << endl;
-    // responseHeaderAdder.addContentTypeHeader("html/text");
-    // responseHeaderAdder.addContentLengthHeader(responseBody);
-    // responseHeaderAdder.addDateHeader();
+    responseHeaderAdder.executeAll(*this);
 }
 
 void HttpResponseBuilder::createResponseMessage() {
     string httpMethod = requestMessage->getHttpMethod();
 
     responseMessage = new HttpResponseMessage();
-    print();
-    cout << "responseStatusManager 호출 전" << endl;
     ResponseStatusManager responseStatusManager;
     //커스텀 에러페이지 있는지 체크
     if (locationConfig.isErrCode(statusCode)) {
-        cout << "custom error page exist!" << endl;
         setSpecifiedErrorPage(statusCode);
-        cout << "custom error page setting complete" << endl;
     }
-    cout << "리스폰스 응답코드 저장 전" << endl;
     responseMessage->setStatusCode(statusCode);
-    cout << "리스폰스 응답코드 체크: " << responseMessage->getStatusCode() << endl;
-    cout << "리스폰스 사유구절 저장 전" << endl;
     responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
-    cout << "리스폰스 사유구절 체크: " << responseMessage->getReasonPhrase() << endl;
     if (autoIndex) {
-        cout << "오토 인덱스 존재" << endl;
         ServerAutoIndexSimulator serverAutoIndexSimulator;
         responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(locationConfig.getRoot(), uri);
     }
     else if (statusCode == 200 && locationConfig.isCgi()) {
-        cout << "200 응답과 씨지아이!" << endl;
         parseCgiProduct();
     }
     else if (statusCode != 200 && responseBody == "") {
-        cout << "200 응답 아니고 리스폰스바디가 없어요" << endl;
         responseBody = responseStatusManager.generateResponseHtml(statusCode);
     }
-    cout << "리스폰스 바디 저장 전 " << endl;
     responseMessage->setBody(responseBody);
-    cout << "리스폰스 바디 체크 : " << responseMessage->getBody() << endl;
-    ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, resourcePath);
-    cout << "리스폰스헤더에더 생성 함" << endl;
-    responseHeaderAdder.executeAll();
+    ResponseHeaderAdder responseHeaderAdder;
+    responseHeaderAdder.executeAll(*this);
 }
 
 int HttpResponseBuilder::isAllowedRequestMessage()
@@ -528,8 +487,28 @@ int HttpResponseBuilder::isAllowedRequestMessage()
     return 0;
 }
 
+int HttpResponseBuilder::isRedirectRequest()
+{
+    if (locationConfig.isRedirect() == true)
+    {
+        redirectUri = locationConfig.getRedirectUri();
+        if (args != "") 
+        {
+            redirectUri += ";" + args;
+        }
+        if (queryString != "")
+        {
+            redirectUri += "?" + queryString;
+        }
+        statusCode = locationConfig.getRedirectStatusCode();
+        return 1;
+    }
+    return 0;
+}
+
 void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
 {
+    
     clear();
     this->requestMessage = requestMessage;
     cout << requestMessage->getHttpMethod() << endl;
@@ -538,40 +517,44 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
         createResponseMessage();
         return ;
     }
-    // uri에 지정된 리다이렉트가 있는지 확인
     // 2. uri 바탕으로 locationConfig 구하기
     locationConfig = server->getConfig(requestMessage->getHeader("host")).getLocConf(uri);
-    // 3. locationConfig 메서드를 이용해서 accept_method, client_max_body_size 체크
+    // 3. 리다이렉트 지시문 체크
+    if ((end = isRedirectRequest()) == 1)
+    {
+        createResponseMessage();
+        return ;
+    }
+    // 4. locationConfig 메서드를 이용해서 accept_method, accepted_method, client_max_body_size 체크
     if ((end = isAllowedRequestMessage()) == 1)
     {
         createResponseMessage();
         return ;
     }
-    // 4. 폴더인데 이름 끝에 '/'가 없다면 '/' 붙이기
-    if (uri[uri.length()-1] != '/') {
+    // 5. 폴더인데 이름 끝에 '/'가 없다면 '/' 붙이기
+    if (uri[uri.length()-1] != '/')
+    {
         string absolutePath = locationConfig.getRoot() + uri;
         if (access(absolutePath.c_str(), F_OK) == 0) {
             struct stat statbuf;
             if (stat(absolutePath.c_str(), &statbuf) < 0) {
                 statusCode = 500;
-                end = 1;
-                createResponseMessage();
-                return ;           
+                return;           
             }
             if (S_ISDIR(statbuf.st_mode)) {
                 uri += "/";
             }
         }
     }
-    // 5. uri 경로 유효성 검사하기
+    // 6. uri 경로 유효성 검사하기
     if ((end = isValidateResource()) == 1)
     {
         createResponseMessage();
         return ;
     }
-    // 6. webserv 변수 초기화하기
+    // 7. webserv 변수 초기화하기
     initWebservValues();
-    // 7. ResponseBuilder 클래스 플래그들 초기화하기
+    // 8. ResponseBuilder 클래스 플래그들 초기화하기
     needMoreMessage = requestMessage->getChunked();
     connection = requestMessage->getConnection();
     needCgi = locationConfig.isCgi();
@@ -594,9 +577,7 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
 void HttpResponseBuilder::build(IMethodExecutor &methodExecutor)
 {
     execute(methodExecutor);
-    cout << "createResponseMessae 호출 전" << endl;
     createResponseMessage();
-    cout << "createResponseMessage 호출 후" << endl;
     end = true;  
 }
 
@@ -605,7 +586,7 @@ HttpRequestMessage HttpResponseBuilder::getRequestMessage() const
 	return *requestMessage;
 }
 
-HttpResponseMessage HttpResponseBuilder::getResponseMessage() const
+HttpResponseMessage &HttpResponseBuilder::getResponseMessage()
 {
 	return *responseMessage;
 }
@@ -637,7 +618,7 @@ bool HttpResponseBuilder::getConnection() const
 
 void HttpResponseBuilder::print()
 {
-    cout << "||||||||print start||||||||" << endl;
+    cout << "***** HttpResponseBuilder print start *****" << endl;
     cout << "requestUri: " << requestUri << endl;
     cout << "uri: " << uri << endl;
     cout << "filename: " << filename << endl;
@@ -653,5 +634,20 @@ void HttpResponseBuilder::print()
     cout << "end: " << end << endl;
     cout << "connection: " << connection << endl;
     cout << "autoIndex: " << autoIndex << endl;
-    cout << "||||||||print end||||||||" << endl;
+    cout << "***** HttpResponseBuilder print end *****" << endl;
+}
+
+string HttpResponseBuilder::getResourcePath() const
+{
+    return resourcePath;
+}
+
+string HttpResponseBuilder::getRedirectUri() const
+{
+    return redirectUri;
+}
+
+string HttpResponseBuilder::getContentType() const
+{
+    return contentType;
 }

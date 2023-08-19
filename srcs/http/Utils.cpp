@@ -71,7 +71,7 @@ string Utils::str_join(vector<string>lines, string delim, int start_idx) {
 
 string Utils::toLowerCase(const string & input)
 {
-    string res;
+    string res = input;
     transform(res.begin(), res.end(), res.begin(), static_cast<int(*)(int)>(std::tolower));
     return res;
 }
