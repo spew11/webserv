@@ -79,7 +79,7 @@ int HttpResponseBuilder::parseRequestUri()
         uri = requestUri.substr(0, pos);
     }
 
-    // filename은, 아니 이걸 왜 만들었는지 기억이 안남
+    // filename은 왜 만들었는지 기억이 잘 안남..
     filename = uri;
 
     pos = requestUri.find(";");
@@ -332,6 +332,7 @@ void HttpResponseBuilder::parseCgiProduct()
     // \n\n이 없다면 header가 없는 것으로 정하였음
     size_t lflf = responseBody.find("\n\n");
     if (lflf != string::npos) {
+        // \n 기준으로 스플릿된 아이들을 모두 헤더임
         string headersLine = responseBody.substr(0, lflf);
         vector<string> headers = Utils::split(headersLine, "\n");
         for (size_t i = 0; i < headers.size(); i++) 
@@ -339,6 +340,7 @@ void HttpResponseBuilder::parseCgiProduct()
             vector<string> header = Utils::split(headers[i], ":");
             responseMessage->addHeader(header[0], Utils::ltrim(header[1]));
         }
+        // 나머지는 모두 바디
         responseBody = responseBody.substr(lflf+2, -1);
     }
 }
@@ -415,26 +417,41 @@ void HttpResponseBuilder::createInvalidResponseMessage()
 
 void HttpResponseBuilder::createResponseMessage() {
     string httpMethod = requestMessage->getHttpMethod();
+
     responseMessage = new HttpResponseMessage();
+    print();
+    cout << "responseStatusManager 호출 전" << endl;
     ResponseStatusManager responseStatusManager;
     //커스텀 에러페이지 있는지 체크
     if (locationConfig.isErrCode(statusCode)) {
+        cout << "custom error page exist!" << endl;
         setSpecifiedErrorPage(statusCode);
+        cout << "custom error page setting complete" << endl;
     }
+    cout << "리스폰스 응답코드 저장 전" << endl;
     responseMessage->setStatusCode(statusCode);
+    cout << "리스폰스 응답코드 체크: " << responseMessage->getStatusCode() << endl;
+    cout << "리스폰스 사유구절 저장 전" << endl;
     responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
+    cout << "리스폰스 사유구절 체크: " << responseMessage->getReasonPhrase() << endl;
     if (autoIndex) {
+        cout << "오토 인덱스 존재" << endl;
         ServerAutoIndexSimulator serverAutoIndexSimulator;
         responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(locationConfig.getRoot(), uri);
     }
     else if (statusCode == 200 && locationConfig.isCgi()) {
+        cout << "200 응답과 씨지아이!" << endl;
         parseCgiProduct();
     }
     else if (statusCode != 200 && responseBody == "") {
+        cout << "200 응답 아니고 리스폰스바디가 없어요" << endl;
         responseBody = responseStatusManager.generateResponseHtml(statusCode);
     }
+    cout << "리스폰스 바디 저장 전 " << endl;
     responseMessage->setBody(responseBody);
+    cout << "리스폰스 바디 체크 : " << responseMessage->getBody() << endl;
     ResponseHeaderAdder responseHeaderAdder(*requestMessage, *responseMessage, locationConfig, resourcePath);
+    cout << "리스폰스헤더에더 생성 함" << endl;
     responseHeaderAdder.executeAll();
 }
 
@@ -473,15 +490,17 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
         createResponseMessage();
         return ;
     }
+    // uri에 지정된 리다이렉트가 있는지 확인
     // 2. uri 바탕으로 locationConfig 구하기
     locationConfig = server->getConfig(requestMessage->getHeader("host")).getLocConf(uri);
+    locationConfig.
     // 3. locationConfig 메서드를 이용해서 accept_method, client_max_body_size 체크
     if ((end = isAllowedRequestMessage()) == 1)
     {
         createResponseMessage();
         return ;
     }
-    // 4. 폴더면 '/' 붙이기
+    // 4. 폴더인데 이름 끝에 '/'가 없다면 '/' 붙이기
     if (uri[uri.length()-1] != '/') {
         string absolutePath = locationConfig.getRoot() + uri;
         if (access(absolutePath.c_str(), F_OK) == 0) {
@@ -528,7 +547,9 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
 void HttpResponseBuilder::build(IMethodExecutor & methodExecutor)
 {
     execute(methodExecutor);
+    cout << "createResponseMessae 호출 전" << endl;
     createResponseMessage();
+    cout << "createResponseMessage 호출 후" << endl;
     end = true;  
 }
 
@@ -565,4 +586,25 @@ bool HttpResponseBuilder::getNeedMoreMessage() const
 bool HttpResponseBuilder::getConnection() const
 {
     return connection;
+}
+
+void HttpResponseBuilder::print()
+{
+    cout << "||||||||print start||||||||" << endl;
+    cout << "requestUri: " << requestUri << endl;
+    cout << "uri: " << uri << endl;
+    cout << "filename: " << filename << endl;
+    cout << "args: " << args << endl;
+    cout << "query string: " << queryString << endl;
+    cout << "resourcePath: " << resourcePath << endl;
+    cout << "requestBody: " << requestBody << endl;
+    cout << "contentType: " << contentType << endl;
+    cout << "responseBody: " << responseBody << endl;
+    cout << "statusCode: " << statusCode << endl;
+    cout << "needMoreMessage: " << needMoreMessage << endl;
+    cout << "needCgi: " << needCgi << endl;
+    cout << "end: " << end << endl;
+    cout << "connection: " << connection << endl;
+    cout << "autoIndex: " << autoIndex << endl;
+    cout << "||||||||print end||||||||" << endl;
 }

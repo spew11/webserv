@@ -30,7 +30,7 @@ class HttpResponseBuilder {
         // requestUril parsing 결과
         string requestUri;
         string uri;
-        string filename;
+        string filename; // 진짜 순수 레귤러 파일이름으로 쓰기로 정했음.
         string args;
         string queryString;
         
@@ -76,6 +76,7 @@ class HttpResponseBuilder {
         bool getNeedCgi() const;
         bool getEnd() const;
         bool getConnection() const;
+        void print();
 };
 
 #endif

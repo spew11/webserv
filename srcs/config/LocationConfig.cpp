@@ -106,12 +106,11 @@ const string & LocationConfig::getType( const string & scriptName ) const
 
 bool LocationConfig::isErrCode( int code ) const
 {
-	for (int i = 0; errorPageMods.size(); i++)
+	for (size_t i = 0; i < errorPageMods.size(); i++)
 	{
 		if (errorPageMods[i]->isErrCode( code ))
 			return true;
 	}
-
 	return false;
 }
 
@@ -119,7 +118,7 @@ const string & LocationConfig::getErrPage( int code ) const
 {
 	static const string defaultErrPage = "";
 
-	for (int i = 0; errorPageMods.size(); i++)
+	for (size_t i = 0; i < errorPageMods.size(); i++)
 	{
 		if (errorPageMods[i]->isErrCode( code ))
 			return errorPageMods[i]->getUri();

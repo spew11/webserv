@@ -1,5 +1,10 @@
 #include "ResponseStatusManager.hpp"
 
+ResponseStatusManager::ResponseStatusManager()
+{
+   cout << "ResponseStatusManager 생성자 호출" << endl;
+}
+
 string ResponseStatusManager::findStatusMessage(const int & statusCode) const
 {
     switch(statusCode) {

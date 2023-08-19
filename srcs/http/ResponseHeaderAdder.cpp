@@ -12,6 +12,7 @@ ResponseHeaderAdder::ResponseHeaderAdder(const HttpRequestMessage & requestMessa
 
 void ResponseHeaderAdder::executeAll()
 {
+    cout << "ReposneHeaderAdder::executeAll() 시작" << endl;
     const int statusCode = responseMessage.getStatusCode();
     
     if (statusCode == 201) { // 리소스 생성 성공
@@ -26,6 +27,7 @@ void ResponseHeaderAdder::executeAll()
     if (requestMessage.getHeader("Connection") == "close") {
         addConnectionHeader(false);
     }
+    cout << "ReposneHeaderAdder::executeAll() 끝" << endl;
 }
 
 void ResponseHeaderAdder::addContentTypeHeader(const string & contentType)
