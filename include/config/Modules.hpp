@@ -34,7 +34,7 @@ protected:
     virtual void checkSyntax( const Directive & directive, const vector<Directive> * subDirectives ) = 0;
 public:
     Module ( Directive const & directive, enum ModuleType type );
-    virtual ~Module( void ) {}
+    virtual ~Module();
 
     const string & getName( void ) const;
     const enum ModuleType & getType( void ) const;
