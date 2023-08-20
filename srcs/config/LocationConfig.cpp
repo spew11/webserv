@@ -10,6 +10,7 @@ LocationConfig::LocationConfig(void)
 	autoIndexMod = NULL;
 	cliMaxBodyMod = NULL;
 	acceptMethodMod = NULL;
+	returnMod = NULL;
 	errorPageMods.clear();
 }
 
@@ -58,6 +59,10 @@ void LocationConfig::addModules(const vector<Module *> &modules)
 		else if (mod->getName() == "accept_method")
 		{
 			acceptMethodMod = dynamic_cast<AcceptMethodModule *>(mod);
+		}
+		else if (mod->getName() == "return")
+		{
+			returnMod = dynamic_cast<ReturnModule *>(mod);
 		}
 	}
 }
