@@ -2,7 +2,6 @@
 
 void ResponseHeaderAdder::executeAll(HttpResponseBuilder &responseBuilder)
 {
-    cout << "ReposneHeaderAdder::executeAll() 시작" << endl;
 	HttpResponseMessage &responseMessage = responseBuilder.getResponseMessage();
     const int statusCode = responseBuilder.getResponseMessage().getStatusCode();
     if (statusCode == 201) // 리소스 생성 성공
@@ -26,28 +25,27 @@ void ResponseHeaderAdder::executeAll(HttpResponseBuilder &responseBuilder)
 	}
 	addConnectionHeader(responseMessage, responseBuilder.getConnection());
     addDateHeader(responseMessage);
-    cout << "ReposneHeaderAdder::executeAll() 끝" << endl;
 }
 
-void ResponseHeaderAdder::addContentTypeHeader(HttpResponseMessage & responseMessage, const string &contentType)
+void ResponseHeaderAdder::addContentTypeHeader(HttpResponseMessage &responseMessage, const string &contentType)
 {
 	responseMessage.addHeader("Content-Type", contentType);
 }
 
-void ResponseHeaderAdder::addContentLengthHeader(HttpResponseMessage & responseMessage, const string &responseBody)
+void ResponseHeaderAdder::addContentLengthHeader(HttpResponseMessage &responseMessage, const string &responseBody)
 {
 	responseMessage.addHeader("Content-Length", Utils::itoa(responseBody.length()));
 }
 
-void ResponseHeaderAdder::addLocationHeader(HttpResponseMessage & responseMessage, const string &location)
+void ResponseHeaderAdder::addLocationHeader(HttpResponseMessage &responseMessage, const string &location)
 {
 	responseMessage.addHeader("Location", location);
 }
 
-void ResponseHeaderAdder::addAllowHeader(HttpResponseMessage & responseMessage, const vector<string> &acceptMethods)
+void ResponseHeaderAdder::addAllowHeader(HttpResponseMessage &responseMessage, const vector<string> &acceptMethods)
 {
 	string methods;
-	for (int i = 0; i < acceptMethods.size() - 1; i++)
+	for(size_t i = 0; i < acceptMethods.size() - 1; i++)
 	{
 		methods += acceptMethods.at(i) + ", ";
 	}
@@ -55,7 +53,7 @@ void ResponseHeaderAdder::addAllowHeader(HttpResponseMessage & responseMessage, 
 	responseMessage.addHeader("Allow", methods);
 }
 
-void ResponseHeaderAdder::addDateHeader(HttpResponseMessage & responseMessage)
+void ResponseHeaderAdder::addDateHeader(HttpResponseMessage &responseMessage)
 {
 	time_t now = time(0);
 	tm *gmt = gmtime(&now);
@@ -64,7 +62,7 @@ void ResponseHeaderAdder::addDateHeader(HttpResponseMessage & responseMessage)
 	responseMessage.addHeader("Date", string(buffer));
 }
 
-void ResponseHeaderAdder::addConnectionHeader(HttpResponseMessage & responseMessage, const bool &connect)
+void ResponseHeaderAdder::addConnectionHeader(HttpResponseMessage &responseMessage, const bool &connect)
 {
 	if (connect == false)
 	{

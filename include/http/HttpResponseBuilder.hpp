@@ -21,69 +21,69 @@ class Server;
 
 class HttpResponseBuilder {
 private:
-  HttpRequestMessage *requestMessage;
-  HttpResponseMessage *responseMessage;
-  LocationConfig locationConfig;
-  const Server *server;
-  WebservValues *webservValues;
+    HttpRequestMessage *requestMessage;
+    HttpResponseMessage *responseMessage;
+    LocationConfig locationConfig;
+    const Server *server;
+    WebservValues *webservValues;
 
-  // requestUril parsing 결과
-  string requestUri;
-  string uri;
-  string filename;
-  string args;
-  string queryString;
-  string pathInfo;
-  
-  string redirectUri;
+    // requestUril parsing 결과
+    string requestUri;
+    string uri;
+    string filename;
+    string args;
+    string queryString;
+    string pathInfo;
+    
+    string redirectUri;
 
-  // request info
-  string resourcePath;
-  string requestBody;
+    // request info
+    string resourcePath;
+    string requestBody;
 
-  // reponse information 
-  string contentType;
-  string responseBody;
-  int statusCode;
-  
-  // flag
-	bool needMoreMessage;
-	bool needCgi;
-	bool end;
-	bool connection;
-	bool autoIndex;
+    // reponse information 
+    string contentType;
+    string responseBody;
+    int statusCode;
+    
+    bool needMoreMessage;
+    bool needCgi;
+    bool end;
+    bool connection;
+    bool autoIndex;
 
-  void clear();
-  int parseRequestUri();
-  int checkClientMaxBodySize(const int & clientMaxBodySize);
-  int isValidateResource();
-  void initWebservValues();
-  void execute(IMethodExecutor & methodExecutor);
-  void parseCgiProduct();
-  void createResponseMessage();
-  int isAllowedRequestMessage();
-  void setSpecifiedErrorPage(const int & errorCode);
-  int isRedirectRequest();
+    void clear();
+    int parseRequestUri();
+    int checkClientMaxBodySize(const int &clientMaxBodySize);
+    bool isValidateResource();
+    void initWebservValues();
+    void execute(IMethodExecutor &methodExecutor);
+    void parseCgiProduct();
+    void createResponseMessage();
+    bool isAllowedRequestMessage();
+    void setSpecifiedErrorPage(const int &errorCode);
+    bool isRedirectRequest();
+
 public:
-  void createInvalidResponseMessage();
-  HttpResponseBuilder(const Server *server, WebservValues & webservValues);
-  ~HttpResponseBuilder();
-  void initiate(HttpRequestMessage * requestMessage);
-  void addRequestMessage(HttpRequestMessage *newRequestMessage);
-  void build(IMethodExecutor & methodExecutor);
-  string getResponse() const;
-  //getter setter
-  HttpResponseMessage &getResponseMessage();
-  HttpRequestMessage getRequestMessage() const;
-  LocationConfig getLocationConfig() const;
-  bool getNeedMoreMessage() const;
-  bool getNeedCgi() const;
-  bool getEnd() const;
-  bool getConnection() const;
-  void print();
-  string getResourcePath() const;
-  string getRedirectUri() const;
-  string getContentType() const;
+    void createInvalidResponseMessage();
+    HttpResponseBuilder(const Server *server, WebservValues &webservValues);
+    ~HttpResponseBuilder();
+    void initiate(HttpRequestMessage *requestMessage);
+    void addRequestMessage(HttpRequestMessage *newRequestMessage);
+    void build(IMethodExecutor &methodExecutor);
+    string getResponse() const;
+    //getter setter
+    HttpResponseMessage &getResponseMessage();
+    HttpRequestMessage getRequestMessage() const;
+    LocationConfig getLocationConfig() const;
+    bool getNeedMoreMessage() const;
+    bool getNeedCgi() const;
+    bool getEnd() const;
+    bool getConnection() const;
+    void print();
+    string getResourcePath() const;
+    string getRedirectUri() const;
+    string getContentType() const;
 };
 
 #endif

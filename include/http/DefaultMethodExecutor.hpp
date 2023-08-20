@@ -13,7 +13,6 @@ using namespace std;
 
 class DefaultMethodExecutor : public IMethodExecutor
 {
-private:
 public:
 	~DefaultMethodExecutor();
 	int getMethod(const string &resourcePath, string &response);

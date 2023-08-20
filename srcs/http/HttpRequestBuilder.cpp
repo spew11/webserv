@@ -82,7 +82,7 @@ string HttpRequestBuilder::getBody(void)
 	return this->body;
 }
 
-string HttpRequestBuilder::getMethod(const HttpMethodType & method_type) const
+string HttpRequestBuilder::getMethod(const HttpMethodType &method_type) const
 {
 	switch(method_type) {
 		case 0:
@@ -155,7 +155,7 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool check_only)
 		return false;
 	}
 	string path = str.substr(now, http_idx-now-1);
-	for (int i = 0; i < path.length(); i++) {
+	for(size_t i = 0; i < path.length(); i++) {
 		if (path[i] < 33 || path[i] > 126) {
 			// cout << "path must printable." << endl;
 			return false;
@@ -229,7 +229,7 @@ bool HttpRequestBuilder::setHeader(string str, bool check_only)
 	}
 	// first line의 경우 반드시 공백 문자가 1개 이상 필요한데, key의 경우 공백문자 포함될 경우 이미 이전에 필터링됨
 	// 때문에 key에 대해서는 first line인지 다시 확인할 필요가 없음
-	for (int i = 0; i < value.length(); i++) {
+	for(size_t i = 0; i < value.length(); i++) {
 		if (this->buildFirstLine(value.substr(i, value.length()), true)) {
 			// cout << "value " << value << " has http first header line." << endl;
 			return false;
@@ -245,7 +245,7 @@ bool HttpRequestBuilder::setHeader(string str, bool check_only)
 				return false;
 			}
 			bool correct = true;
-			for (int i = 0; i < value.length(); i++) {
+			for(size_t i = 0; i < value.length(); i++) {
 				if (!isdigit(value[i])) {
 					correct = false;
 					break;
@@ -303,8 +303,8 @@ int HttpRequestBuilder::isHttp(string &recv_buf)
 
 	int lines_index = -1;  // first line 직후의 lines index
 	if (getBuildStep() == BUILD_FIRST) {  // first line부터 완성해야 하는 경우
-		for (int i = 0; i < lines.size()-1; i++) {
-			for (int j = 0; j < lines[i].length(); j++) { // 쓰레기 byte가 first line의 앞에 있는 경우를 고려해 이를 skip
+		for(size_t i = 0; i < lines.size()-1; i++) {
+			for(size_t j = 0; j < lines[i].length(); j++) { // 쓰레기 byte가 first line의 앞에 있는 경우를 고려해 이를 skip
 				if (buildFirstLine(lines[i].substr(j, lines[i].length()))) {
 					break;
 				}
@@ -331,7 +331,7 @@ int HttpRequestBuilder::isHttp(string &recv_buf)
 	bool body_required = (method_type == POST || method_type == PUT || method_type == PATCH);
 	string body = "";
 	int chunked_number = -1; // chunked_number == -1 => 이번에 chunked number가 등장할거다
-	for (int i = lines_index; i < lines.size()-1; i++) {
+	for(size_t i = lines_index; i < lines.size()-1; i++) {
 		if (lines[i].length() == 0) {  // empty line, header finish
 			cout << "EMPTY LINE" << i << endl;
 			if (getBuildStep() == BUILD_HEADER && body_required) {  // header를 완성한 뒤 body로 넘어가는 경우

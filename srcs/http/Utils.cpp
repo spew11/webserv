@@ -51,7 +51,7 @@ string Utils::itoa(const int &num)
 
 bool Utils::is_digit_string(string s)
 {
-	for (int i = 0; i < s.length(); i++) {
+	for(size_t i = 0; i < s.length(); i++) {
 		if (!isdigit(s[i])) {
 			return false;
 		}
@@ -61,7 +61,7 @@ bool Utils::is_digit_string(string s)
 
 string Utils::str_join(vector<string>lines, string delim, int start_idx) {
 	string result = "";
-	for (int i = start_idx; i < lines.size()-1; i++) {
+	for(size_t i = start_idx; i < lines.size()-1; i++) {
 		result += lines[i] + delim;
 	}
 	result += lines[lines.size()-1];
@@ -69,7 +69,7 @@ string Utils::str_join(vector<string>lines, string delim, int start_idx) {
 	return result;
 }
 
-string Utils::toLowerCase(const string & input)
+string Utils::toLowerCase(const string &input)
 {
     string res = input;
     transform(res.begin(), res.end(), res.begin(), static_cast<int(*)(int)>(std::tolower));

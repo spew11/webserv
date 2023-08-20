@@ -69,7 +69,7 @@ void HttpResponseBuilder::clear()
 
 int HttpResponseBuilder::parseRequestUri()
 {
-    const string & requestTarget = requestMessage->getRequestTarget();
+    const string &requestTarget = requestMessage->getRequestTarget();
     requestUri = requestTarget;
     
     size_t pos = requestUri.find_first_of(";?#");
@@ -142,7 +142,7 @@ int HttpResponseBuilder::parseRequestUri()
     return 0;
 }
 
-int HttpResponseBuilder::checkClientMaxBodySize(const int & clientMaxBodySize)
+int HttpResponseBuilder::checkClientMaxBodySize(const int &clientMaxBodySize)
 {
     if (requestMessage->getBody().length() > clientMaxBodySize)
     {
@@ -152,15 +152,15 @@ int HttpResponseBuilder::checkClientMaxBodySize(const int & clientMaxBodySize)
     return 0;
 }
 
-int HttpResponseBuilder::isValidateResource()
+bool HttpResponseBuilder::isValidateResource()
 {
-    const vector<string> & indexes = locationConfig.getIndexes();
-    const string & httpMethod = requestMessage->getHttpMethod();
+    const vector<string> &indexes = locationConfig.getIndexes();
+    const string &httpMethod = requestMessage->getHttpMethod();
     struct stat statbuf;
     string tmpPath = locationConfig.getRoot() + uri;
 
-    if (httpMethod == "GET" or (httpMethod == "POST" and locationConfig.isCgi()) \
-        or (httpMethod == "PUT" and locationConfig.isCgi()) or httpMethod == "HEAD") { 
+    if (httpMethod == "GET" || (httpMethod == "POST" && locationConfig.isCgi()) \
+        || (httpMethod == "PUT" && locationConfig.isCgi()) || httpMethod == "HEAD") { 
         
         if (access(tmpPath.c_str(), F_OK) != 0) {
             statusCode = 404;
@@ -179,7 +179,7 @@ int HttpResponseBuilder::isValidateResource()
         if(S_ISDIR(statbuf.st_mode)) {
 
             bool exist = false;
-            for (int i = 0; i < indexes.size(); i++) {
+            for(size_t i = 0; i < indexes.size(); i++) {
                 string resourcePathTmp = tmpPath + indexes.at(i);
                 if (access(resourcePathTmp.c_str(), R_OK) == 0) {
                     resourcePath = resourcePathTmp;
@@ -208,7 +208,7 @@ int HttpResponseBuilder::isValidateResource()
             resourcePath = tmpPath;
         }
     }
-    else if (httpMethod == "POST" or httpMethod == "PUT") {
+    else if (httpMethod == "POST" || httpMethod == "PUT") {
         if (access(tmpPath.c_str(), F_OK) == 0) {
             if (stat(tmpPath.c_str(), &statbuf) < 0) {
                 statusCode = 500;
@@ -249,7 +249,7 @@ void HttpResponseBuilder::initWebservValues()
 	webservValues->insert("fastcgi_path_info", pathInfo);
 }
 
-void HttpResponseBuilder::setSpecifiedErrorPage(const int & errorCode)
+void HttpResponseBuilder::setSpecifiedErrorPage(const int &errorCode)
 {
     string errorPage = locationConfig.getErrPage(statusCode);
     ResponseStatusManager responseStatusManager;
@@ -292,7 +292,7 @@ void HttpResponseBuilder::setSpecifiedErrorPage(const int & errorCode)
     if (S_ISDIR(statbuf.st_mode))
     {
         // a. index지시어가 지정되어 있고, index파일이 있다면 그 파일로 대체
-        const vector<string> & indexes = redirectedLocationConfig.getIndexes();
+        const vector<string> &indexes = redirectedLocationConfig.getIndexes();
         bool exist = false;
         for (size_t i = 0; i < indexes.size(); i++)
         {
@@ -462,11 +462,11 @@ void HttpResponseBuilder::createResponseMessage() {
     responseHeaderAdder.executeAll(*this);
 }
 
-int HttpResponseBuilder::isAllowedRequestMessage()
+bool HttpResponseBuilder::isAllowedRequestMessage()
 {
-    const vector<string> & acceptMethods = locationConfig.getAcceptMethods();
-    const string & httpMethod = requestMessage->getHttpMethod();
-    const string & serverProtocol = requestMessage->getServerProtocol();
+    const vector<string> &acceptMethods = locationConfig.getAcceptMethods();
+    const string &httpMethod = requestMessage->getHttpMethod();
+    const string &serverProtocol = requestMessage->getServerProtocol();
     // protocol version check
     if (serverProtocol != "HTTP/1.1")
     {
@@ -487,7 +487,7 @@ int HttpResponseBuilder::isAllowedRequestMessage()
     return 0;
 }
 
-int HttpResponseBuilder::isRedirectRequest()
+bool HttpResponseBuilder::isRedirectRequest()
 {
     if (locationConfig.isRedirect() == true)
     {
@@ -511,7 +511,6 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     
     clear();
     this->requestMessage = requestMessage;
-    cout << requestMessage->getHttpMethod() << endl;
     // 1. uri 구하기
     if ((end = parseRequestUri()) == 1) {
         createResponseMessage();
