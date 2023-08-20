@@ -1,8 +1,14 @@
 #include "Utils.hpp"
 
-Utils::Utils() {}
+Utils::Utils()
+{
 
-Utils::~Utils() {}
+}
+
+Utils::~Utils()
+{
+	
+}
 
 vector<string> Utils::split(const string &s, const string &delim)
 {
@@ -51,17 +57,21 @@ string Utils::itoa(const int &num)
 
 bool Utils::is_digit_string(string s)
 {
-	for(size_t i = 0; i < s.length(); i++) {
-		if (!isdigit(s[i])) {
+	for(size_t i = 0; i < s.length(); i++)
+	{
+		if (!isdigit(s[i]))
+		{
 			return false;
 		}
 	}
 	return true;
 }
 
-string Utils::str_join(vector<string>lines, string delim, int start_idx) {
+string Utils::str_join(vector<string>lines, string delim, int start_idx)
+{
 	string result = "";
-	for(size_t i = start_idx; i < lines.size()-1; i++) {
+	for(size_t i = start_idx; i < lines.size()-1; i++)
+	{
 		result += lines[i] + delim;
 	}
 	result += lines[lines.size()-1];

@@ -26,11 +26,13 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues &we
 
 HttpResponseBuilder::~HttpResponseBuilder()
 {
-    if (responseMessage) {
+    if (responseMessage)
+    {
         delete responseMessage;
         responseMessage = 0;
     }
-    if (requestMessage) {
+    if (requestMessage)
+    {
         delete requestMessage;
         responseMessage = 0;
     }
@@ -131,12 +133,14 @@ int HttpResponseBuilder::parseRequestUri()
 		}
 	}
     pos = requestUri.find(";");
-    if (pos != string::npos) {
+    if (pos != string::npos)
+    {
         args = requestUri.substr(pos+1, min(requestUri.find("?"), requestUri.length()));
     }
 
     pos = requestUri.find("?");
-    if (pos != string::npos) {
+    if (pos != string::npos)
+    {
         queryString = requestUri.substr(pos+1, min(requestUri.find("#"), requestUri.length())-pos-1);
     }
     return 0;
@@ -160,73 +164,91 @@ bool HttpResponseBuilder::isValidateResource()
     string tmpPath = locationConfig.getRoot() + uri;
 
     if (httpMethod == "GET" || (httpMethod == "POST" && locationConfig.isCgi()) \
-        || (httpMethod == "PUT" && locationConfig.isCgi()) || httpMethod == "HEAD") { 
-        
-        if (access(tmpPath.c_str(), F_OK) != 0) {
+        || (httpMethod == "PUT" && locationConfig.isCgi()) || httpMethod == "HEAD")
+    { 
+        if (access(tmpPath.c_str(), F_OK) != 0)
+        {
             statusCode = 404;
             return 1;
         }
-        else if (access(tmpPath.c_str(), R_OK) != 0) {
+        else if (access(tmpPath.c_str(), R_OK) != 0)
+        {
             statusCode = 403;
             return 1;
         }
 
-        if (stat(tmpPath.c_str(), &statbuf) < 0) {
+        if (stat(tmpPath.c_str(), &statbuf) < 0)
+        {
             statusCode = 500;
             return 1;
         }
 
-        if(S_ISDIR(statbuf.st_mode)) {
-
+        if(S_ISDIR(statbuf.st_mode))
+        {
             bool exist = false;
-            for(size_t i = 0; i < indexes.size(); i++) {
+            for(size_t i = 0; i < indexes.size(); i++)
+            {
                 string resourcePathTmp = tmpPath + indexes.at(i);
-                if (access(resourcePathTmp.c_str(), R_OK) == 0) {
+                if (access(resourcePathTmp.c_str(), R_OK) == 0)
+                {
                     resourcePath = resourcePathTmp;
                     exist = true;
                     break;
                 }
             }
-            if (exist == false) {
+            if (exist == false)
+            {
                 resourcePath = tmpPath;
-                if (locationConfig.isAutoIndex()) {
-                    if (opendir(resourcePath.c_str()) == 0) {
+                if (locationConfig.isAutoIndex())
+                {
+                    if (opendir(resourcePath.c_str()) == 0)
+                    {
                         statusCode = 500;
                     }
-                    else {
+                    else
+                    {
                         statusCode = 200;
                         autoIndex = true;
                     }
                 }
-                else {
+                else
+                {
                     statusCode = 404;
                 }
                 return 1;
             }
         }
-        else if (S_ISREG(statbuf.st_mode)) { 
+        else if (S_ISREG(statbuf.st_mode))
+        { 
             resourcePath = tmpPath;
         }
     }
-    else if (httpMethod == "POST" || httpMethod == "PUT") {
-        if (access(tmpPath.c_str(), F_OK) == 0) {
-            if (stat(tmpPath.c_str(), &statbuf) < 0) {
+    else if (httpMethod == "POST" || httpMethod == "PUT")
+    {
+        if (access(tmpPath.c_str(), F_OK) == 0)
+        {
+            if (stat(tmpPath.c_str(), &statbuf) < 0)
+            {
                 statusCode = 500;
                 return 1;
             }
-            if (S_ISDIR(statbuf.st_mode)) { 
+            if (S_ISDIR(statbuf.st_mode))
+            { 
                 statusCode = 400;
                 return 1;
             }
         }
         resourcePath = tmpPath;
     }
-    else if (httpMethod == "DELETE") {
-        if (access(tmpPath.c_str(), F_OK) != 0) {
+    else if (httpMethod == "DELETE")
+    {
+        if (access(tmpPath.c_str(), F_OK) != 0)
+        {
             statusCode = 404;
             return 1;
         }
-        else if (access(tmpPath.c_str(), W_OK) != 0) {
+        else if (access(tmpPath.c_str(), W_OK) != 0)
+        {
             statusCode = 403;
             return 1;
         }
@@ -324,7 +346,8 @@ void HttpResponseBuilder::setSpecifiedErrorPage(const int &errorCode)
                 // auto index가 on 이면 폴더의 내용을 나열한다.
                 responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(root, errorPage);
             }
-            else {
+            else
+            {
                 // 모두 다 해당하지 않는다면 내장 에러페이지 사용한다.
                 responseBody = responseStatusManager.generateResponseHtml(statusCode);
             }
@@ -379,7 +402,8 @@ void HttpResponseBuilder::parseCgiProduct()
 {
     // \n\n이 없다면 header가 없는 것으로 정하였음
     size_t lflf = responseBody.find("\n\n");
-    if (lflf != string::npos) {
+    if (lflf != string::npos)
+    {
         // \n 기준으로 스플릿된 아이들을 모두 헤더임
         string headersLine = responseBody.substr(0, lflf);
         vector<string> headers = Utils::split(headersLine, "\n");
@@ -393,22 +417,27 @@ void HttpResponseBuilder::parseCgiProduct()
     }
 }
 
-string HttpResponseBuilder::getResponse() const {
+string HttpResponseBuilder::getResponse() const
+{
     string response = responseMessage->getServerProtocol() + " ";
     response += Utils::itoa(responseMessage->getStatusCode()) + " ";
     response += responseMessage->getReasonPhrase() + "\r\n";
     map<string, string> headers = responseMessage->getHeaders();
     
-    for (map<string, string>::iterator it = headers.begin(); it != headers.end(); it++) {
-        if (it->second != "") {
+    for (map<string, string>::iterator it = headers.begin(); it != headers.end(); it++)
+    {
+        if (it->second != "")
+        {
             response += it->first + ": " + it->second + "\r\n";
         }
     }
     response += "\r\n";
-    if (requestMessage && requestMessage->getHttpMethod() != "HEAD") {
+    if (requestMessage && requestMessage->getHttpMethod() != "HEAD")
+    {
         response += responseMessage->getBody();
     }
-    else if (!requestMessage) {
+    else if (!requestMessage)
+    {
         response += responseMessage->getBody();
     }
     return response;
@@ -427,7 +456,8 @@ void HttpResponseBuilder::createInvalidResponseMessage()
     {
         setSpecifiedErrorPage(statusCode);
     }
-    else {
+    else
+    {
         responseBody = responseStatusManager.generateResponseHtml(statusCode);
     }
     responseMessage->setStatusCode(statusCode);
@@ -436,25 +466,30 @@ void HttpResponseBuilder::createInvalidResponseMessage()
     responseHeaderAdder.executeAll(*this);
 }
 
-void HttpResponseBuilder::createResponseMessage() {
+void HttpResponseBuilder::createResponseMessage()
+{
     string httpMethod = requestMessage->getHttpMethod();
 
     responseMessage = new HttpResponseMessage();
     ResponseStatusManager responseStatusManager;
     //커스텀 에러페이지 있는지 체크
-    if (locationConfig.isErrCode(statusCode)) {
+    if (locationConfig.isErrCode(statusCode))
+    {
         setSpecifiedErrorPage(statusCode);
     }
     responseMessage->setStatusCode(statusCode);
     responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
-    if (autoIndex) {
+    if (autoIndex)
+    {
         ServerAutoIndexSimulator serverAutoIndexSimulator;
         responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(locationConfig.getRoot(), uri);
     }
-    else if (statusCode == 200 && locationConfig.isCgi()) {
+    else if (statusCode == 200 && locationConfig.isCgi())
+    {
         parseCgiProduct();
     }
-    else if (statusCode != 200 && responseBody == "") {
+    else if (statusCode != 200 && responseBody == "")
+    {
         responseBody = responseStatusManager.generateResponseHtml(statusCode);
     }
     responseMessage->setBody(responseBody);
@@ -512,7 +547,8 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     clear();
     this->requestMessage = requestMessage;
     // 1. uri 구하기
-    if ((end = parseRequestUri()) == 1) {
+    if ((end = parseRequestUri()) == 1)
+    {
         createResponseMessage();
         return ;
     }
@@ -534,13 +570,16 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     if (uri[uri.length()-1] != '/')
     {
         string absolutePath = locationConfig.getRoot() + uri;
-        if (access(absolutePath.c_str(), F_OK) == 0) {
+        if (access(absolutePath.c_str(), F_OK) == 0)
+        {
             struct stat statbuf;
-            if (stat(absolutePath.c_str(), &statbuf) < 0) {
+            if (stat(absolutePath.c_str(), &statbuf) < 0)
+            {
                 statusCode = 500;
                 return;           
             }
-            if (S_ISDIR(statbuf.st_mode)) {
+            if (S_ISDIR(statbuf.st_mode))
+            {
                 uri += "/";
             }
         }
@@ -562,7 +601,8 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
 
 void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessage)
 {
-    if ((end = checkClientMaxBodySize(newRequestMessage->getBody().length() + requestBody.length())) == 1) {
+    if ((end = checkClientMaxBodySize(newRequestMessage->getBody().length() + requestBody.length())) == 1)
+    {
         return ;
     }
     needMoreMessage = newRequestMessage->getChunked();

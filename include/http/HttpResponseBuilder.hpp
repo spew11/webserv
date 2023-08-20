@@ -19,7 +19,8 @@
 
 class Server;
 
-class HttpResponseBuilder {
+class HttpResponseBuilder
+{
 private:
     HttpRequestMessage *requestMessage;
     HttpResponseMessage *responseMessage;

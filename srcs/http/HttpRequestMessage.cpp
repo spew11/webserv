@@ -25,10 +25,12 @@ void HttpRequestMessage::setFlag()
     {
         string headerType = Utils::toLowerCase(it->first);
         string headerValue = it->second;
-        if (headerType == "tansfer-encoding" && headerValue == "chunked") {
+        if (headerType == "tansfer-encoding" && headerValue == "chunked")
+        {
             chunked = true;
         }
-        else if (headerType == "connection" && headerValue == "close") {
+        else if (headerType == "connection" && headerValue == "close")
+        {
             connection = false;
         }
     }
