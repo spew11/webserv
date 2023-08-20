@@ -3,6 +3,8 @@
 #include "HttpMessage.hpp"
 #include "Utils.hpp"
 
+using namespace std;
+
 class HttpRequestMessage : public HttpMessage
 {
 private:

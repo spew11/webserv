@@ -55,7 +55,7 @@ string Utils::itoa(const int &num)
     return ss.str();
 }
 
-bool Utils::is_digit_string(string s)
+bool Utils::isDigitString(string s)
 {
 	for(size_t i = 0; i < s.length(); i++)
 	{
@@ -67,10 +67,10 @@ bool Utils::is_digit_string(string s)
 	return true;
 }
 
-string Utils::str_join(vector<string>lines, string delim, int start_idx)
+string Utils::stringJoin(vector<string>lines, string delim, int startIdx)
 {
 	string result = "";
-	for(size_t i = start_idx; i < lines.size()-1; i++)
+	for(size_t i = startIdx; i < lines.size()-1; i++)
 	{
 		result += lines[i] + delim;
 	}

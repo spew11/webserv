@@ -34,39 +34,39 @@ private:
 		PATCH,
 		TRACE,
 	};
-	HttpRequestBuilderBuildStep build_step;
-	HttpMethodType method_type;
+	HttpRequestBuilderBuildStep buildStep;
+	HttpMethodType methodType;
 	string method;
 	string path;
-	string http_version;
+	string httpVersion;
 	map<string,string> headers;
 	string getMethod(const HttpMethodType &methodType) const;
-	int content_length;
-	bool is_chunked;
+	int contentLength;
+	bool isChunked;
 	string body;
-	void setBuildStep(HttpRequestBuilderBuildStep build_step);
+	void setBuildStep(HttpRequestBuilderBuildStep buildStep);
 	HttpRequestBuilderBuildStep getBuildStep(void);
-	void setMethodType(HttpMethodType method_type);
+	void setMethodType(HttpMethodType methodType);
 	HttpMethodType getMethodType(void);
 	void setPath(string path);
 	string getPath(void);
-	void setHttpVersion(string http_version);
+	void setHttpVersion(string httpVersion);
 	string getHttpVersion(void);
 	int getContentLength(void);
 	bool getIsChunked(void);
 	void setBody(string body);
 	void appendBody(string body);
 	string getBody(void);
-	bool buildFirstLine(string str, bool check_only = false);
-	bool setHeader(string str, bool check_only = false);
+	bool buildFirstLine(string str, bool checkOnly = false);
+	bool setHeader(string str, bool checkOnly = false);
 	string getHeader(string key);
-	int buildChunkedBody(string &recv_buf, string &body, vector<string> &lines, int start_idx);
+	int buildChunkedBody(string &recvBuf, string &body, vector<string> &lines, int startIdx);
 	vector<string> split(const string& s, const string& delim);
 
 public:
 	HttpRequestBuilder();
 	~HttpRequestBuilder();
-	int isHttp(string &recv_buf);
+	int isHttp(string &recvBuf);
 	void print(void);
 	void erase(void);
 	HttpRequestMessage *createRequestMessage();

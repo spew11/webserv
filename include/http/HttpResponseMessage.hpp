@@ -4,6 +4,8 @@
 #include "HttpMessage.hpp"
 #include "Utils.hpp"
 
+using namespace std;
+
 class HttpResponseMessage : public HttpMessage
 {
 private:

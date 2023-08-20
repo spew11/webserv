@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include "ServerAutoIndexSimulator.hpp"
 
+using namespace std;
+
 class Server;
 
 class HttpResponseBuilder
