@@ -309,6 +309,7 @@ string HttpRequestBuilder::getHeader(string key)
 
 void HttpRequestBuilder::print(void)
 {
+	cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
 	cout << "BuildStep: " << this->buildStep << endl;
 	cout << "Method: " << this->methodType << endl;
 	cout << "Path: " << this->path << endl;
@@ -323,6 +324,7 @@ void HttpRequestBuilder::print(void)
 
 	cout << endl << "***Body*** (Content-Length: " << this->contentLength << ")" << endl;
 	cout << this->body << endl;
+	cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl << endl;
 }
 
 // return value
@@ -358,10 +360,9 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 		}
 		if (lines_index == -1)
 		{  // first line이 없는 경우
-			erase();  // 기존에 완성하던 request는 버림
 			recvBuf = lines[lines.size()-1]; // \r\n으로 끝나는 모든 line들 (lines[:-1])은 이미 first line 포맷이 아님을 확인했기에 배제, 마지막 line(lines[-1])만 recvBuf에 남김
-			cout << "[RETURN -1] first line doesn't exist." << endl;
-			return -1;
+			cout << "[RETURN 1] first line doesn't exist." << endl;
+			return 1;
 		}
 	}
 	else

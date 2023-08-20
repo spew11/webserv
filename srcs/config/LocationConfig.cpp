@@ -10,6 +10,7 @@ LocationConfig::LocationConfig(void)
 	autoIndexMod = NULL;
 	cliMaxBodyMod = NULL;
 	acceptMethodMod = NULL;
+	returnMod = NULL;
 	errorPageMods.clear();
 }
 
