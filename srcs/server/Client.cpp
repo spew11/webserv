@@ -23,8 +23,6 @@ Client::Client(Server *server) : server(server)
 	webVal.insert("remote_port", addr.sin_port);
 
 	hrb = new HttpResponseBuilder(server, webVal);
-
-	// annotation is from eunji!!
 	httpRequestBuilder = new HttpRequestBuilder();
 }
 
@@ -33,6 +31,7 @@ Client::~Client()
 	cout << "Connection Close: " << sock << endl;
 	close(sock);
 	delete hrb;
+	delete httpRequestBuilder;
 }
 
 void Client::send_msg()
@@ -99,8 +98,6 @@ void Client::communicate()
 	}
 	if (ret == -1)
 	{
-		// invalid request
-		cout << "HERE" << endl;
 		hrb->createInvalidResponseMessage();
 		send_buf = hrb->getResponse();
 		return ;

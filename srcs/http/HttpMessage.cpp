@@ -23,3 +23,12 @@ string HttpMessage::getHeader(const string &headerType) const
 	}
 	return "";
 }
+
+void HttpMessage::printHeaders() const
+{
+	map<string, string>::const_iterator it;
+	for (it = headers.begin(); it != headers.end(); it++)
+	{
+		cout << "key: " << it->first << " ***** value: " << it->second << endl;
+	}
+}

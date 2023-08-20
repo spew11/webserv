@@ -1,8 +1,14 @@
 #include "Utils.hpp"
 
-Utils::Utils() {}
+Utils::Utils()
+{
 
-Utils::~Utils() {}
+}
+
+Utils::~Utils()
+{
+	
+}
 
 vector<string> Utils::split(const string &s, const string &delim)
 {
@@ -49,19 +55,23 @@ string Utils::itoa(const int &num)
     return ss.str();
 }
 
-bool Utils::is_digit_string(string s)
+bool Utils::isDigitString(string s)
 {
-	for (int i = 0; i < s.length(); i++) {
-		if (!isdigit(s[i])) {
+	for(size_t i = 0; i < s.length(); i++)
+	{
+		if (!isdigit(s[i]))
+		{
 			return false;
 		}
 	}
 	return true;
 }
 
-string Utils::str_join(vector<string>lines, string delim, int start_idx) {
+string Utils::stringJoin(vector<string>lines, string delim, int startIdx)
+{
 	string result = "";
-	for (int i = start_idx; i < lines.size()-1; i++) {
+	for(size_t i = startIdx; i < lines.size()-1; i++)
+	{
 		result += lines[i] + delim;
 	}
 	result += lines[lines.size()-1];
@@ -69,9 +79,9 @@ string Utils::str_join(vector<string>lines, string delim, int start_idx) {
 	return result;
 }
 
-string Utils::toLowerCase(const string & input)
+string Utils::toLowerCase(const string &input)
 {
-    string res;
+    string res = input;
     transform(res.begin(), res.end(), res.begin(), static_cast<int(*)(int)>(std::tolower));
     return res;
 }

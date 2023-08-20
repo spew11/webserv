@@ -1,7 +1,10 @@
 #include "ServerAutoIndexSimulator.hpp"
 
 ServerAutoIndexSimulator::DirectoryEntry::DirectoryEntry(const string name, const string date, const string size)
-	: name(name), date(date), size(size) {}
+	: name(name), date(date), size(size)
+{
+	
+}
 
 string ServerAutoIndexSimulator::DirectoryEntry::getName() const
 {

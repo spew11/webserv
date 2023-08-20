@@ -18,5 +18,6 @@ public:
 	string getServerProtocol() const;
 	map<string, string> getHeaders() const;
 	string getHeader(const string &headerType) const;
+	void printHeaders() const;
 };
 #endif
