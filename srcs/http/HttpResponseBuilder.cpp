@@ -592,9 +592,6 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
     needMoreMessage = newRequestMessage->getNeedMoreChunked();
     connection = newRequestMessage->getConnection();
     requestBody.append(newRequestMessage->getBody());
-
-    /* 이전과 같은 chunk 요청인지 구별하는 방법은 HTTP 메서드와 requestTarget이 동일함을 확인, Contetn-Length 헤더가 없는것을 확인
-    Transfer-Encoding: chunked 헤더가 지정되어 있는지를 확인하면 됌 */
 }
 
 void HttpResponseBuilder::build(IMethodExecutor &methodExecutor)
