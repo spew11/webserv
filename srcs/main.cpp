@@ -1,5 +1,4 @@
 #include <iostream>
-#include "ConfigParser.hpp"
 #include "ServerHandler.hpp"
 #include "HttpResponseBuilder.hpp"
 #include "IMethodExecutor.hpp"
@@ -15,8 +14,8 @@ int main(void)
 {
 	try
 	{
-		ConfigParser parser("tester.conf");
-		ServerHandler sh(parser.get());
+		Config config("tester.conf");
+		ServerHandler sh(&config);
 		sh.loop();
 	}
 	catch (const exception &e)

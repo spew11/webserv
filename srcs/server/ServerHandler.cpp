@@ -57,8 +57,6 @@ ServerHandler::~ServerHandler()
 		delete it->second;
 	servers.clear();
 	clients.clear();
-	if (config)
-		delete config;
 }
 
 #ifdef __APPLE__
