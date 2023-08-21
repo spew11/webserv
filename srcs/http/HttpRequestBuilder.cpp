@@ -427,7 +427,8 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 				{  // chunked number가 나올 차례인 경우
 					if (Utils::isDigitString(lines[i]))
 					{
-						chunked_number = stoi(lines[i], 0, 16);
+						stringstream ss(lines[i]);
+						ss >> std::hex >> chunked_number;
 						if (chunked_number == 0)
 						{  // chunked 2번, chunked number가 0이면 request가 끝이라는 의미
 							needMoreChunk = false;
@@ -488,7 +489,9 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 			recvBuf = "";
 			if (chunked_number != -1) // 이제 문자열이 나올차례다
 			{
-				recvBuf += to_string(chunked_number) + "\r\n";
+				stringstream ss;
+				ss << std::hex << chunked_number;
+				recvBuf += ss.str() + "\r\n";
 			}
 			recvBuf += lines[lines.size()-1];
 			cout << "[RETURN 1] chunked is not finished." << endl;

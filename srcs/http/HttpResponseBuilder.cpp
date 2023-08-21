@@ -87,51 +87,6 @@ int HttpResponseBuilder::parseRequestUri()
     // filename 필요없을 듯
     filename = uri;
   
-    string root = locationConfig.getRoot();
-	int idx = 0;
-	while (true)
-	{
-		idx = uri.find_first_of("/", idx + 1);
-		if (idx == string::npos)
-			break;
-		string tmp = root + uri.substr(0, idx);
-		if (access(tmp.c_str(), F_OK) == 0)
-		{
-			struct stat statbuf;
-			if (stat(tmp.c_str(), &statbuf) < 0)
-			{
-				statusCode = 500;
-				return 1;
-			}
-			if (S_ISDIR(statbuf.st_mode))
-				filename += uri.substr(0, idx) + "/";
-			else if (S_ISREG(statbuf.st_mode))
-			{
-				filename = uri.substr(0, idx);
-				pathInfo = uri.substr(idx);
-				uri = filename;
-				break;
-			}
-		}
-	}
-
-	if (idx == string::npos && uri[uri.length() - 1] != '/')
-	{
-		string absolutePath = root + uri;
-		if (access(absolutePath.c_str(), F_OK) == 0)
-		{
-			struct stat statbuf;
-			if (stat(absolutePath.c_str(), &statbuf) < 0)
-			{
-				statusCode = 500;
-				return 1;
-			}
-			if (S_ISDIR(statbuf.st_mode))
-			{
-				uri += "/";
-			}
-		}
-	}
     pos = requestUri.find(";");
     if (pos != string::npos)
     {
@@ -567,7 +522,35 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
         createResponseMessage();
         return ;
     }
-    // 5. 폴더인데 이름 끝에 '/'가 없다면 '/' 붙이기
+    // 5. pathinfo parsing
+    string root = locationConfig.getRoot();
+	int idx = 0;
+	while (true)
+	{
+		idx = uri.find_first_of("/", idx + 1);
+		if (idx == string::npos)
+			break;
+		string tmp = root + uri.substr(0, idx);
+		if (access(tmp.c_str(), F_OK) == 0)
+		{
+			struct stat statbuf;
+			if (stat(tmp.c_str(), &statbuf) < 0)
+			{
+				statusCode = 500;
+				return ;
+			}
+			if (S_ISDIR(statbuf.st_mode))
+				filename += uri.substr(0, idx) + "/";
+			else if (S_ISREG(statbuf.st_mode))
+			{
+				filename = uri.substr(0, idx);
+				pathInfo = uri.substr(idx);
+				uri = filename;
+				break;
+			}
+		}
+	}
+    // 6. 폴더인데 이름 끝에 '/'가 없다면 '/' 붙이기
     if (uri[uri.length()-1] != '/')
     {
         string absolutePath = locationConfig.getRoot() + uri;
@@ -585,15 +568,15 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
             }
         }
     }
-    // 6. uri 경로 유효성 검사하기
+    // 7. uri 경로 유효성 검사하기
     if ((end = isValidateResource()) == 1)
     {
         createResponseMessage();
         return ;
     }
-    // 7. webserv 변수 초기화하기
+    // 8. webserv 변수 초기화하기
     initWebservValues();
-    // 8. ResponseBuilder 클래스 플래그들 초기화하기
+    // 9. ResponseBuilder 클래스 플래그들 초기화하기
     needMoreMessage = requestMessage->getNeedMoreChunked();
     connection = requestMessage->getConnection();
     needCgi = locationConfig.isCgi();
