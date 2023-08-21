@@ -40,10 +40,11 @@ private:
 	string path;
 	string httpVersion;
 	map<string,string> headers;
-	string getMethod(const HttpMethodType &methodType) const;
 	int contentLength;
-	bool isChunked;
 	string body;
+	bool isChunked;
+	bool needMoreChunk;
+	string getMethod(const HttpMethodType &methodType) const;
 	void setBuildStep(HttpRequestBuilderBuildStep buildStep);
 	HttpRequestBuilderBuildStep getBuildStep(void);
 	void setMethodType(HttpMethodType methodType);
@@ -60,7 +61,6 @@ private:
 	bool buildFirstLine(string str, bool checkOnly = false);
 	bool setHeader(string str, bool checkOnly = false);
 	string getHeader(string key);
-	int buildChunkedBody(string &recvBuf, string &body, vector<string> &lines, int startIdx);
 	vector<string> split(const string& s, const string& delim);
 
 public:

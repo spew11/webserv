@@ -36,13 +36,14 @@ Client::~Client()
 
 void Client::send_msg()
 {
+	cout << "***********send_buf***********" << endl;
 	cout << send_buf << endl;
+	cout << "******************************" << endl << endl;
 	const char *tmp = send_buf.c_str();
 	ssize_t len = send(sock, tmp, strlen(tmp), MSG_DONTWAIT);
 	if (len == -1)
 		throw exception();
 	send_buf = "";
-	recv_buf = "";
 }
 
 void Client::recv_msg()
@@ -58,7 +59,10 @@ void Client::recv_msg()
 		else
 			break;
 	}
-	cout << sock << ">> " << recv_buf << endl;
+	cout << "***************[" << sock << "]recv_buf***************" << endl;
+	// cout << sock << ">> " << recv_buf << endl;
+	cout << recv_buf << endl;
+	cout << "******************************" << endl << endl;
 }
 
 int Client::getSock() const
@@ -105,6 +109,7 @@ void Client::communicate()
 	if (ret == 0) {
 		if (hrb->getNeedMoreMessage() == false)
 		{
+			httpRequestBuilder->print();
 			hrb->initiate(httpRequestBuilder->createRequestMessage());
 
 			if (hrb->getEnd())

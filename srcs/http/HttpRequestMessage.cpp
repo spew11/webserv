@@ -4,14 +4,14 @@
 #include <fstream>
 #include <stdlib.h>
 
-HttpRequestMessage::HttpRequestMessage(const string httpMethod, const string requestTarget, string serverProtocol, map<string, string> headers, string body)
+HttpRequestMessage::HttpRequestMessage(const string httpMethod, const string requestTarget, string serverProtocol, map<string, string> headers, string body, bool needMoreChunk)
 {
     this->httpMethod = httpMethod;
     this->requestTarget = requestTarget;
     this->serverProtocol = serverProtocol;
     this->headers = headers;
     this->body = body;
-    chunked = false;
+    this->needMoreChunk = needMoreChunk;
     connection = true;
     errorCode = 500;
     setFlag();
@@ -25,11 +25,11 @@ void HttpRequestMessage::setFlag()
     {
         string headerType = Utils::toLowerCase(it->first);
         string headerValue = it->second;
-        if (headerType == "tansfer-encoding" && headerValue == "chunked")
+        if (headerType == "transfer-encoding" && headerValue == "chunked")
         {
             chunked = true;
         }
-        else if (headerType == "connection" && headerValue == "close")
+        if (headerType == "connection" && headerValue == "close")
         {
             connection = false;
         }
@@ -46,9 +46,9 @@ string HttpRequestMessage::getRequestTarget() const
 	return requestTarget;
 }
 
-bool HttpRequestMessage::getChunked() const
+bool HttpRequestMessage::getNeedMoreChunked() const
 {
-	return chunked;
+	return needMoreChunk;
 }
 
 bool HttpRequestMessage::getConnection() const
@@ -59,4 +59,9 @@ bool HttpRequestMessage::getConnection() const
 int HttpRequestMessage::getErrorCode() const
 {
 	return errorCode;
+}
+
+bool HttpRequestMessage::isChunked() const
+{
+    return chunked;
 }
