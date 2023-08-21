@@ -10,11 +10,13 @@
 
 using namespace std;
 
-int main(void)
+int main(int ac, char **av)
 {
+	if (ac != 2)
+		return 1;
 	try
 	{
-		Config config("tester.conf");
+		Config config(av[1]);
 		ServerHandler sh(&config);
 		sh.loop();
 	}

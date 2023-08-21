@@ -110,7 +110,14 @@ void ServerHandler::loop()
 			{
 				map<int, Client *>::iterator it2 = clients.find(curEvent->ident);
 				if (it2 != clients.end() && it2->second->isSendable())
+				{
 					it2->second->send_msg();
+					if (it2->second->getConnection() == false)
+					{
+						delete it2->second;
+						clients.erase(it2);
+					}
+				}
 			}
 		}
 	}
