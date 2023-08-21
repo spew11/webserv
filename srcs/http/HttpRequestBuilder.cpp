@@ -71,7 +71,7 @@ string HttpRequestBuilder::getHttpVersion(void)
 	return this->httpVersion;
 }
 
-int HttpRequestBuilder::getContentLength(void)
+size_t HttpRequestBuilder::getContentLength(void)
 {
 	return this->contentLength;
 }
@@ -118,6 +118,8 @@ string HttpRequestBuilder::getMethod(const HttpMethodType &methodType) const
 			return "PATCH";
 		case TRACE:
 			return "TRACE";
+		default:
+			return "NONE";
 	}
 }
 
@@ -135,7 +137,7 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly)
 	};
 	map<string, HttpMethodType> http_methods(map_data, map_data + sizeof(map_data) / sizeof(map_data[0]));
 	
-	int now = 0;
+	size_t now = 0;
 	HttpMethodType methodType = METHOD_TYPE_NONE;
 	for (map<string, HttpMethodType>::iterator it = http_methods.begin(); it != http_methods.end(); it++)
 	{
@@ -160,7 +162,7 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly)
 		// cout << "next method, 1 space is needed." << endl;
 		return false;
 	}
-	int http_idx = str.find("HTTP/", now);
+	size_t http_idx = str.find("HTTP/", now);
 	if (http_idx == string::npos)
 	{
 		// cout << "HTTP/ is not exist." << endl;
@@ -449,7 +451,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 				}
 				else
 				{  // chunked string이 나올 차례인 경우
-					if (lines[i].length() != chunked_number)
+					if (static_cast<int>(lines[i].length()) != chunked_number)
 					{  // chunked 5번
 						erase();
 						recvBuf = Utils::stringJoin(lines, "\r\n", i);  // recvBuf에 현재 line부터 추가

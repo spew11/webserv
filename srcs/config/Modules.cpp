@@ -300,7 +300,7 @@ ClientMaxBodySizeModule::ClientMaxBodySizeModule(const Directive &directive) : M
 {
 	checkSyntax(directive, NULL);
 
-	maxSize = atoi(directive.arg[1].c_str());
+	maxSize = static_cast<size_t>(atoi(directive.arg[1].c_str()));
 }
 
 void ClientMaxBodySizeModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
@@ -311,7 +311,7 @@ void ClientMaxBodySizeModule::checkSyntax(const Directive &directive, const vect
 		throw syntax_error("client_max_body_size");
 }
 
-int ClientMaxBodySizeModule::getClientMaxBodySize(void) const { return maxSize; }
+size_t ClientMaxBodySizeModule::getClientMaxBodySize(void) const { return maxSize; }
 
 // AcceptMethodModule
 AcceptMethodModule::AcceptMethodModule(const Directive &directive) : Module(directive, LOC_MOD)

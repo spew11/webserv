@@ -27,7 +27,7 @@ public:
 	bool isAutoIndex(void) const;
 	bool isRedirect(void) const;
 
-	int getClientMaxBodySize(void) const;
+	size_t getClientMaxBodySize(void) const;
 	int getRedirectStatusCode(void) const;
 
 	const string &getRoot(void) const;

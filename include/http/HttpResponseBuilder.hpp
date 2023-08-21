@@ -57,7 +57,7 @@ private:
 
     void clear();
     int parseRequestUri();
-    int checkClientMaxBodySize(const int &clientMaxBodySize);
+    int checkClientMaxBodySize(const size_t &clientMaxBodySize);
     bool isValidateResource();
     void initWebservValues();
     void execute(IMethodExecutor &methodExecutor);

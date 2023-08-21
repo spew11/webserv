@@ -192,7 +192,7 @@ bool LocationConfig::isAutoIndex(void) const
 	return autoIndexMod->getAutoIndex();
 }
 
-int LocationConfig::getClientMaxBodySize(void) const
+size_t LocationConfig::getClientMaxBodySize(void) const
 {
 	if (cliMaxBodyMod == NULL)
 		return 1024;
