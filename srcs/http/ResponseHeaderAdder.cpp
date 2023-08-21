@@ -18,11 +18,8 @@ void ResponseHeaderAdder::executeAll(HttpResponseBuilder &responseBuilder)
 		addLocationHeader(responseMessage, responseBuilder.getRedirectUri());
 	}
 	// defualt headers
-	if (responseBuilder.getResponseMessage().getBody() != "")
-	{
-		addContentTypeHeader(responseMessage, responseBuilder.getContentType());
-    	addContentLengthHeader(responseMessage, responseBuilder.getResponseMessage().getBody());
-	}
+	addContentTypeHeader(responseMessage, responseBuilder.getContentType());
+	addContentLengthHeader(responseMessage, responseBuilder.getResponseMessage().getBody());
 	addConnectionHeader(responseMessage, responseBuilder.getConnection());
     addDateHeader(responseMessage);
 }

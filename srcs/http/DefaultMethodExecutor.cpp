@@ -8,7 +8,11 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
 	{
 		return 500;
 	}
-	getline(file, response, '\0');
+	string tmp;
+	while (getline(file, tmp))
+	{
+		response += tmp;
+	}
 	file.close();
 	return 200;
 }
@@ -66,7 +70,11 @@ int DefaultMethodExecutor::headMethod(const string &resourcePath, string &respon
 	{
 		return 500;
 	}
-	getline(file, response, '\0');
+	string tmp;
+	while (getline(file, tmp))
+	{
+		response += tmp;
+	}
 	file.close();
 	return 200;
 }

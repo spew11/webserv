@@ -59,7 +59,7 @@ bool Utils::isDigitString(string s)
 {
 	for(size_t i = 0; i < s.length(); i++)
 	{
-		if (!isdigit(s[i]))
+		if (!(isdigit(s[i]) || ('a' <= s[i] && s[i] >= 'e') || ('A' <= s[i] && s[i] >= 'E')))
 		{
 			return false;
 		}
