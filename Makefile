@@ -9,7 +9,6 @@ RM			= rm -rf
 
 CONFIG		:=	\
 				Config \
-				ConfigParser \
 				DirectiveTree \
 				LocationConfig \
 				ServerConfig \
