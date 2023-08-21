@@ -1,8 +1,8 @@
 
 NAME		= webserv
-# -Wall -Wextra -Werror -std=c++98
+
 CXXFLAGS	=  \
-				-MMD -MP -g
+				-Wall -Wextra -Werror -std=c++98 -MMD -MP -g
 CPPFLAGS	= -I ./include -I ./include/config -I ./include/http -I ./include/server
 
 RM			= rm -rf
@@ -23,7 +23,7 @@ HTTP		:=	\
 				HttpResponseMessage \
 				ServerAutoIndexSimulator \
 				ResponseHeaderAdder \
-        ResponseStatusManager \
+        		ResponseStatusManager \
 				Utils \
 				WebservValues \
 				HttpRequestBuilder \

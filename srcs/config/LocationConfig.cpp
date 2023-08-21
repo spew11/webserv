@@ -166,7 +166,7 @@ char **LocationConfig::getCgiParams(const WebservValues &env) const
 
 	char **paramArr = new char *[params.size() + 1];
 
-	for (int i = 0; i < params.size(); i++)
+	for (size_t i = 0; i < params.size(); i++)
 	{
 		const string &key = params[i].first;
 		string value = env.convert(params[i].second);

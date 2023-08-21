@@ -53,7 +53,7 @@ Module *DirectiveTree::createMain()
 
 	try
 	{
-		for (int i = 0; i < subTree.size(); i++)
+		for (size_t i = 0; i < subTree.size(); i++)
 			m->addModule(subTree[i].createModule());
 	}
 	catch (const exception &e)
@@ -71,7 +71,7 @@ Module *DirectiveTree::createServer()
 	const Directive *listenDirective = NULL;
 	vector<DirectiveTree *> subModDirectives;
 
-	for (int i = 0; i < subTree.size(); i++)
+	for (size_t i = 0; i < subTree.size(); i++)
 	{
 		const Directive &directive = subTree[i].getDirective();
 
@@ -97,7 +97,7 @@ Module *DirectiveTree::createServer()
 	// listen이외에 지시어는 sub모듈을 생성한다.
 	try
 	{
-		for (int i = 0; i < subModDirectives.size(); i++)
+		for (size_t i = 0; i < subModDirectives.size(); i++)
 			m->addModule(subModDirectives[i]->createModule());
 	}
 	catch (const exception &e)
@@ -121,7 +121,7 @@ Module *DirectiveTree::createLocation()
 
 	try
 	{
-		for (int i = 0; i < subTree.size(); i++)
+		for (size_t i = 0; i < subTree.size(); i++)
 			m->addModule(subTree[i].createModule());
 	}
 	catch (const exception &e)
@@ -143,7 +143,7 @@ Module *DirectiveTree::createTypes()
 {
 	vector<Directive> subDirectives;
 
-	for (int i = 0; i < subTree.size(); i++)
+	for (size_t i = 0; i < subTree.size(); i++)
 	{
 		subDirectives.push_back(subTree[i].getDirective());
 	}
@@ -170,7 +170,7 @@ Module *DirectiveTree::createCgiParams()
 {
 	vector<Directive> subDirectives;
 
-	for (int i = 0; i < subTree.size(); i++)
+	for (size_t i = 0; i < subTree.size(); i++)
 	{
 		subDirectives.push_back(subTree[i].getDirective());
 	}

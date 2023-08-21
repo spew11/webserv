@@ -30,6 +30,7 @@ protected:
 
 	static bool isBoolean(const string &str);
 	static bool isNumeric(const string &str);
+	static bool isNotNumeric(const string &str);
 
 	virtual void checkSyntax(const Directive &directive, const vector<Directive> *subDirectives) = 0;
 

@@ -44,6 +44,8 @@ bool Module::isNumeric(const string &str)
 	return true;
 }
 
+bool Module::isNotNumeric(const string &str) { return !isNumeric(str); }
+
 // MainModule
 MainModule::MainModule(const Directive &directive) : Module(directive, NO_TYPE) {}
 
@@ -84,6 +86,7 @@ ServerModule::ServerModule(const Directive &directive, const vector<Directive> &
 
 void ServerModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)directive;
 	// subDirectives에는 listen지시어가 들어있다.
 	if (subDirectives->size() != 1 || (*subDirectives)[0].arg.size() != 2)
 		throw syntax_error("server");
@@ -101,7 +104,11 @@ ServerNameModule::ServerNameModule(const Directive &directive) : Module(directiv
 		this->serverNames.push_back(directive.arg[i]);
 }
 
-void ServerNameModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives) {}
+void ServerNameModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
+{
+	(void)directive;
+	(void)subDirectives;
+}
 
 const vector<string> &ServerNameModule::getServerNames(void) const { return serverNames; }
 
@@ -112,12 +119,14 @@ LocationModule::LocationModule(const Directive &directive) : Module(directive, N
 
 	uri = directive.arg[1];
 
-	if (uri.back() == '/')
-		uri.pop_back();
+	if (uri.size() > 0 && uri[uri.size() - 1] == '/')
+		uri.erase(uri.end() - 1);
 }
 
 void LocationModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)subDirectives;
+
 	if (directive.arg.size() != 2)
 		throw syntax_error("location");
 }
@@ -134,6 +143,8 @@ RootModule::RootModule(const Directive &directive) : Module(directive, LOC_MOD)
 
 void RootModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)subDirectives;
+
 	if (directive.arg.size() != 2)
 		throw syntax_error("root");
 }
@@ -160,6 +171,8 @@ TypesModule::TypesModule(const Directive &directive, vector<Directive> subDirect
 
 void TypesModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)directive;
+
 	for (size_t i = 0; i < subDirectives->size(); i++)
 	{
 		if ((*subDirectives)[i].arg.size() < 2)
@@ -179,7 +192,11 @@ IndexModule::IndexModule(const Directive &directive) : Module(directive, LOC_MOD
 		indexes.push_back(directive.arg[i]);
 }
 
-void IndexModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives) {}
+void IndexModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
+{
+	(void)directive;
+	(void)subDirectives;
+}
 
 const vector<string> &IndexModule::getIndexes(void) const { return indexes; }
 
@@ -196,11 +213,13 @@ ErrorPageModule::ErrorPageModule(const Directive &directive) : Module(directive,
 
 void ErrorPageModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)subDirectives;
+
 	if (directive.arg.size() < 3)
 		throw syntax_error("error_page");
 
 	// arg의 마지막을 제외한 인자에 숫자가 아닌 string이 있다면 에러.
-	if (find_if_not(directive.arg.begin() + 1, directive.arg.end() - 1, isNumeric) != directive.arg.end() - 1)
+	if (find_if(directive.arg.begin() + 1, directive.arg.end() - 1, isNotNumeric) != directive.arg.end() - 1)
 		throw syntax_error("error_page");
 }
 
@@ -223,6 +242,8 @@ CgiModule::CgiModule(const Directive &directive) : Module(directive, LOC_MOD)
 
 void CgiModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)subDirectives;
+
 	if (directive.arg.size() != 2)
 		throw syntax_error("cgi");
 }
@@ -234,7 +255,7 @@ CgiParamsModule::CgiParamsModule(const Directive &directive, const vector<Direct
 {
 	checkSyntax(directive, &subDirectives);
 
-	for (int i = 0; i < subDirectives.size(); i++)
+	for (size_t i = 0; i < subDirectives.size(); i++)
 	{
 		params.push_back(make_pair(subDirectives[i].arg[0], subDirectives[i].arg[1]));
 	}
@@ -242,7 +263,9 @@ CgiParamsModule::CgiParamsModule(const Directive &directive, const vector<Direct
 
 void CgiParamsModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
-	for (int i = 0; i < subDirectives->size(); i++)
+	(void)directive;
+
+	for (size_t i = 0; i < subDirectives->size(); i++)
 	{
 		if ((*subDirectives)[i].arg.size() != 2)
 			throw syntax_error("cgi_params");
@@ -264,6 +287,8 @@ AutoIndexModule::AutoIndexModule(const Directive &directive) : Module(directive,
 
 void AutoIndexModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)subDirectives;
+
 	if (directive.arg.size() != 2 || !isBoolean(directive.arg[1]))
 		throw syntax_error("autoindex");
 }
@@ -280,6 +305,8 @@ ClientMaxBodySizeModule::ClientMaxBodySizeModule(const Directive &directive) : M
 
 void ClientMaxBodySizeModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)subDirectives;
+
 	if (directive.arg.size() != 2 || !isNumeric(directive.arg[1]))
 		throw syntax_error("client_max_body_size");
 }
@@ -290,13 +317,17 @@ int ClientMaxBodySizeModule::getClientMaxBodySize(void) const { return maxSize; 
 AcceptMethodModule::AcceptMethodModule(const Directive &directive) : Module(directive, LOC_MOD)
 {
 	// accept_method 지시어 arg가 비었다면 methods벡터는 빈 벡터.
-	for (int i = 1; i < directive.arg.size(); i++)
+	for (size_t i = 1; i < directive.arg.size(); i++)
 	{
 		methods.push_back(directive.arg[i]);
 	}
 }
 
-void AcceptMethodModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives) {}
+void AcceptMethodModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
+{
+	(void)directive;
+	(void)subDirectives;
+}
 
 const vector<string> &AcceptMethodModule::getAcceptMethods(void) const { return methods; }
 
@@ -311,6 +342,8 @@ ReturnModule::ReturnModule(const Directive &directive) : Module(directive, LOC_M
 
 void ReturnModule::checkSyntax(const Directive &directive, const vector<Directive> *subDirectives)
 {
+	(void)subDirectives;
+
 	if (directive.arg.size() != 3 || !isNumeric(directive.arg[1]))
 		throw syntax_error("return");
 }
