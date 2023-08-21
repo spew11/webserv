@@ -80,6 +80,11 @@ string Client::getRecvBuf() const
 	return recv_buf;
 }
 
+bool Client::getConnection() const
+{
+	return hrb->getConnection();
+}
+
 void Client::setSendBuf(string send_buf)
 {
 	this->send_buf = send_buf;

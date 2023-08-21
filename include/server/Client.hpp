@@ -42,6 +42,8 @@ public:
 	int getSock() const;
 	Server *getServer() const;
 	string getRecvBuf() const;
+	bool getConnection() const;
+
 	void setSendBuf(string send_buf);
 	bool isSendable() const;
 
