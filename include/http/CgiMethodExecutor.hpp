@@ -5,6 +5,7 @@
 #include <fstream>
 #include "IMethodExecutor.hpp"
 #include <unistd.h>
+#include <cstdlib>
 
 #ifdef __linux__
 #include <signal.h>

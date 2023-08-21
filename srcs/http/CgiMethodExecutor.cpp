@@ -98,7 +98,7 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		write_to_pipe(response);
+		write_to_pipe(request);
 
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
@@ -116,6 +116,7 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 
 int CgiMethodExecutor::deleteMethod(const string &resourcePath) const
 {
+	(void)resourcePath;
 	return 501;
 }
 
@@ -180,7 +181,7 @@ int CgiMethodExecutor::putMethod(const string &resourcePath, const string &reque
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
-		write_to_pipe(response);
+		write_to_pipe(request);
 
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);

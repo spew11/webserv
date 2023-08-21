@@ -139,7 +139,7 @@ void ServerHandler::loop()
 		if (activity < 0)
 			throw exception();
 
-		for (int i = 0; i < fds.size(); i++)
+		for (size_t i = 0; i < fds.size(); i++)
 		{
 			if (fds[i].revents & (POLL_ERR | POLL_HUP))
 			{
