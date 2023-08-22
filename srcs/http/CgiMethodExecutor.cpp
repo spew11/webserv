@@ -37,6 +37,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		char **args = new char *[2];
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
+		close(STDIN_FILENO);
 		execve(args[0], args, cgiEnv);
 		exit(127);
 	}
@@ -99,6 +100,7 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		close(child_to_parent_pipe[WRITE]);
 
 		write_to_pipe(request);
+		dup2(stdout_fd, STDOUT_FILENO);
 
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
@@ -106,7 +108,6 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		signal(SIGQUIT, SIG_DFL);
 		response = read_from_pipe();
 		dup2(stdin_fd, STDIN_FILENO);
-		dup2(stdout_fd, STDOUT_FILENO);
 		if (exit_code == 0)
 			return 200;
 		else
@@ -182,6 +183,7 @@ int CgiMethodExecutor::putMethod(const string &resourcePath, const string &reque
 		close(child_to_parent_pipe[WRITE]);
 
 		write_to_pipe(request);
+		dup2(stdout_fd, STDOUT_FILENO);
 
 		int exit_code;
 		waitpid(pid, &exit_code, WUNTRACED);
@@ -189,7 +191,6 @@ int CgiMethodExecutor::putMethod(const string &resourcePath, const string &reque
 		signal(SIGQUIT, SIG_DFL);
 		response = read_from_pipe();
 		dup2(stdin_fd, STDIN_FILENO);
-		dup2(stdout_fd, STDOUT_FILENO);
 		if (exit_code == 0)
 			return 200;
 		else
