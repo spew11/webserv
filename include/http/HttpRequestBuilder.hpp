@@ -53,7 +53,7 @@ private:
 	string getPath(void);
 	void setHttpVersion(string httpVersion);
 	string getHttpVersion(void);
-	int getContentLength(void);
+	size_t getContentLength(void);
 	bool getIsChunked(void);
 	void setBody(string body);
 	void appendBody(string body);

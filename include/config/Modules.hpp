@@ -191,14 +191,14 @@ public:
 class ClientMaxBodySizeModule : public Module
 {
 private:
-	int maxSize;
+	size_t maxSize;
 
 	virtual void checkSyntax(const Directive &directive, const vector<Directive> *subDirectives);
 
 public:
 	ClientMaxBodySizeModule(const Directive &directive);
 
-	int getClientMaxBodySize(void) const;
+	size_t getClientMaxBodySize(void) const;
 };
 
 class AcceptMethodModule : public Module

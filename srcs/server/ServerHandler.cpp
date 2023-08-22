@@ -8,7 +8,7 @@ ServerHandler::ServerHandler(Config *config) : config(config)
 	if (kq_fd == -1)
 		throw exception();
 	// Server 생성 및 changeList에 추가
-		const vector<ServerConfig> &servConf = config->getSrvConf();
+		const vector<ServerConfig> &servConf = this->config->getSrvConf();
 	for (vector<ServerConfig>::const_iterator it = servConf.begin(); it != servConf.end(); it++)
 	{
 		map<int, Server *>::iterator it2 = servers.begin();

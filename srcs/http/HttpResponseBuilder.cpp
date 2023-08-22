@@ -101,7 +101,7 @@ int HttpResponseBuilder::parseRequestUri()
     return 0;
 }
 
-int HttpResponseBuilder::checkClientMaxBodySize(const int &clientMaxBodySize)
+int HttpResponseBuilder::checkClientMaxBodySize(const size_t &clientMaxBodySize)
 {
     if (requestMessage->getBody().length() > clientMaxBodySize)
     {
@@ -278,7 +278,7 @@ void HttpResponseBuilder::setSpecifiedErrorPage(const int &errorCode)
             {
                 exist = true;
                 // reponse body에 저장(GET Method와 동일)
-                ifstream file(tmpPath);
+                ifstream file(tmpPath.c_str());
                 if (file.fail())
                 {
                     if (redirectedLocationConfig.isErrCode(500) == true)
@@ -311,7 +311,7 @@ void HttpResponseBuilder::setSpecifiedErrorPage(const int &errorCode)
     else if(S_ISREG(statbuf.st_mode))
     {
         // 4. 에러페이지가 파일이면 바로 저장한다.
-        ifstream file(path);
+        ifstream file(path.c_str());
         if (file.fail())
         {
             if (redirectedLocationConfig.isErrCode(500) == true)
@@ -524,7 +524,7 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     }
     // 5. pathinfo parsing
     string root = locationConfig.getRoot();
-	int idx = 0;
+	size_t idx = 0;
 	while (true)
 	{
 		idx = uri.find_first_of("/", idx + 1);
@@ -592,9 +592,6 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
     needMoreMessage = newRequestMessage->getNeedMoreChunked();
     connection = newRequestMessage->getConnection();
     requestBody.append(newRequestMessage->getBody());
-
-    /* 이전과 같은 chunk 요청인지 구별하는 방법은 HTTP 메서드와 requestTarget이 동일함을 확인, Contetn-Length 헤더가 없는것을 확인
-    Transfer-Encoding: chunked 헤더가 지정되어 있는지를 확인하면 됌 */
 }
 
 void HttpResponseBuilder::build(IMethodExecutor &methodExecutor)

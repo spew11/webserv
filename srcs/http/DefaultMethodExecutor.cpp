@@ -2,8 +2,7 @@
 
 int DefaultMethodExecutor::getMethod(const string &resourcePath, string &response)
 {
-	int statusCode;
-	ifstream file(resourcePath);
+	ifstream file(resourcePath.c_str());
 	if (file.fail())
 	{
 		return 500;
@@ -21,7 +20,9 @@ DefaultMethodExecutor::~DefaultMethodExecutor() {}
 
 int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response)
 {
-	ofstream file(resourcePath);
+	static_cast<void>(response);
+
+	ofstream file(resourcePath.c_str());
 
 	if (file.fail())
 	{
@@ -47,7 +48,8 @@ int DefaultMethodExecutor::deleteMethod(const string &resourcePath) const
 
 int DefaultMethodExecutor::putMethod(const string &resourcePath, const string &request, string &response)
 {
-	ofstream file(resourcePath);
+	static_cast<void>(response);
+	ofstream file(resourcePath.c_str());
 
 	if (file.fail())
 	{
@@ -64,8 +66,7 @@ int DefaultMethodExecutor::putMethod(const string &resourcePath, const string &r
 
 int DefaultMethodExecutor::headMethod(const string &resourcePath, string &response)
 {
-	int statusCode;
-	ifstream file(resourcePath);
+	ifstream file(resourcePath.c_str());
 	if (file.fail())
 	{
 		return 500;
