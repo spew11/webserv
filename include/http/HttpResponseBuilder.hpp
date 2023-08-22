@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include "ServerAutoIndexSimulator.hpp"
 
 using namespace std;

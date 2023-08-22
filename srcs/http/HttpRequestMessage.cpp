@@ -2,7 +2,7 @@
 #include <cctype>
 #include <algorithm>
 #include <fstream>
-#include <stdlib.h>
+#include <cstdlib>
 
 HttpRequestMessage::HttpRequestMessage(const string httpMethod, const string requestTarget, string serverProtocol, map<string, string> headers, string body, bool needMoreChunk)
 {

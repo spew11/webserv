@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DIRECIVETREE_HPP
+#define DIRECIVETREE_HPP
 
 #include "Modules.hpp"
 #include "ConfigUtils.hpp"
@@ -31,3 +32,5 @@ public:
 	Module *createAcceptMethod();
 	Module *createReturn();
 };
+
+#endif
