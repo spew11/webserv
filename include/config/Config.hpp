@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
 
 #include <iostream>
 #include <vector>
@@ -47,3 +48,5 @@ public:
 
 	const vector<ServerConfig> &getSrvConf(void) const { return srvConfs; }
 };
+
+#endif

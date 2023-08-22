@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MODULES_HPP
+#define MODULES_HPP
 
 #include <vector>
 #include <map>
@@ -228,3 +229,5 @@ public:
 	int getStatusCode(void) const;
 	const string &getUri(void) const;
 };
+
+#endif

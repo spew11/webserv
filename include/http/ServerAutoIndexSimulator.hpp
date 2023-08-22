@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <dirent.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <ctime>

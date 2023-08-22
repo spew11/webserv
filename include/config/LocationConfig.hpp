@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LOCATIONCONFIG_HPP
+#define LOCATIONCONFIG_HPP
 
 #include "Modules.hpp"
 #include "WebservValues.hpp"
@@ -41,3 +42,5 @@ public:
 
 	char **getCgiParams(const WebservValues &) const;
 };
+
+#endif

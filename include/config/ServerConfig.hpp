@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SERVERCONFIG_HPP
+#define SERVERCONFIG_HPP
 
 #include <algorithm>
 #include "Modules.hpp"
@@ -31,3 +32,5 @@ private:
 	ServerNameModule *srvNameMod;
 	LocationMap locMap;
 };
+
+#endif

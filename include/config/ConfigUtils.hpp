@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ConfigUtils_HPP
+#define ConfigUtils_HPP
 
 #include <string>
 #include <vector>
@@ -28,3 +29,5 @@ struct Directive
 	Directive(void) {}
 	Directive(const string &name) : name(name) {}
 };
+
+#endif
