@@ -78,15 +78,18 @@ void ServerHandler::loop()
 		for (int i = 0; i < new_events; i++)
 		{
 			struct kevent *curEvent = &eventList[i];
-			if (curEvent->flags & (EV_EOF | EV_ERROR)) // 에러 발생한 경우
+			if (curEvent->flags & (EV_EOF | EV_ERROR) || curEvent->filter == EVFILT_TIMER) // 에러 발생한 경우
 			{
 				if (servers.find(curEvent->ident) != servers.end())
 					throw exception();
 				else // 클라이언트 소켓에 에러 -> 연결 끊고 삭제
 				{
 					map<int, Client *>::iterator it = clients.find(curEvent->ident);
-					delete it->second;
-					clients.erase(it);
+					if (it != clients.end())
+					{
+						delete it->second;
+						clients.erase(it);
+					}
 				}
 			}
 			else if (curEvent->filter == EVFILT_READ) // 읽기 이벤트 발생
@@ -98,12 +101,15 @@ void ServerHandler::loop()
 					Client *cli = new Client(it->second);
 					clients[cli->getSock()] = cli;
 					change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-					change_events(cli->getSock(), EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+					change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 10, NULL);
+					change_events(cli->getSock(), EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
 				}
 				else if (it2 != clients.end()) // 클라이언트 소켓 읽기
 				{
 					Client *cli = it2->second;
 					cli->communicate();
+					if (cli->isSendable())
+						change_events(cli->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
 				}
 			}
 			else if (curEvent->filter == EVFILT_WRITE) // 클라이언트에 데이터 전송 가능
@@ -112,6 +118,7 @@ void ServerHandler::loop()
 				if (it2 != clients.end() && it2->second->isSendable())
 				{
 					it2->second->send_msg();
+					change_events(it2->second->getSock(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 					if (it2->second->getConnection() == false)
 					{
 						delete it2->second;
