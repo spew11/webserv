@@ -77,54 +77,25 @@ void ServerHandler::loop()
 		changeList.clear();
 		for (int i = 0; i < new_events; i++)
 		{
-			struct kevent *curEvent = &eventList[i];
-			if (curEvent->flags & (EV_EOF | EV_ERROR) || curEvent->filter == EVFILT_TIMER) // 에러 발생한 경우
+			struct kevent curEvent = eventList[i];
+
+			if (curEvent.udata != NULL)
 			{
-				if (servers.find(curEvent->ident) != servers.end())
-					throw exception();
-				else // 클라이언트 소켓에 에러 -> 연결 끊고 삭제
-				{
-					map<int, Client *>::iterator it = clients.find(curEvent->ident);
-					if (it != clients.end())
-					{
-						delete it->second;
-						clients.erase(it);
-					}
-				}
+				handleBuildEvent(curEvent);
+				continue;
 			}
-			else if (curEvent->filter == EVFILT_READ) // 읽기 이벤트 발생
+
+			map<int, Server*>::iterator servIt = servers.find(curEvent.ident);
+			if (servIt != servers.end())
 			{
-				map<int, Server *>::iterator it = servers.find(curEvent->ident);
-				map<int, Client *>::iterator it2 = clients.find(curEvent->ident);
-				if (it != servers.end()) // 연결 요청: client 객체 생성 및  changeList에 추가
-				{
-					Client *cli = new Client(it->second);
-					clients[cli->getSock()] = cli;
-					change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-					change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 10, NULL);
-					change_events(cli->getSock(), EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-				}
-				else if (it2 != clients.end()) // 클라이언트 소켓 읽기
-				{
-					Client *cli = it2->second;
-					cli->communicate();
-					if (cli->isSendable())
-						change_events(cli->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-				}
+				handleServerEvent(curEvent, servIt->second);
+				continue;
 			}
-			else if (curEvent->filter == EVFILT_WRITE) // 클라이언트에 데이터 전송 가능
+
+			map<int, Client*>::iterator cliIt = clients.find(curEvent.ident);
+			if (cliIt != clients.end())
 			{
-				map<int, Client *>::iterator it2 = clients.find(curEvent->ident);
-				if (it2 != clients.end() && it2->second->isSendable())
-				{
-					it2->second->send_msg();
-					change_events(it2->second->getSock(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-					if (it2->second->getConnection() == false)
-					{
-						delete it2->second;
-						clients.erase(it2);
-					}
-				}
+				handleClientEvent(curEvent, cliIt->second);
 			}
 		}
 	}
@@ -135,6 +106,56 @@ void ServerHandler::change_events(uintptr_t ident, int16_t filter, uint16_t flag
 	struct kevent tmp_event;
 	EV_SET(&tmp_event, ident, filter, flags, fflags, data, udata);
 	changeList.push_back(tmp_event);
+}
+
+void ServerHandler::handleServerEvent(struct kevent &curEvent, Server *server)
+{
+	if (curEvent.filter == EVFILT_READ)
+	{
+		Client *cli = new Client(server);
+		clients[cli->getSock()] = cli;
+		change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+		change_events(cli->getSock(), EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+		change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 10, NULL);
+	}
+}
+
+void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
+{
+	if (curEvent.filter == EVFILT_TIMER || curEvent.flags & EV_EOF)
+	{
+		clients.erase(clients.find(client->getSock()));
+		delete client;
+	}
+	else if (curEvent.filter == EVFILT_READ)
+	{
+		client->communicate();
+		if (client->isSendable())
+		{
+			change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+			change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+		}
+	}
+	else if (curEvent.filter == EVFILT_WRITE)
+	{
+		if (client->isSendable())
+		{
+			client->send_msg();
+			if (client->getConnection() == false)
+			{
+				clients.erase(clients.find(client->getSock()));
+				delete client;
+				return ;
+			}
+			change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+			change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+		}
+	}
+}
+
+void ServerHandler::handleBuildEvent(struct kevent &curEvent)
+{
+	(void)curEvent;
 }
 
 #elif __linux__
