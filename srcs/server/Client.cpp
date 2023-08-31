@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(Server *server) : server(server)
+Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), isBuildableFlag(false)
 {
 	bzero(&addr, sizeof(addr));
 	socklen_t cli_size = sizeof(addr);
@@ -44,6 +44,7 @@ void Client::send_msg()
 	if (len == -1)
 		throw exception();
 	send_buf = "";
+	isBuildableFlag = false;
 }
 
 void Client::recv_msg()
@@ -97,6 +98,11 @@ bool Client::isSendable() const
 	return true;
 }
 
+bool Client::isBuildable() const
+{
+	return isBuildableFlag;
+}
+
 void Client::communicate()
 {
 	recv_msg();	
@@ -134,22 +140,23 @@ void Client::communicate()
 		}
 		if (hrb->getNeedMoreMessage() == false)
 		{
-			makeResponse();
-			send_buf = hrb->getResponse();
+			IMethodExecutor *executor;
+			if (hrb->getNeedCgi() == true)
+			{
+				LocationConfig lc = hrb->getLocationConfig();
+				executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
+			}
+			else
+				executor = new DefaultMethodExecutor(sh, this);
+			hrb->setMethodExcutor(executor);
+			isBuildableFlag = true;
 		}
 	}
 }
 
-void Client::makeResponse()
+void Client::makeResponse(void)
 {
-	IMethodExecutor *executor;
-	if (hrb->getNeedCgi() == true)
-	{
-		LocationConfig lc = hrb->getLocationConfig();
-		executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
-	}
-	else
-		executor = new DefaultMethodExecutor();
-	hrb->build(*executor);
-	delete executor;
+	hrb->build();
+	if (hrb->getEnd())
+		this->send_buf = hrb->getResponse();
 }

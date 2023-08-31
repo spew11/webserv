@@ -1,7 +1,7 @@
 #include "HttpResponseBuilder.hpp"
 
 HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues &webservValues)
-	: server(server)
+    : server(server)
 {
 	this->webservValues = &webservValues;
 	this->webservValues->initEnvList();
@@ -22,6 +22,8 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues &we
 	end = false;
 	connection = true;
 	autoIndex = false;
+
+    methodExecutor = NULL;
 }
 
 HttpResponseBuilder::~HttpResponseBuilder()
@@ -67,6 +69,12 @@ void HttpResponseBuilder::clear()
 	end = false;
 	connection = true;
 	autoIndex = false;
+
+    if (methodExecutor)
+    {
+        delete methodExecutor;
+        methodExecutor = NULL;
+    }
 }
 
 int HttpResponseBuilder::parseRequestUri()
@@ -326,30 +334,30 @@ void HttpResponseBuilder::setSpecifiedErrorPage(const int &errorCode)
     }
 }
 
-void HttpResponseBuilder::execute(IMethodExecutor &methodExecutor)
+void HttpResponseBuilder::execute()
 {
 	string httpMethod = requestMessage->getHttpMethod();
 
 	// 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
 	if (httpMethod == "GET")
 	{
-		statusCode = methodExecutor.getMethod(resourcePath, responseBody);
+		statusCode = methodExecutor->getMethod(resourcePath, responseBody);
 	}
 	else if (httpMethod == "POST")
 	{
-		statusCode = methodExecutor.postMethod(resourcePath, requestBody, responseBody);
+		statusCode = methodExecutor->postMethod(resourcePath, requestBody, responseBody);
 	}
 	else if (httpMethod == "DELETE")
 	{
-		statusCode = methodExecutor.deleteMethod(resourcePath);
+		statusCode = methodExecutor->deleteMethod(resourcePath);
 	}
 	else if (httpMethod == "PUT")
 	{
-		statusCode = methodExecutor.putMethod(resourcePath, requestBody, responseBody);
+		statusCode = methodExecutor->putMethod(resourcePath, requestBody, responseBody);
 	}
 	else if (httpMethod == "HEAD")
 	{
-		statusCode = methodExecutor.headMethod(resourcePath, responseBody);
+		statusCode = methodExecutor->headMethod(resourcePath, responseBody);
 	}
 }
 
@@ -594,9 +602,11 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
     requestBody.append(newRequestMessage->getBody());
 }
 
-void HttpResponseBuilder::build(IMethodExecutor &methodExecutor)
+void HttpResponseBuilder::build()
 {
-    execute(methodExecutor);
+    execute();
+    if (statusCode == 0)
+        return ;
     createResponseMessage();
     end = true;  
 }
@@ -670,4 +680,9 @@ string HttpResponseBuilder::getRedirectUri() const
 string HttpResponseBuilder::getContentType() const
 {
     return contentType;
+}
+
+void HttpResponseBuilder::setMethodExcutor(IMethodExecutor *methodExecutor)
+{
+    this->methodExecutor = methodExecutor;
 }

@@ -8,7 +8,7 @@ ServerHandler::ServerHandler(Config *config) : config(config)
 	if (kq_fd == -1)
 		throw exception();
 	// Server 생성 및 changeList에 추가
-		const vector<ServerConfig> &servConf = this->config->getSrvConf();
+	const vector<ServerConfig> &servConf = this->config->getSrvConf();
 	for (vector<ServerConfig>::const_iterator it = servConf.begin(); it != servConf.end(); it++)
 	{
 		map<int, Server *>::iterator it2 = servers.begin();
@@ -112,11 +112,11 @@ void ServerHandler::handleServerEvent(struct kevent &curEvent, Server *server)
 {
 	if (curEvent.filter == EVFILT_READ)
 	{
-		Client *cli = new Client(server);
+		Client *cli = new Client(this, server);
 		clients[cli->getSock()] = cli;
 		change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
 		change_events(cli->getSock(), EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-		change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 10, NULL);
+		change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 120, NULL);
 	}
 }
 
@@ -134,6 +134,11 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 		{
 			change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 			change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+		}
+		else if (client->isBuildable())
+		{
+			change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
+			client->makeResponse();
 		}
 	}
 	else if (curEvent.filter == EVFILT_WRITE)
@@ -155,7 +160,13 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 
 void ServerHandler::handleBuildEvent(struct kevent &curEvent)
 {
-	(void)curEvent;
+	void *tmp = curEvent.udata;
+	Client *client = reinterpret_cast<Client*>(tmp);
+	client->makeResponse();
+	if (client->isSendable())
+	{
+		change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+	}
 }
 
 #elif __linux__

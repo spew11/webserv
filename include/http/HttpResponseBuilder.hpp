@@ -6,6 +6,7 @@
 #include "CgiMethodExecutor.hpp"
 #include "WebservValues.hpp"
 #include "ServerConfig.hpp"
+#include "ServerHandler.hpp"
 #include "Server.hpp"
 #include "LocationConfig.hpp"
 #include "ResponseHeaderAdder.hpp"
@@ -55,12 +56,14 @@ private:
     bool connection;
     bool autoIndex;
 
+    IMethodExecutor *methodExecutor;
+
     void clear();
     int parseRequestUri();
     int checkClientMaxBodySize(const size_t &clientMaxBodySize);
     bool isValidateResource();
     void initWebservValues();
-    void execute(IMethodExecutor &methodExecutor);
+    void execute();
     void parseCgiProduct();
     void createResponseMessage();
     bool isAllowedRequestMessage();
@@ -73,7 +76,7 @@ public:
     ~HttpResponseBuilder();
     void initiate(HttpRequestMessage *requestMessage);
     void addRequestMessage(HttpRequestMessage *newRequestMessage);
-    void build(IMethodExecutor &methodExecutor);
+    void build();
     string getResponse() const;
     //getter setter
     HttpResponseMessage &getResponseMessage();
@@ -87,6 +90,8 @@ public:
     string getResourcePath() const;
     string getRedirectUri() const;
     string getContentType() const;
+
+    void setMethodExcutor(IMethodExecutor *mothodExecutor);
 };
 
 #endif

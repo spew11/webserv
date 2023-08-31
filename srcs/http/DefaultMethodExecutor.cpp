@@ -1,19 +1,33 @@
 #include "DefaultMethodExecutor.hpp"
 
+DefaultMethodExecutor::DefaultMethodExecutor(ServerHandler *sh, Client *client): sh(sh), client(client), step(STEP_OPEN_FILE), fd(-1) {}
+
 int DefaultMethodExecutor::getMethod(const string &resourcePath, string &response)
 {
-	ifstream file(resourcePath.c_str());
-	if (file.fail())
+	if (step == STEP_OPEN_FILE)
 	{
-		return 500;
+		fd = open(resourcePath.c_str(), O_RDONLY | O_NONBLOCK);
+		if (fd == -1)
+			return 500;
+		step = STEP_IO_OPER;
+		sh->change_events(fd, EVFILT_READ, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
 	}
-	string tmp;
-	while (getline(file, tmp))
+	else if (step == STEP_IO_OPER)
 	{
-		response += tmp;
+		char buf[1024];
+		bzero(buf, 1024);
+		int len = read(fd, buf, 1023);
+		if (len < 0)
+			return 500;
+		else if (len != 1023)
+		{
+			close(fd);
+			response += string(buf);
+			return 200;
+		}
+		response += string(buf);
 	}
-	file.close();
-	return 200;
+	return 0;
 }
 
 DefaultMethodExecutor::~DefaultMethodExecutor() {}
@@ -21,20 +35,25 @@ DefaultMethodExecutor::~DefaultMethodExecutor() {}
 int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response)
 {
 	static_cast<void>(response);
-
-	ofstream file(resourcePath.c_str());
-
-	if (file.fail())
+	if (step == STEP_OPEN_FILE)
 	{
-		return 500;
+		fd = open(resourcePath.c_str(), O_WRONLY | O_NONBLOCK);
+		if (fd == -1)
+			return 500;
+		step = STEP_IO_OPER;
+		sh->change_events(fd, EVFILT_WRITE, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
 	}
-	file << request;
-	file.close();
-	if (request.length() == 0)
+	else if (step == STEP_IO_OPER)
 	{
-		return 204;
+		ssize_t cnt = write(fd, resourcePath.c_str(), resourcePath.length());
+		close(fd);
+		if (cnt != static_cast<ssize_t>(resourcePath.length()))
+			return 500;
+		else if (request.length() == 0)
+			return 204;
+		return 201;
 	}
-	return 201;
+	return 0;
 }
 
 int DefaultMethodExecutor::deleteMethod(const string &resourcePath) const
@@ -49,33 +68,53 @@ int DefaultMethodExecutor::deleteMethod(const string &resourcePath) const
 int DefaultMethodExecutor::putMethod(const string &resourcePath, const string &request, string &response)
 {
 	static_cast<void>(response);
-	ofstream file(resourcePath.c_str());
-
-	if (file.fail())
+		static_cast<void>(response);
+	if (step == STEP_OPEN_FILE)
 	{
-		return 500;
+		fd = open(resourcePath.c_str(), O_WRONLY | O_NONBLOCK);
+		if (fd == -1)
+			return 500;
+		step = STEP_IO_OPER;
+		sh->change_events(fd, EVFILT_WRITE, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
 	}
-	file << request;
-	file.close();
-	if (request.length() == 0)
+	else if (step == STEP_IO_OPER)
 	{
-		return 204;
+		int cnt = write(fd, resourcePath.c_str(), resourcePath.length());
+		close(fd);
+		if (cnt != static_cast<ssize_t>(resourcePath.length()))
+			return 500;
+		else if (request.length() == 0)
+			return 204;
+		return 201;
 	}
-	return 201;
+	return 0;
 }
 
 int DefaultMethodExecutor::headMethod(const string &resourcePath, string &response)
 {
-	ifstream file(resourcePath.c_str());
-	if (file.fail())
+	if (step == STEP_OPEN_FILE)
 	{
-		return 500;
+		fd = open(resourcePath.c_str(), O_RDONLY | O_NONBLOCK);
+		if (fd == -1)
+			return 500;
+		step = STEP_IO_OPER;
+		sh->change_events(fd, EVFILT_READ, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
 	}
-	string tmp;
-	while (getline(file, tmp))
+	else if (step == STEP_IO_OPER)
 	{
-		response += tmp;
+		char buf[1024];
+		bzero(buf, 1024);
+		int len = read(fd, buf, 1023);
+		if (len < 0)
+			return 500;
+		else if (len != 1023)
+			step = STEP_FINAL;
+		response += string(buf);
 	}
-	file.close();
-	return 200;
+	else if (step == STEP_FINAL)
+	{
+		close(fd);
+		return 200;
+	}
+	return 0;
 }
