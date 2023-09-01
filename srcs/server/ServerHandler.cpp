@@ -152,8 +152,8 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 				delete client;
 				return ;
 			}
-			change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
-			change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+			change_events(client->getSock(), EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+			change_events(client->getSock(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 		}
 	}
 }
