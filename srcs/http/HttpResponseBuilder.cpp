@@ -334,30 +334,30 @@ void HttpResponseBuilder::setSpecifiedErrorPage(const int &errorCode)
     }
 }
 
-void HttpResponseBuilder::execute()
+void HttpResponseBuilder::execute(const int &exitCode)
 {
 	string httpMethod = requestMessage->getHttpMethod();
 
 	// 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
 	if (httpMethod == "GET")
 	{
-		statusCode = methodExecutor->getMethod(resourcePath, responseBody);
+		statusCode = methodExecutor->getMethod(resourcePath, responseBody, exitCode);
 	}
 	else if (httpMethod == "POST")
 	{
-		statusCode = methodExecutor->postMethod(resourcePath, requestBody, responseBody);
+		statusCode = methodExecutor->postMethod(resourcePath, requestBody, responseBody, exitCode);
 	}
 	else if (httpMethod == "DELETE")
 	{
-		statusCode = methodExecutor->deleteMethod(resourcePath);
+		statusCode = methodExecutor->deleteMethod(resourcePath, exitCode);
 	}
 	else if (httpMethod == "PUT")
 	{
-		statusCode = methodExecutor->putMethod(resourcePath, requestBody, responseBody);
+		statusCode = methodExecutor->putMethod(resourcePath, requestBody, responseBody, exitCode);
 	}
 	else if (httpMethod == "HEAD")
 	{
-		statusCode = methodExecutor->headMethod(resourcePath, responseBody);
+		statusCode = methodExecutor->headMethod(resourcePath, responseBody, exitCode);
 	}
 }
 
@@ -602,9 +602,9 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
     requestBody.append(newRequestMessage->getBody());
 }
 
-void HttpResponseBuilder::build()
+void HttpResponseBuilder::build(const int &exitCode)
 {
-    execute();
+    execute(exitCode);
     if (statusCode == 0)
         return ;
     createResponseMessage();
@@ -682,7 +682,7 @@ string HttpResponseBuilder::getContentType() const
     return contentType;
 }
 
-void HttpResponseBuilder::setMethodExcutor(IMethodExecutor *methodExecutor)
+void HttpResponseBuilder::setMethodExecutor(IMethodExecutor *methodExecutor)
 {
     this->methodExecutor = methodExecutor;
 }

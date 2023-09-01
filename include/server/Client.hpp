@@ -53,7 +53,7 @@ public:
 	bool isSendable() const;
 	bool isBuildable() const;
 
-	void makeResponse();
+	void makeResponse(const int &exitCode);
 };
 
 #endif

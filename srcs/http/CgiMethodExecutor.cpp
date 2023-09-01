@@ -1,9 +1,24 @@
 #include "CgiMethodExecutor.hpp"
 
-CgiMethodExecutor::CgiMethodExecutor(char **cgiEnv) : READ(0), WRITE(1), cgiEnv(cgiEnv)
+const int CgiMethodExecutor::READ = 0;
+const int CgiMethodExecutor::WRITE = 1;
+const int CgiMethodExecutor::STEP_FORK_PROC = 0x02;
+const int CgiMethodExecutor::STEP_PROC_DIE = 0x04;
+const int CgiMethodExecutor::STEP_PARENT_WRITE = 0x08;
+const int CgiMethodExecutor::STEP_PARENT_READ = 0x10;
+const int CgiMethodExecutor::STEP_CHILD = 0x11;
+
+CgiMethodExecutor::CgiMethodExecutor(ServerHandler *sh, Client *client, char **cgiEnv)
+	: sh(sh), client(client), cgiEnv(cgiEnv)
 {
 	stdin_fd = dup(STDIN_FILENO);
 	stdout_fd = dup(STDOUT_FILENO);
+	// parent_to_child_pipe[0] = -1;
+	// parent_to_child_pipe[1] = -1;
+	// child_to_parent_pipe[0] = -1;
+	// child_to_parent_pipe[1] = -1;
+	step = STEP_FORK_PROC;
+	pid = -1;
 }
 
 CgiMethodExecutor::~CgiMethodExecutor()
@@ -13,24 +28,43 @@ CgiMethodExecutor::~CgiMethodExecutor()
 	delete cgiEnv;
 	close(stdin_fd);
 	close(stdout_fd);
+	if (parent_to_child_pipe[0] != -1)
+		close(parent_to_child_pipe[0]);
+	if (parent_to_child_pipe[1] != -1)
+		close(parent_to_child_pipe[1]);
+	if (child_to_parent_pipe[0] != -1)
+		close(child_to_parent_pipe[0]);
+	if (child_to_parent_pipe[1] != -1)
+		close(child_to_parent_pipe[1]);
 }
 
-int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
+int CgiMethodExecutor::getMethod(const string &resourcePath, string &response, const int &exitCode)
 {
-	int child_to_parent_pipe[2];
+	if (step == STEP_FORK_PROC)
+	{
+		if (pipe(child_to_parent_pipe) == -1)
+			return 500;
+		fcntl(child_to_parent_pipe[READ], F_SETFL, O_NONBLOCK);
+		fcntl(child_to_parent_pipe[WRITE], F_SETFL, O_NONBLOCK);
 
-	if (pipe(child_to_parent_pipe) == -1)
-		throw exception();
-	int pid = fork();
-	if (pid == -1)
-	{
-		throw exception();
+		pid = fork();
+		if (pid == -1)
+			return 500;
+		else if (pid != 0)
+		{
+			close(child_to_parent_pipe[WRITE]);
+			step = STEP_PROC_DIE;
+			sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, reinterpret_cast<void*>(client));
+			return 0;
+		}
+		else
+			step = STEP_CHILD;
 	}
-	else if (pid == 0)
+
+	if (step == STEP_CHILD)
 	{
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
 		dup2(child_to_parent_pipe[WRITE], STDOUT_FILENO);
+		// close(STDIN_FILENO);
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
@@ -41,41 +75,54 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response)
 		execve(args[0], args, cgiEnv);
 		exit(127);
 	}
-	else
+
+	if (step == STEP_PROC_DIE)
 	{
-		signal(SIGINT, SIG_IGN);
-		signal(SIGQUIT, SIG_IGN);
-		dup2(child_to_parent_pipe[READ], STDIN_FILENO);
-		close(child_to_parent_pipe[WRITE]);
-		close(child_to_parent_pipe[READ]);
-		int exit_code;
-		waitpid(pid, &exit_code, WUNTRACED);
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
-		response = read_from_pipe();
-		dup2(stdin_fd, STDIN_FILENO);
-		if (exit_code == 0)
-			return 200;
-		else
-			return 400;
+		step = STEP_PARENT_READ;
+		this->exitCode = exitCode;
+		sh->change_events(child_to_parent_pipe[READ], EVFILT_READ, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
+		return 0;
 	}
+	
+	if (step == STEP_PARENT_READ)
+	{
+		int ret = read_from_pipe(child_to_parent_pipe[READ], response);
+		if (ret != 200)
+			return ret;
+		if (this->exitCode == 0)
+			return 200;
+		return 500;
+	}
+	return 0;
 }
 
-int CgiMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response)
+int CgiMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response, const int &exitCode)
 {
-	int parent_to_child_pipe[2];
-	int child_to_parent_pipe[2];
-
-	if (pipe(parent_to_child_pipe) == -1)
-		throw exception();
-	if (pipe(child_to_parent_pipe) == -1)
-		throw exception();
-	int pid = fork();
-	if (pid == -1)
+	if (step == STEP_FORK_PROC)
 	{
-		throw exception();
+		if (pipe(parent_to_child_pipe) == -1)
+			return 500;
+		if (pipe(child_to_parent_pipe) == -1)
+			return 500;
+
+		fcntl(parent_to_child_pipe[READ], F_SETFL, O_NONBLOCK);
+		fcntl(parent_to_child_pipe[WRITE], F_SETFL, O_NONBLOCK);
+		fcntl(child_to_parent_pipe[READ], F_SETFL, O_NONBLOCK);
+		fcntl(child_to_parent_pipe[WRITE], F_SETFL, O_NONBLOCK);
+
+		pid = fork();
+		if (pid == -1)
+			return 500;
+		else if (pid != 0)
+		{
+			step = STEP_PARENT_WRITE;
+			sh->change_events(parent_to_child_pipe[WRITE], EVFILT_WRITE, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
+		}
+		else
+			step = STEP_CHILD;
 	}
-	else if (pid == 0)
+
+	if (step == STEP_CHILD)
 	{
 		dup2(parent_to_child_pipe[READ], STDIN_FILENO);
 		dup2(child_to_parent_pipe[WRITE], STDOUT_FILENO);
@@ -88,157 +135,78 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		args[0] = strdup(resourcePath.c_str());
 		args[1] = NULL;
 		execve(resourcePath.c_str(), args, cgiEnv);
-		exit(1);
+		exit(127);
 	}
-	else
+
+	if (step == STEP_PARENT_WRITE)
 	{
-		dup2(child_to_parent_pipe[READ], STDIN_FILENO);
-		dup2(parent_to_child_pipe[WRITE], STDOUT_FILENO);
-		close(parent_to_child_pipe[READ]);
-		close(parent_to_child_pipe[WRITE]);
-		close(child_to_parent_pipe[READ]);
-		close(child_to_parent_pipe[WRITE]);
+		write_to_pipe(parent_to_child_pipe[WRITE], request);
+		step = STEP_PARENT_WRITE;
+		sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, reinterpret_cast<void*>(client));
+		return 0;
+	}
+	
+	if (step == STEP_PROC_DIE)
+	{
+		step = STEP_PARENT_READ;
+		this->exitCode = exitCode;
+		sh->change_events(child_to_parent_pipe[READ], EVFILT_READ, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
+		return 0;
+	}
 
-		write_to_pipe(request);
-		dup2(stdout_fd, STDOUT_FILENO);
+	if (step == STEP_PARENT_READ)
+	{
+		int ret = read_from_pipe(child_to_parent_pipe[READ], response);
+		if (ret != 200)
+			return ret;
 
-		int exit_code;
-		waitpid(pid, &exit_code, WUNTRACED);
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
-		response = read_from_pipe();
-		dup2(stdin_fd, STDIN_FILENO);
-		if (exit_code == 0)
+		if (this->exitCode == 0)
 			return 200;
 		else
 			return 400;
 	}
+	return 0;
 }
 
-int CgiMethodExecutor::deleteMethod(const string &resourcePath) const
+int CgiMethodExecutor::deleteMethod(const string &resourcePath, const int &exitCode) const
 {
-	(void)resourcePath;
+	(void)resourcePath; (void)exitCode;
 	return 501;
 }
 
-string CgiMethodExecutor::read_from_pipe()
+int CgiMethodExecutor::read_from_pipe(int &fd, string &body)
 {
 	char buf[1024];
 	bzero(buf, 1024 * sizeof(char));
 
-	int ret;
-	string res;
-	while ((ret = read(STDIN_FILENO, buf, 1024)) > 0)
+	ssize_t cnt = read(fd, buf, 1023);
+	if (cnt < 0)
+		return 500;
+	else if (cnt != 1023)
 	{
-		res += string(buf);
-		bzero(buf, 1024 * sizeof(char));
+		close(fd);
+		body += string(buf);
+		return 200;
 	}
-	if (ret == -1)
-		throw exception();
-	return res;
+	body += string(buf);
+	return 0;
 }
 
-void CgiMethodExecutor::write_to_pipe(string body)
+int CgiMethodExecutor::write_to_pipe(int &fd, const string &body)
 {
-	if (write(STDOUT_FILENO, body.c_str(), body.size() + 1) == -1)
-		throw exception();
+	ssize_t cnt = write(fd, body.c_str(), body.length());
+	close(fd);
+	if (cnt != static_cast<ssize_t>(body.length()))
+		return 500;
+	return 200;
 }
 
-int CgiMethodExecutor::putMethod(const string &resourcePath, const string &request, string &response)
+int CgiMethodExecutor::putMethod(const string &resourcePath, const string &request, string &response, const int &exitCode)
 {
-	int parent_to_child_pipe[2];
-	int child_to_parent_pipe[2];
-
-	if (pipe(parent_to_child_pipe) == -1)
-		throw exception();
-	if (pipe(child_to_parent_pipe) == -1)
-		throw exception();
-	int pid = fork();
-	if (pid == -1)
-	{
-		throw exception();
-	}
-	else if (pid == 0)
-	{
-		dup2(parent_to_child_pipe[READ], STDIN_FILENO);
-		dup2(child_to_parent_pipe[WRITE], STDOUT_FILENO);
-		close(parent_to_child_pipe[READ]);
-		close(parent_to_child_pipe[WRITE]);
-		close(child_to_parent_pipe[READ]);
-		close(child_to_parent_pipe[WRITE]);
-
-		char **args = new char *[2];
-		args[0] = strdup(resourcePath.c_str());
-		args[1] = NULL;
-		execve(resourcePath.c_str(), args, cgiEnv);
-		exit(1);
-	}
-	else
-	{
-		dup2(child_to_parent_pipe[READ], STDIN_FILENO);
-		dup2(parent_to_child_pipe[WRITE], STDOUT_FILENO);
-		close(parent_to_child_pipe[READ]);
-		close(parent_to_child_pipe[WRITE]);
-		close(child_to_parent_pipe[READ]);
-		close(child_to_parent_pipe[WRITE]);
-
-		write_to_pipe(request);
-		dup2(stdout_fd, STDOUT_FILENO);
-
-		int exit_code;
-		waitpid(pid, &exit_code, WUNTRACED);
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
-		response = read_from_pipe();
-		dup2(stdin_fd, STDIN_FILENO);
-		if (exit_code == 0)
-			return 200;
-		else
-			return 400;
-	}
+	return postMethod(resourcePath, request, response, exitCode);
 }
 
-int CgiMethodExecutor::headMethod(const string &resourcePath, string &response)
+int CgiMethodExecutor::headMethod(const string &resourcePath, string &response, const int &exitCode)
 {
-	int child_to_parent_pipe[2];
-
-	if (pipe(child_to_parent_pipe) == -1)
-		throw exception();
-	int pid = fork();
-	if (pid == -1)
-	{
-		throw exception();
-	}
-	else if (pid == 0)
-	{
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
-		dup2(child_to_parent_pipe[WRITE], STDOUT_FILENO);
-		close(child_to_parent_pipe[READ]);
-		close(child_to_parent_pipe[WRITE]);
-
-		char **args = new char *[3];
-		args[0] = strdup(resourcePath.c_str());
-		args[1] = NULL;
-		execve(args[0], args, cgiEnv);
-		exit(127);
-	}
-	else
-	{
-		signal(SIGINT, SIG_IGN);
-		signal(SIGQUIT, SIG_IGN);
-		dup2(child_to_parent_pipe[READ], STDIN_FILENO);
-		close(child_to_parent_pipe[WRITE]);
-		close(child_to_parent_pipe[READ]);
-		int exit_code;
-		waitpid(pid, &exit_code, WUNTRACED);
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
-		response = read_from_pipe();
-		dup2(stdin_fd, STDIN_FILENO);
-		if (exit_code == 0)
-			return 200;
-		else
-			return 400;
-	}
+	return getMethod(resourcePath, response, exitCode);
 }

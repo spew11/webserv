@@ -63,7 +63,7 @@ private:
     int checkClientMaxBodySize(const size_t &clientMaxBodySize);
     bool isValidateResource();
     void initWebservValues();
-    void execute();
+    void execute(const int &exitCode);
     void parseCgiProduct();
     void createResponseMessage();
     bool isAllowedRequestMessage();
@@ -76,7 +76,7 @@ public:
     ~HttpResponseBuilder();
     void initiate(HttpRequestMessage *requestMessage);
     void addRequestMessage(HttpRequestMessage *newRequestMessage);
-    void build();
+    void build(const int &exitCode);
     string getResponse() const;
     //getter setter
     HttpResponseMessage &getResponseMessage();
@@ -91,7 +91,7 @@ public:
     string getRedirectUri() const;
     string getContentType() const;
 
-    void setMethodExcutor(IMethodExecutor *mothodExecutor);
+    void setMethodExecutor(IMethodExecutor *mothodExecutor);
 };
 
 #endif

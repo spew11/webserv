@@ -144,19 +144,19 @@ void Client::communicate()
 			if (hrb->getNeedCgi() == true)
 			{
 				LocationConfig lc = hrb->getLocationConfig();
-				executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
+				executor = new CgiMethodExecutor(sh, this, lc.getCgiParams(webVal));
 			}
 			else
 				executor = new DefaultMethodExecutor(sh, this);
-			hrb->setMethodExcutor(executor);
+			hrb->setMethodExecutor(executor);
 			isBuildableFlag = true;
 		}
 	}
 }
 
-void Client::makeResponse(void)
+void Client::makeResponse(const int &exitCode)
 {
-	hrb->build();
+	hrb->build(exitCode);
 	if (hrb->getEnd())
 		this->send_buf = hrb->getResponse();
 }

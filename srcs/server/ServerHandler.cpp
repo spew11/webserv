@@ -137,7 +137,7 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 		}
 		else if (client->isBuildable())
 		{
-			client->makeResponse();
+			client->makeResponse(-1);
 			if (client->isSendable())
 				change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
 			else
@@ -163,9 +163,13 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 
 void ServerHandler::handleBuildEvent(struct kevent &curEvent)
 {
+	int exitCode = -1;
+	if (curEvent.filter == EVFILT_PROC)
+		exitCode = curEvent.data;
+	cout << "==================================================a==EXIT_CODE: " << exitCode << endl;
 	void *tmp = curEvent.udata;
 	Client *client = reinterpret_cast<Client*>(tmp);
-	client->makeResponse();
+	client->makeResponse(exitCode);
 	if (client->isSendable())
 	{
 		change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);

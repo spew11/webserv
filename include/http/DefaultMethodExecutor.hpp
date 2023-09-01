@@ -18,9 +18,8 @@ class DefaultMethodExecutor : public IMethodExecutor
 {
 private:
 	typedef int method_step;
-	static const int STEP_OPEN_FILE = 0x00000001;
-	static const int STEP_IO_OPER = 0x00000002;
-	static const int STEP_FINAL = 0x00000004;
+	static const method_step STEP_OPEN_FILE = 0x00000001;
+	static const method_step STEP_IO_OPER = 0x00000002;
 
 	ServerHandler *sh;
 	Client *client;
@@ -30,10 +29,10 @@ private:
 public:
 	DefaultMethodExecutor(ServerHandler *sh, Client *client);
 	~DefaultMethodExecutor();
-	int getMethod(const string &resourcePath, string &response);
-	int postMethod(const string &resourcePath, const string &request, string &response);
-	int deleteMethod(const string &resourcePath) const;
-	int putMethod(const string &resourcePath, const string &request, string &response);
-	int headMethod(const string &resourcePath, string &response);
+	int getMethod(const string &resourcePath, string &response, const int &exitCode);
+	int postMethod(const string &resourcePath, const string &request, string &response, const int &exitCode);
+	int deleteMethod(const string &resourcePath, const int &exitCode) const;
+	int putMethod(const string &resourcePath, const string &request, string &response, const int &exitCode);
+	int headMethod(const string &resourcePath, string &response, const int &exitCode);
 };
 #endif
