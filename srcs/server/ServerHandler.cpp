@@ -137,8 +137,11 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 		}
 		else if (client->isBuildable())
 		{
-			change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 			client->makeResponse();
+			if (client->isSendable())
+				change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+			else
+				change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 		}
 	}
 	else if (curEvent.filter == EVFILT_WRITE)

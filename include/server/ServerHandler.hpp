@@ -17,6 +17,9 @@
 
 using namespace std;
 
+class Server;
+class Client;
+
 class ServerHandler
 {
 private:

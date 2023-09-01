@@ -37,7 +37,7 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	static_cast<void>(response);
 	if (step == STEP_OPEN_FILE)
 	{
-		fd = open(resourcePath.c_str(), O_WRONLY | O_NONBLOCK);
+		fd = open(resourcePath.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC, 0666);
 		if (fd == -1)
 			return 500;
 		step = STEP_IO_OPER;
@@ -71,7 +71,7 @@ int DefaultMethodExecutor::putMethod(const string &resourcePath, const string &r
 		static_cast<void>(response);
 	if (step == STEP_OPEN_FILE)
 	{
-		fd = open(resourcePath.c_str(), O_WRONLY | O_NONBLOCK);
+		fd = open(resourcePath.c_str(), O_WRONLY | O_NONBLOCK  | O_TRUNC | O_CREAT, 0666); //권한 이게 맞나...?
 		if (fd == -1)
 			return 500;
 		step = STEP_IO_OPER;
@@ -79,9 +79,9 @@ int DefaultMethodExecutor::putMethod(const string &resourcePath, const string &r
 	}
 	else if (step == STEP_IO_OPER)
 	{
-		int cnt = write(fd, resourcePath.c_str(), resourcePath.length());
+		int cnt = write(fd, request.c_str(), request.length());
 		close(fd);
-		if (cnt != static_cast<ssize_t>(resourcePath.length()))
+		if (cnt != static_cast<ssize_t>(request.length()))
 			return 500;
 		else if (request.length() == 0)
 			return 204;
