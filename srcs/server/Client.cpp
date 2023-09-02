@@ -158,5 +158,8 @@ void Client::makeResponse(const int &exitCode)
 {
 	hrb->build(exitCode);
 	if (hrb->getEnd())
+	{
 		this->send_buf = hrb->getResponse();
+		// hrb->deleteMethodExecutor();
+	}
 }

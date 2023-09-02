@@ -13,10 +13,6 @@ CgiMethodExecutor::CgiMethodExecutor(ServerHandler *sh, Client *client, char **c
 {
 	stdin_fd = dup(STDIN_FILENO);
 	stdout_fd = dup(STDOUT_FILENO);
-	// parent_to_child_pipe[0] = -1;
-	// parent_to_child_pipe[1] = -1;
-	// child_to_parent_pipe[0] = -1;
-	// child_to_parent_pipe[1] = -1;
 	step = STEP_FORK_PROC;
 	pid = -1;
 }
@@ -64,7 +60,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response, c
 	if (step == STEP_CHILD)
 	{
 		dup2(child_to_parent_pipe[WRITE], STDOUT_FILENO);
-		// close(STDIN_FILENO);
+		close(STDIN_FILENO);
 		close(child_to_parent_pipe[READ]);
 		close(child_to_parent_pipe[WRITE]);
 
@@ -115,8 +111,11 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 			return 500;
 		else if (pid != 0)
 		{
+			close(parent_to_child_pipe[READ]);
+			close(child_to_parent_pipe[WRITE]);
 			step = STEP_PARENT_WRITE;
 			sh->change_events(parent_to_child_pipe[WRITE], EVFILT_WRITE, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
+			return 0;
 		}
 		else
 			step = STEP_CHILD;
@@ -140,8 +139,10 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 
 	if (step == STEP_PARENT_WRITE)
 	{
-		write_to_pipe(parent_to_child_pipe[WRITE], request);
-		step = STEP_PARENT_WRITE;
+		int ret = write_to_pipe(parent_to_child_pipe[WRITE], request);
+		if (ret != 200)
+			return ret;
+		step = STEP_PROC_DIE;
 		sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, reinterpret_cast<void*>(client));
 		return 0;
 	}
@@ -159,11 +160,9 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		int ret = read_from_pipe(child_to_parent_pipe[READ], response);
 		if (ret != 200)
 			return ret;
-
 		if (this->exitCode == 0)
 			return 200;
-		else
-			return 400;
+		return 500;
 	}
 	return 0;
 }
