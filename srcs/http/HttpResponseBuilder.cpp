@@ -36,8 +36,13 @@ HttpResponseBuilder::~HttpResponseBuilder()
     if (requestMessage)
     {
         delete requestMessage;
-        responseMessage = 0;
+        requestMessage = 0;
     }
+	if (methodExecutor)
+	{
+		delete methodExecutor;
+        methodExecutor = 0;
+	}
 }
 
 void HttpResponseBuilder::clear()
@@ -608,7 +613,12 @@ void HttpResponseBuilder::build(const int &exitCode)
     if (statusCode == 0)
         return ;
     createResponseMessage();
-    end = true;  
+    end = true;
+	if (methodExecutor)
+	{
+		delete methodExecutor;
+        methodExecutor = 0;
+	}
 }
 
 HttpRequestMessage HttpResponseBuilder::getRequestMessage() const

@@ -9,12 +9,13 @@ const int CgiMethodExecutor::STEP_PARENT_READ = 0x10;
 const int CgiMethodExecutor::STEP_CHILD = 0x11;
 
 CgiMethodExecutor::CgiMethodExecutor(ServerHandler *sh, Client *client, char **cgiEnv)
-	: sh(sh), client(client), cgiEnv(cgiEnv)
+	: sh(sh), cgiEnv(cgiEnv)
 {
 	stdin_fd = dup(STDIN_FILENO);
 	stdout_fd = dup(STDOUT_FILENO);
 	step = STEP_FORK_PROC;
 	pid = -1;
+	this->client = reinterpret_cast<void*>(client);
 }
 
 CgiMethodExecutor::~CgiMethodExecutor()
@@ -50,7 +51,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response, c
 		{
 			close(child_to_parent_pipe[WRITE]);
 			step = STEP_PROC_DIE;
-			sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, reinterpret_cast<void*>(client));
+			sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, client);
 			return 0;
 		}
 		else
@@ -76,7 +77,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response, c
 	{
 		step = STEP_PARENT_READ;
 		this->exitCode = exitCode;
-		sh->change_events(child_to_parent_pipe[READ], EVFILT_READ, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
+		sh->change_events(child_to_parent_pipe[READ], EVFILT_READ, EV_ADD, 0, 0, client);
 		return 0;
 	}
 	
@@ -114,7 +115,7 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 			close(parent_to_child_pipe[READ]);
 			close(child_to_parent_pipe[WRITE]);
 			step = STEP_PARENT_WRITE;
-			sh->change_events(parent_to_child_pipe[WRITE], EVFILT_WRITE, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
+			sh->change_events(parent_to_child_pipe[WRITE], EVFILT_WRITE, EV_ADD, 0, 0, client);
 			return 0;
 		}
 		else
@@ -143,7 +144,7 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		if (ret != 200)
 			return ret;
 		step = STEP_PROC_DIE;
-		sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, reinterpret_cast<void*>(client));
+		sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, client);
 		return 0;
 	}
 	
@@ -151,7 +152,7 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 	{
 		step = STEP_PARENT_READ;
 		this->exitCode = exitCode;
-		sh->change_events(child_to_parent_pipe[READ], EVFILT_READ, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
+		sh->change_events(child_to_parent_pipe[READ], EVFILT_READ, EV_ADD, 0, 0, client);
 		return 0;
 	}
 

@@ -79,6 +79,7 @@ void ServerHandler::loop()
 		{
 			struct kevent curEvent = eventList[i];
 
+			cout << "EVENT OCCUR = " << curEvent.ident << endl;
 			if (curEvent.udata != NULL)
 			{
 				handleBuildEvent(curEvent);
@@ -110,7 +111,7 @@ void ServerHandler::change_events(uintptr_t ident, int16_t filter, uint16_t flag
 
 void ServerHandler::handleServerEvent(struct kevent &curEvent, Server *server)
 {
-	if (curEvent.filter == EVFILT_READ)
+	if (curEvent.filter == EVFILT_READ && curEvent.data > 0)
 	{
 		Client *cli = new Client(this, server);
 		clients[cli->getSock()] = cli;
@@ -124,8 +125,9 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 {
 	if (curEvent.filter == EVFILT_TIMER || curEvent.flags & EV_EOF)
 	{
-		clients.erase(clients.find(client->getSock()));
-		delete client;
+		map<int, Client*>::iterator it = clients.find(client->getSock());
+		delete it->second;
+		clients.erase(it);
 	}
 	else if (curEvent.filter == EVFILT_READ)
 	{
@@ -151,8 +153,9 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 			client->send_msg();
 			if (client->getConnection() == false)
 			{
-				clients.erase(clients.find(client->getSock()));
-				delete client;
+				map<int, Client*>::iterator it = clients.find(client->getSock());
+				delete it->second;
+				clients.erase(it);
 				return ;
 			}
 			change_events(client->getSock(), EVFILT_READ, EV_ENABLE, 0, 0, NULL);
@@ -166,7 +169,6 @@ void ServerHandler::handleBuildEvent(struct kevent &curEvent)
 	int exitCode = -1;
 	if (curEvent.filter == EVFILT_PROC)
 		exitCode = curEvent.data;
-	cout << "==================================================a==EXIT_CODE: " << exitCode << endl;
 	void *tmp = curEvent.udata;
 	Client *client = reinterpret_cast<Client*>(tmp);
 	client->makeResponse(exitCode);

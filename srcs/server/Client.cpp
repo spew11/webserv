@@ -15,7 +15,7 @@ Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), isBu
 	fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 #endif
 
-	cout << "Connet: Client" << sock << endl;
+	cout << "Connect: Client" << sock << endl;
 	cout << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << endl;
 	webVal.insert("server_addr", server->getIP());
 	webVal.insert("server_port", server->getPort());
@@ -36,7 +36,7 @@ Client::~Client()
 
 void Client::send_msg()
 {
-	cout << "***********send_buf***********" << endl;
+	cout << "***********send_buf[" << sock << "]***********" << endl;
 	cout << send_buf << endl;
 	cout << "******************************" << endl << endl;
 	const char *tmp = send_buf.c_str();
@@ -120,7 +120,7 @@ void Client::communicate()
 	if (ret == 0) {
 		if (hrb->getNeedMoreMessage() == false)
 		{
-			httpRequestBuilder->print();
+			// httpRequestBuilder->print();
 			hrb->initiate(httpRequestBuilder->createRequestMessage());
 
 			if (hrb->getEnd())

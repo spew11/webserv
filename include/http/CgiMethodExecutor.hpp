@@ -36,7 +36,7 @@ private:
 	method_step step;
 
 	ServerHandler *sh;
-	Client *client;
+	void *client;
 	char **cgiEnv;
 
 	int stdin_fd;

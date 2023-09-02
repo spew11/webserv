@@ -8,6 +8,7 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
 
 	if (step == STEP_OPEN_FILE)
 	{
+		cout << "STEP_OPEN_FILE" << endl;
 		fd = open(resourcePath.c_str(), O_RDONLY | O_NONBLOCK);
 		if (fd == -1)
 			return 500;
@@ -16,6 +17,7 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
 	}
 	else if (step == STEP_IO_OPER)
 	{
+		cout << "STEP_IO_OPER" << endl;
 		char buf[1024];
 		bzero(buf, 1024);
 		ssize_t len = read(fd, buf, 1023);
