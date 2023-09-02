@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(Server *server) : server(server)
+Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), isBuildableFlag(false)
 {
 	bzero(&addr, sizeof(addr));
 	socklen_t cli_size = sizeof(addr);
@@ -15,7 +15,7 @@ Client::Client(Server *server) : server(server)
 	fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 #endif
 
-	cout << "Connet: Client" << sock << endl;
+	cout << "Connect: Client" << sock << endl;
 	cout << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << endl;
 	webVal.insert("server_addr", server->getIP());
 	webVal.insert("server_port", server->getPort());
@@ -36,7 +36,7 @@ Client::~Client()
 
 void Client::send_msg()
 {
-	cout << "***********send_buf***********" << endl;
+	cout << "***********send_buf[" << sock << "]***********" << endl;
 	cout << send_buf << endl;
 	cout << "******************************" << endl << endl;
 	const char *tmp = send_buf.c_str();
@@ -44,6 +44,7 @@ void Client::send_msg()
 	if (len == -1)
 		throw exception();
 	send_buf = "";
+	isBuildableFlag = false;
 }
 
 void Client::recv_msg()
@@ -97,6 +98,11 @@ bool Client::isSendable() const
 	return true;
 }
 
+bool Client::isBuildable() const
+{
+	return isBuildableFlag;
+}
+
 void Client::communicate()
 {
 	recv_msg();	
@@ -114,7 +120,7 @@ void Client::communicate()
 	if (ret == 0) {
 		if (hrb->getNeedMoreMessage() == false)
 		{
-			httpRequestBuilder->print();
+			// httpRequestBuilder->print();
 			hrb->initiate(httpRequestBuilder->createRequestMessage());
 
 			if (hrb->getEnd())
@@ -134,22 +140,26 @@ void Client::communicate()
 		}
 		if (hrb->getNeedMoreMessage() == false)
 		{
-			makeResponse();
-			send_buf = hrb->getResponse();
+			IMethodExecutor *executor;
+			if (hrb->getNeedCgi() == true)
+			{
+				LocationConfig lc = hrb->getLocationConfig();
+				executor = new CgiMethodExecutor(sh, this, lc.getCgiParams(webVal));
+			}
+			else
+				executor = new DefaultMethodExecutor(sh, this);
+			hrb->setMethodExecutor(executor);
+			isBuildableFlag = true;
 		}
 	}
 }
 
-void Client::makeResponse()
+void Client::makeResponse(const int &exitCode)
 {
-	IMethodExecutor *executor;
-	if (hrb->getNeedCgi() == true)
+	hrb->build(exitCode);
+	if (hrb->getEnd())
 	{
-		LocationConfig lc = hrb->getLocationConfig();
-		executor = new CgiMethodExecutor(lc.getCgiParams(webVal));
+		this->send_buf = hrb->getResponse();
+		// hrb->deleteMethodExecutor();
 	}
-	else
-		executor = new DefaultMethodExecutor();
-	hrb->build(*executor);
-	delete executor;
 }

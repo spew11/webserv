@@ -5,6 +5,7 @@
 #include <exception>
 #include <sys/socket.h>
 
+#include "ServerHandler.hpp"
  #include "Server.hpp"
  #include "HttpResponseBuilder.hpp"
  #include "DefaultMethodExecutor.hpp"
@@ -14,12 +15,14 @@
 
 using namespace std;
 
-class HttpResponseBuilder;
+class ServerHandler;
 class Server;
+class HttpResponseBuilder;
 
 class Client
 {
 private:
+	ServerHandler *sh;
 	Server *server;
 	HttpResponseBuilder *hrb;
 	HttpRequestBuilder *httpRequestBuilder;
@@ -31,8 +34,10 @@ private:
 	string send_buf;
 	string recv_buf;
 
+	bool isBuildableFlag;
+
 public:
-	Client(Server *server);
+	Client(ServerHandler *sh, Server *server);
 	~Client();
 
 	void send_msg();
@@ -46,9 +51,9 @@ public:
 
 	void setSendBuf(string send_buf);
 	bool isSendable() const;
+	bool isBuildable() const;
 
-private:
-	void makeResponse();
+	void makeResponse(const int &exitCode);
 };
 
 #endif
