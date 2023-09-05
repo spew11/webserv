@@ -362,6 +362,12 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 		if (lines[i].length() == 0)
 		{	// empty line //size -1 까지만 보기 때문에 \r\n으로 끝난놈과 \r\n\r\n으로 끝난 놈을 구별할 필요X 무조건 \r\n\r\n으로 끝난 놈임
 			cout << "EMPTY LINE" << i << endl;
+			if (headers.find("host") == headers.end())
+			{
+				recvBuf = Utils::stringJoin(lines, "\r\n", i+1);
+				cout << "[RETURN -1] request must be include host header." << endl;
+				return -1;
+			}
 			if (getBuildStep() == BUILD_HEADER && bodyRequired)
 			{  	// header finish (header를 완성한 뒤 body로 넘어가는 경우)
 				setBuildStep(BUILD_BODY);
