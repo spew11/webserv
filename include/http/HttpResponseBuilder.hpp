@@ -56,7 +56,7 @@ private:
     bool connection;
     bool autoIndex;
     bool invalidRequest;
-    
+    int previousStatusCode;
     IMethodExecutor *methodExecutor;
 
     void clear();
@@ -66,16 +66,17 @@ private:
     void initWebservValues();
     void execute(const int &exitCode);
     void parseCgiProduct();
-    void createResponseMessage();
     bool isAllowedRequestMessage();
-    void setSpecifiedErrorPage(const int &errorCode);
+    // void setSpecifiedErrorPage(const int &errorCode);
     bool isRedirectRequest();
 
 public:
-    void createInvalidResponseMessage();
+    void createResponseMessage();
+    void changeRequestMessage(const int &errorCode);
+    // void createInvalidResponseMessage();
     HttpResponseBuilder(const Server *server, WebservValues &webservValues);
     ~HttpResponseBuilder();
-    void initiate(HttpRequestMessage *requestMessage);
+    void initiate(HttpRequestMessage *requestMessage, int preStatusCode = 0);
     void addRequestMessage(HttpRequestMessage *newRequestMessage);
     void build(const int &exitCode);
     string getResponse() const;
@@ -91,6 +92,7 @@ public:
     string getResourcePath() const;
     string getRedirectUri() const;
     string getContentType() const;
+    int getStatusCode() const;
 
     void setMethodExecutor(IMethodExecutor *mothodExecutor);
 };

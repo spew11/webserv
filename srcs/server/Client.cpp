@@ -133,10 +133,29 @@ void Client::communicate()
 			return ;
 		}
 	}
+	
+	LocationConfig lc = hrb->getLocationConfig();
+	if (hrb->getEnd())
+	{
+		cout << "end is one" << endl;
+		// 구현되지 않은 요청을 받은 경우에는 requestMessage 객체에 firstLine밖에 안들어있어서 애초에 lc를 확인할 수 없음
+		if (lc.isErrCode(hrb->getStatusCode()) && hrb->getRequestMessage().getHeaders().size())
+		{
+			cout << "IS ERROR CODE" << endl;
+			hrb->changeRequestMessage(hrb->getStatusCode());
+		}
+		else
+		{
+			hrb->createResponseMessage();
+			send_buf = hrb->getResponse();
+			return ;
+		}
+	}
+	
 	IMethodExecutor *executor;
 	if (hrb->getNeedCgi() == true)
 	{
-		LocationConfig lc = hrb->getLocationConfig();
+		lc = hrb->getLocationConfig();
 		executor = new CgiMethodExecutor(sh, this, lc.getCgiParams(webVal));
 	}
 	else
@@ -148,6 +167,7 @@ void Client::communicate()
 void Client::makeResponse(const int &exitCode)
 {
 	hrb->build(exitCode);
+
 	if (hrb->getEnd())
 	{
 		this->send_buf = hrb->getResponse();
