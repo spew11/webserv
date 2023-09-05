@@ -12,6 +12,8 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues &we
 	filename = "";
 	args = "";
 	queryString = "";
+    pathInfo = "";
+    redirectUri = "";
 	resourcePath = "";
 	requestBody = "";
 	contentType = "";
@@ -62,9 +64,10 @@ void HttpResponseBuilder::clear()
 	requestUri = "";
 	uri = "";
 	filename = "";
-	pathInfo = "";
 	args = "";
 	queryString = "";
+    pathInfo = "";
+    redirectUri = "";
 	resourcePath = "";
 	requestBody = "";
 	contentType = "";
@@ -139,7 +142,6 @@ bool HttpResponseBuilder::isValidateResource()
         if (access(tmpPath.c_str(), F_OK) != 0)
         {
             statusCode = 404;
-            cout << "HERE: " << statusCode << endl;
             return 1;
         }
         else if (access(tmpPath.c_str(), R_OK) != 0)
@@ -403,13 +405,13 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage, int previ
 {
     
     clear();
+    this->previousStatusCode = previousStatusCode;
+    this->requestMessage = requestMessage;
     if (!requestMessage)
     {   // isHttp()가 -1을 리턴한 경우
         createResponseMessage();
         return ;
     }
-    this->previousStatusCode = previousStatusCode;
-    this->requestMessage = requestMessage;
     this->needMoreMessage = requestMessage->getNeedMoreChunked();
     // 1. uri 구하기
     parseRequestUri();
