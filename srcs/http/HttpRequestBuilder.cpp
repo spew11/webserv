@@ -12,6 +12,12 @@ HttpRequestBuilder::HttpRequestBuilder()
 	this->isChunked = false;
 	this->body = "";
 	this->needMoreChunk = false;
+
+	httpMethods.insert(make_pair<string, HttpMethodType>("GET", GET));
+	httpMethods.insert(make_pair<string, HttpMethodType>("POST", POST));
+	httpMethods.insert(make_pair<string, HttpMethodType>("PUT", PUT));
+	httpMethods.insert(make_pair<string, HttpMethodType>("HEAD", HEAD));
+	httpMethods.insert(make_pair<string, HttpMethodType>("DELETE", DELETE));
 }
 
 HttpRequestBuilder::~HttpRequestBuilder()
@@ -88,7 +94,7 @@ void HttpRequestBuilder::setBody(string body)
 
 void HttpRequestBuilder::appendBody(string body)
 {
-	this->body += body;
+	this->body.append(body);
 }
 
 string HttpRequestBuilder::getBody(void)
@@ -112,12 +118,6 @@ string HttpRequestBuilder::getMethod(const HttpMethodType &methodType) const
 			return "HEAD";
 		case DELETE:
 			return "DELETE";
-		case OPTIONS:
-			return "OPTIONS";
-		case PATCH:
-			return "PATCH";
-		case TRACE:
-			return "TRACE";
 		default:
 			return "NONE";
 	}
@@ -125,86 +125,52 @@ string HttpRequestBuilder::getMethod(const HttpMethodType &methodType) const
 
 bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly)
 {
-	pair<string, HttpMethodType> map_data[] = {
-		make_pair("GET", GET),
-		make_pair("POST", POST),
-		make_pair("PUT", PUT),
-		make_pair("HEAD", HEAD),
-		make_pair("DELETE", DELETE),
-		make_pair("OPTIONS", OPTIONS),
-		make_pair("PATCH", PATCH),
-		make_pair("TRACE", TRACE),
-	};
-	map<string, HttpMethodType> http_methods(map_data, map_data + sizeof(map_data) / sizeof(map_data[0]));
-	
-	size_t now = 0;
 	HttpMethodType methodType = METHOD_TYPE_NONE;
-	for (map<string, HttpMethodType>::iterator it = http_methods.begin(); it != http_methods.end(); it++)
+
+	vector<string> firstLine = split(str, " ");
+	if (firstLine.size() != 3)
 	{
-		if (str.compare(0,it->first.length(), it->first) == 0)
-		{
-			now += it->first.length();
-			methodType = it->second;
-			break;
-		}
-	}
-	if (now == 0)
-	{
-		// cout << "method is invalid." << endl;
-		return false;
-	}
-	if (str[now] == ' ')
-	{
-		now++;
-	}
-	else
-	{
-		// cout << "next method, 1 space is needed." << endl;
-		return false;
-	}
-	size_t http_idx = str.find("HTTP/", now);
-	if (http_idx == string::npos)
-	{
-		// cout << "HTTP/ is not exist." << endl;
-		return false;
-	}
-	else if (http_idx == now)
-	{
-		// cout << "path is not exist." << endl;
 		return false;
 	}
 
-	if (str[http_idx-1] != ' ')
+	// version check
+	string httpVersion = firstLine[2];
+	if (httpVersion.length() == 8)
 	{
-		// cout << "next path, 1 space is needed." << endl;
+		size_t idx = httpVersion.find("HTTP/");
+		if (idx == string::npos)
+		{ // cout << "HTTP/ is not exist." << endl;
+			return false;
+		}
+		else if (!(isdigit(httpVersion[5]) && httpVersion[6] == '.' && isdigit(httpVersion[7])))
+		{ // cout << "HTTP version format must be X.X (X is one digit)." << endl;
+			return false;
+		}
+	}
+	else
+	{ // cout << "HTTP version length must be 8." << endl;
 		return false;
 	}
-	string path = str.substr(now, http_idx-now-1);
-	for(size_t i = 0; i < path.length(); i++)
+
+	// path check
+	string path = firstLine[1];
+	for (size_t i = 0; i < path.length(); i++)
 	{
 		if (path[i] < 33 || path[i] > 126)
-		{
-			// cout << "path must printable." << endl;
+		{ // cout << "path must printable." << endl;
 			return false;
 		}
 	}
 
-	now = http_idx + 5;  // skip "HTTP/"
-	if (now == str.length())
+	// method check (none_type은 구현되지 않은 메서드로 간주함)
+	string method = firstLine[0];
+	for (map<string, HttpMethodType>::iterator it = httpMethods.begin(); it != httpMethods.end(); it++)
 	{
-		// cout << "HTTP version is not exist." << endl;
-		return false;
-	}
-	string httpVersion = str.substr(now, str.length()-now);
-	if (httpVersion.length() != 3)
-	{
-		// cout << "HTTP version length must be 3." << endl;
-		return false;
-	}
-	else if (!(isdigit(httpVersion[0]) && isdigit(httpVersion[2]) && httpVersion[1] == '.'))
-	{
-		// cout << "HTTP version format must be X.X (X is one digit)." << endl;
-		return false;
+		if (method.compare(it->first) == 0)
+		{
+			methodType = it->second;
+			break;
+		}
 	}
 
 	if (!checkOnly)
@@ -220,18 +186,10 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly)
 
 bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 {
-	
 	size_t idx = str.find(':');
 
-	// if (!checkOnly) cout << "SETHEADER@@@@@@@@@@@@" << str << endl;
-	// if (idx == -1 || str.find(":", idx+1) != -1) {
-	// 	// cout << "delimeter : is invalid." << endl;
-	// 	return false;
-	// }
-
 	if (idx == string::npos)
-	{
-		// cout << "delimeter : is invalid." << endl;
+	{	// cout << "header field must include colon." << endl;
 		return false;
 	}
 
@@ -245,7 +203,7 @@ bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 			break;
 		}
 	}
-	if (!key.length() || !is_valid_key)
+	if (key.length() == 0 || is_valid_key == false)
 	{
 		// cout << "key " << key << " is invalid." << endl;
 		return false;
@@ -259,18 +217,18 @@ bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 	}
 
 	string value = str.substr(idx, str.length());
-	if (!value.length())
+	if (value.length() == 0)
 	{
-		// cout << "value " << value << " is invalid." << endl;
+		// cout << value's length is 0 << endl;
 		return false;
 	}
-	// first line의 경우 반드시 공백 문자가 1개 이상 필요한데, key의 경우 공백문자 포함될 경우 이미 이전에 필터링됨
-	// 때문에 key에 대해서는 first line인지 다시 확인할 필요가 없음, key에는 공백문자가 있으면 안되기 때문
-	for(size_t i = 0; i < value.length(); i++)
+
+	// first line의 경우 반드시 공백 문자가 2개 필요한데, key의 경우 공백문자 포함될 경우 이미 이전에 필터링됨
+	// 때문에 key에 대해서는 first line인지 다시 확인할 필요가 없음, value에 대해서만 다시 한번 확인
+	for (size_t i = 0; i < value.length(); i++)
 	{
-		if (this->buildFirstLine(value.substr(i, value.length()), true))
-		{
-			// cout << "value " << value << " has http first header line." << endl;
+		if (buildFirstLine(value.substr(i, value.length()), true))
+		{	// cout << "value " << value << " has http first header line." << endl;
 			return false;
 		}
 	}
@@ -281,13 +239,13 @@ bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 		this->headers[lowerKey] = value;
 
 		if (!lowerKey.compare("content-length"))
-		{ // contentLength 갱신
+		{	// contentLength 갱신
 			if (this->isChunked)
-			{  // isChunked인 경우 Content-Length header는 없어야 함
+			{	// isChunked인 경우 Content-Length header는 없어야 함
 				return false;
 			}
 			bool correct = true;
-			for(size_t i = 0; i < value.length(); i++)
+			for (size_t i = 0; i < value.length(); i++)
 			{
 				if (!isdigit(value[i]))
 				{
@@ -345,35 +303,35 @@ void HttpRequestBuilder::print(void)
 int HttpRequestBuilder::isHttp(string &recvBuf)
 {
 	vector<string> lines = split(recvBuf, "\r\n");
-	if (!lines.size())
-	{  // \r\n이 recvBuf에 등장하지 않은 경우에 대한 예외처리
-		string s(recvBuf);
-		lines.push_back(s); // lines가 비어있기 때문에 일단 집어 넣음
-	}
 
-	int lines_index = -1;  // first line 직후의 lines index
+	int lines_index = -1;  // first line 직후의 lines index이며, flag 역할도 겸함.
 	if (getBuildStep() == BUILD_FIRST)
-	{  // first line부터 완성해야 하는 경우
-		for(size_t i = 0; i < lines.size()-1; i++)
+	{ // first line부터 완성해야 하는 경우
+		for (size_t i = 0; i < lines.size()-1; i++)
 		{
-			for(size_t j = 0; j < lines[i].length(); j++)
-			{ // 쓰레기 byte가 first line의 앞에 있는 경우를 고려해 이를 skip
+			for (size_t j = 0; j < lines[i].length(); j++)
+			{	// 쓰레기 byte가 first line의 앞에 있는 경우를 고려해 이를 skip
 				if (buildFirstLine(lines[i].substr(j, lines[i].length())))
 				{
+					lines_index = i + 1;
 					break;
 				}
 			}
-			if (getMethodType() != METHOD_TYPE_NONE)
-			{  // first line을 찾은 경우
-				lines_index = i + 1;
-				break;
-			}
 		}
+
 		if (lines_index == -1)
-		{  // first line이 없는 경우
+		{	// first line이 없는 경우
 			recvBuf = lines[lines.size()-1]; // \r\n으로 끝나는 모든 line들 (lines[:-1])은 이미 first line 포맷이 아님을 확인했기에 배제, 마지막 line(lines[-1])만 recvBuf에 남김
 			cout << "[RETURN 1] first line doesn't exist." << endl;
 			return 1;
+		}
+		else
+		{	// 구현되지 않은 메서드는 바로 return 0
+			if (methodType == METHOD_TYPE_NONE)
+			{
+				cout << "[RETURN 0] not implemented method" << endl;
+				return 0;
+			}
 		}
 	}
 	else
@@ -384,24 +342,23 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 
 	HttpMethodType methodType = getMethodType();
 
-	bool body_required = (methodType == POST || methodType == PUT || methodType == PATCH);
+	bool body_required = (methodType == POST || methodType == PUT);
 	string body = "";
 	int chunked_number = -1; // chunked_number == -1 => 이번에 chunked number가 등장할거다
-	for(size_t i = lines_index; i < lines.size()-1; i++)
+	for (size_t i = lines_index; i < lines.size()-1; i++)
 	{
 		if (lines[i].length() == 0)
-		{  // empty line //size -1 까지만 보기 때문에 \r\n으로 끝난놈과 \r\n\r\n으로 끝난 놈을 구별할 필요X 무조건 \r\n\r\n으로 끝난 놈임
+		{	// empty line //size -1 까지만 보기 때문에 \r\n으로 끝난놈과 \r\n\r\n으로 끝난 놈을 구별할 필요X 무조건 \r\n\r\n으로 끝난 놈임
 			cout << "EMPTY LINE" << i << endl;
 			if (getBuildStep() == BUILD_HEADER && body_required)
-			{  
-				// header finish
-				// header를 완성한 뒤 body로 넘어가는 경우
+			{  	// header finish (header를 완성한 뒤 body로 넘어가는 경우)
 				setBuildStep(BUILD_BODY);
 			}
 			else if (getBuildStep() == BUILD_BODY && body_required)
-			{  // 이미 body를 완성중이었던 경우
+			{	// 이미 body를 완성중이었던 경우
 				if (getIsChunked())
-				{  // chunked 1번, 4번
+				{	// chunked 1번(알맞은 숫자와 스트링이 번갈아 나온 후 0(종료플래그)없이 \r\n\r\n이 나온 경우)
+					// checked 2번(내용과 0(종료플래그)없이 \r\n\r\n만 나온 경우 -> body size = 0이라고 치고 return 0)
 					// 빈문자열이 올경우 이전까지만 정상적인 요청으로 하고 리턴 0
 					needMoreChunk = true;
 					appendBody(body);
@@ -415,24 +372,24 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 				}
 			}
 			else if (!body_required)
-			{  // body가 필요없는 method인 경우
+			{	// body가 필요없는 method인 경우
 				recvBuf = Utils::stringJoin(lines, "\r\n", i+1);  // recvBuf에 다음 line부터 추가
 				cout << "[RETURN 0] header is finished. (body is not required.)" << endl;
 				return 0;  // 온전한 request 완성 (body 없는 method)
 			}
 		}
 		else if (getBuildStep() == BUILD_BODY)
-		{  // body를 완성중이던 경우
+		{	// body를 완성중이던 경우
 			if (getIsChunked())
 			{
 				if (chunked_number == -1)
-				{  // chunked number가 나올 차례인 경우
+				{	// chunked number가 나올 차례인 경우
 					if (Utils::isDigitString(lines[i]))
 					{
 						stringstream ss(lines[i]);
 						ss >> std::hex >> chunked_number;
 						if (chunked_number == 0)
-						{  // chunked 2번, chunked number가 0이면 request가 끝이라는 의미
+						{	// chunked 2번, chunked number가 0이면 request가 끝이라는 의미
 							needMoreChunk = false;
 							appendBody(body);
 							recvBuf = Utils::stringJoin(lines, "\r\n", i+1);
@@ -441,7 +398,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 						}
 					}
 					else
-					{  // chunked 3번, chunked number가 나올 차례인데 다른 문자열이 나온 경우, 이전까지의 body로 request가 끝났다고 가정
+					{	// chunked 3번(숫자와 스트링이 번갈아 나오다가 숫자가 나올 차례인데 문자열이 나온 경우, 이전까지의 body로 request가 끝났다고 가정함)
 						needMoreChunk = true;
 						appendBody(body);
 						recvBuf = Utils::stringJoin(lines, "\r\n", i);
@@ -450,10 +407,10 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 					}
 				}
 				else
-				{  // chunked string이 나올 차례인 경우
+				{	// chunked string이 나올 차례인 경우
 					if (static_cast<int>(lines[i].length()) != chunked_number)
-					{  // chunked 5번
-						erase();
+					{	// chunked 5번(chucked 숫자에 맞지 않는 길이의 문자열이 올 경우)
+						erase(); // 기존에 완성하던 request는 버림
 						recvBuf = Utils::stringJoin(lines, "\r\n", i);  // recvBuf에 현재 line부터 추가
 						cout << "[RETURN -1] chunked length mismatch: " << chunked_number << " vs " << lines[i].length() << endl;
 						return -1;
@@ -466,14 +423,14 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 				}
 			}
 			else
-			{
+			{	// chunked가 아닌 바디를 완성하는 중이기 때문에 body에 이어 붙임
 				body += lines[i] + "\r\n";
 			}
 		}
 		else if (getBuildStep() == BUILD_HEADER)
-		{  // header를 완성중이던 경우
-			if (!setHeader(lines[i]))
-			{  // header 차례인데 유효하지 않은 header가 나온 경우
+		{	// header를 완성중이던 경우
+			if (setHeader(lines[i]) == false)
+			{	// header 차례인데 유효하지 않은 header가 나온 경우
 				erase();  // 기존에 완성하던 request는 버림
 				recvBuf = Utils::stringJoin(lines, "\r\n", i);  // recvBuf에 현재 line부터 추가
 				cout << "[RETURN -1]  invalid header." << endl;
@@ -484,9 +441,9 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 
 	// 마지막라인 처리(\r\n으로 끝났을 때 마지막라인이 빈문자열이라는 것이 핵심)
 	if (body_required && getBuildStep() == BUILD_BODY)
-	{  // 마지막 line까지 포함해 body 완성 후 content-length와 비교
+	{	// 마지막 line까지 포함해 body 완성 후 content-length와 비교
 		if (getIsChunked())
-		{  // chunked인 경우 마지막 line을 recvBuf에 남긴 뒤에 이후 다시 판단
+		{	// chunked인 경우 마지막 line을 recvBuf에 남긴 뒤에 이후 다시 판단
 			appendBody(body);
 			recvBuf = "";
 			if (chunked_number != -1) // 이제 문자열이 나올차례다
@@ -504,20 +461,20 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 			body += lines[lines.size()-1];
 
 			if (getContentLength() <= 0)
-			{  // 유효하지 않은 contentLength인 경우
+			{	// 유효하지 않은 contentLength인 경우
 				erase();  // 기존에 완성하던 request는 버림
 				recvBuf = body;  // 그동안 모았던 body를 모두 잔여물로 취급해 recvBuf에 담음
 				cout << "[RETURN -1] invalid contentLength: " << endl;
 				return -1;
 			}
 			else if (body.length() < getContentLength())
-			{  // content-length까지 body가 완성되지 않은 경우
+			{	// content-length까지 body가 완성되지 않은 경우
 				recvBuf = body;  // recvBuf를 body로 덮어씌움
 				cout << "[RETURN 1] body is not sufficient." << endl;
 				return 1;
 			}
 			else
-			{  // body가 충분히 모인 경우
+			{	// body가 충분히 모인 경우
 				setBody(body.substr(0, getContentLength()));  // 완성된 body를 content-length만큼 slicing해 body에 추가
 				recvBuf = body.substr(getContentLength(), body.length()-getContentLength());  // 잔여물 body는 recvBuf에 덮어씌움
 				cout << "[RETURN 0] body is sufficient." << endl;
@@ -526,7 +483,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 		}
 	}
 	else
-	{  // 마지막 line (\r\n으로 끝나지 않음)은 잔여물로 취급해 recvBuf에 저장
+	{	// 마지막 line (\r\n으로 끝나지 않음)은 잔여물로 취급해 recvBuf에 저장
 		recvBuf = lines[lines.size()-1];
 		cout << "[RETURN 1] header is not finished." << endl;
 		return 1;
@@ -541,6 +498,13 @@ vector<string> HttpRequestBuilder::split(const string& s, const string& delim)
 	vector<string> result;
     size_t start = 0;
     size_t end = s.find(delim);
+
+	// delim이 존재하지 않는 경우 result에 집어 넣고 종료
+	if (end == string::npos)
+	{
+		result.push_back(s);
+		return result;
+	}
     while (end != string::npos)
 	{
         result.push_back(s.substr(start, end - start));
@@ -565,7 +529,7 @@ vector<string> HttpRequestBuilder::split(const string& s, const string& delim)
 HttpRequestMessage *HttpRequestBuilder::createRequestMessage()
 {
 	HttpRequestMessage *requestMessage;
-	string serverProtocol = "HTTP/" + httpVersion;
+	string serverProtocol = httpVersion;
 	string method = getMethod(methodType);
 	string requestbody = body;
 	requestMessage = new HttpRequestMessage(method, path, serverProtocol, headers, body, needMoreChunk);
