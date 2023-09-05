@@ -194,16 +194,16 @@ bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 	}
 
 	string key = str.substr(0, idx);
-	bool is_valid_key = true;
+	bool isValidKey = true;
 	for (size_t i = 0; i < key.length(); i++)
 	{
 		if (!(key[i] >= 33 && key[i] <= 126) || key[i] == ':')
 		{
-			is_valid_key = false;
+			isValidKey = false;
 			break;
 		}
 	}
-	if (key.length() == 0 || is_valid_key == false)
+	if (key.length() == 0 || isValidKey == false)
 	{
 		// cout << "key " << key << " is invalid." << endl;
 		return false;
@@ -304,7 +304,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 {
 	vector<string> lines = split(recvBuf, "\r\n");
 
-	int lines_index = -1;  // first line 직후의 lines index이며, flag 역할도 겸함.
+	int linesIndex = -1;  // first line 직후의 lines index이며, flag 역할도 겸함.
 	if (getBuildStep() == BUILD_FIRST)
 	{ // first line부터 완성해야 하는 경우
 		for (size_t i = 0; i < lines.size()-1; i++)
@@ -313,13 +313,13 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 			{	// 쓰레기 byte가 first line의 앞에 있는 경우를 고려해 이를 skip
 				if (buildFirstLine(lines[i].substr(j, lines[i].length())))
 				{
-					lines_index = i + 1;
+					linesIndex = i + 1;
 					break;
 				}
 			}
 		}
 
-		if (lines_index == -1)
+		if (linesIndex == -1)
 		{	// first line이 없는 경우
 			recvBuf = lines[lines.size()-1]; // \r\n으로 끝나는 모든 line들 (lines[:-1])은 이미 first line 포맷이 아님을 확인했기에 배제, 마지막 line(lines[-1])만 recvBuf에 남김
 			cout << "[RETURN 1] first line doesn't exist." << endl;
@@ -336,25 +336,25 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 	}
 	else
 	{
-		lines_index = 0;
+		linesIndex = 0;
 	}
-	cout << "START_LINE: " << lines_index << endl;
+	cout << "START_LINE: " << linesIndex << endl;
 
 	HttpMethodType methodType = getMethodType();
 
-	bool body_required = (methodType == POST || methodType == PUT);
+	bool bodyRequired = (methodType == POST || methodType == PUT);
 	string body = "";
-	int chunked_number = -1; // chunked_number == -1 => 이번에 chunked number가 등장할거다
-	for (size_t i = lines_index; i < lines.size()-1; i++)
+	int chunkedNumber = -1; // chunkedNumber == -1 => 이번에 chunked number가 등장할거다
+	for (size_t i = linesIndex; i < lines.size()-1; i++)
 	{
 		if (lines[i].length() == 0)
 		{	// empty line //size -1 까지만 보기 때문에 \r\n으로 끝난놈과 \r\n\r\n으로 끝난 놈을 구별할 필요X 무조건 \r\n\r\n으로 끝난 놈임
 			cout << "EMPTY LINE" << i << endl;
-			if (getBuildStep() == BUILD_HEADER && body_required)
+			if (getBuildStep() == BUILD_HEADER && bodyRequired)
 			{  	// header finish (header를 완성한 뒤 body로 넘어가는 경우)
 				setBuildStep(BUILD_BODY);
 			}
-			else if (getBuildStep() == BUILD_BODY && body_required)
+			else if (getBuildStep() == BUILD_BODY && bodyRequired)
 			{	// 이미 body를 완성중이었던 경우
 				if (getIsChunked())
 				{	// chunked 1번(알맞은 숫자와 스트링이 번갈아 나온 후 0(종료플래그)없이 \r\n\r\n이 나온 경우)
@@ -371,7 +371,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 					body += "\r\n";
 				}
 			}
-			else if (!body_required)
+			else if (!bodyRequired)
 			{	// body가 필요없는 method인 경우
 				recvBuf = Utils::stringJoin(lines, "\r\n", i+1);  // recvBuf에 다음 line부터 추가
 				cout << "[RETURN 0] header is finished. (body is not required.)" << endl;
@@ -382,13 +382,13 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 		{	// body를 완성중이던 경우
 			if (getIsChunked())
 			{
-				if (chunked_number == -1)
+				if (chunkedNumber == -1)
 				{	// chunked number가 나올 차례인 경우
 					if (Utils::isDigitString(lines[i]))
 					{
 						stringstream ss(lines[i]);
-						ss >> std::hex >> chunked_number;
-						if (chunked_number == 0)
+						ss >> std::hex >> chunkedNumber;
+						if (chunkedNumber == 0)
 						{	// chunked 2번, chunked number가 0이면 request가 끝이라는 의미
 							needMoreChunk = false;
 							appendBody(body);
@@ -408,17 +408,17 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 				}
 				else
 				{	// chunked string이 나올 차례인 경우
-					if (static_cast<int>(lines[i].length()) != chunked_number)
+					if (static_cast<int>(lines[i].length()) != chunkedNumber)
 					{	// chunked 5번(chucked 숫자에 맞지 않는 길이의 문자열이 올 경우)
 						erase(); // 기존에 완성하던 request는 버림
 						recvBuf = Utils::stringJoin(lines, "\r\n", i);  // recvBuf에 현재 line부터 추가
-						cout << "[RETURN -1] chunked length mismatch: " << chunked_number << " vs " << lines[i].length() << endl;
+						cout << "[RETURN -1] chunked length mismatch: " << chunkedNumber << " vs " << lines[i].length() << endl;
 						return -1;
 					}
 					else
 					{
 						body += lines[i];
-						chunked_number = -1;
+						chunkedNumber = -1;
 					}
 				}
 			}
@@ -440,16 +440,16 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 	}
 
 	// 마지막라인 처리(\r\n으로 끝났을 때 마지막라인이 빈문자열이라는 것이 핵심)
-	if (body_required && getBuildStep() == BUILD_BODY)
+	if (bodyRequired && getBuildStep() == BUILD_BODY)
 	{	// 마지막 line까지 포함해 body 완성 후 content-length와 비교
 		if (getIsChunked())
 		{	// chunked인 경우 마지막 line을 recvBuf에 남긴 뒤에 이후 다시 판단
 			appendBody(body);
 			recvBuf = "";
-			if (chunked_number != -1) // 이제 문자열이 나올차례다
+			if (chunkedNumber != -1) // 이제 문자열이 나올차례다
 			{
 				stringstream ss;
-				ss << std::hex << chunked_number;
+				ss << std::hex << chunkedNumber;
 				recvBuf += ss.str() + "\r\n";
 			}
 			recvBuf += lines[lines.size()-1];
