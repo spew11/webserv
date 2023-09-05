@@ -236,6 +236,17 @@ bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 	if (!checkOnly)
 	{
 		string lowerKey = Utils::toLowerCase(key);
+		
+		// content-length와 host는 중복되면 잘못된 요청으로 간주함.
+		if (!lowerKey.compare("content-length") && this->headers.find("content-length") != headers.end())
+		{
+			return false;
+		}
+		else if (!lowerKey.compare("host") && this->headers.find("host") != headers.end())
+		{
+			return false;
+		}
+		
 		this->headers[lowerKey] = value;
 
 		if (!lowerKey.compare("content-length"))
@@ -329,6 +340,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 		{	// 구현되지 않은 메서드는 바로 return 0
 			if (methodType == METHOD_TYPE_NONE)
 			{
+				recvBuf = Utils::stringJoin(lines, "\r\n", linesIndex+1);
 				cout << "[RETURN 0] not implemented method" << endl;
 				return 0;
 			}
