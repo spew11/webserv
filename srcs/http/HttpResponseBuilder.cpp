@@ -444,13 +444,13 @@ void HttpResponseBuilder::createResponseMessage()
     ResponseStatusManager responseStatusManager;
     ResponseHeaderAdder responseHeaderAdder;
     
-    if (invalidRequest == true)
+    if (!requestMessage)
     {
         statusCode = 400;
         connection = false; // 커넥션 끊기
-        responseBody = responseStatusManager.generateResponseHtml(statusCode);
         responseMessage->setStatusCode(statusCode);
         responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
+        responseBody = responseStatusManager.generateResponseHtml(statusCode);
         responseMessage->setBody(responseBody);
         responseHeaderAdder.executeAll(*this);
         return ;
@@ -533,6 +533,7 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     if (!requestMessage)
     {   // isHttp()가 -1을 리턴한 경우
         invalidRequest = true;
+        createResponseMessage();
         return ;
     }
 
