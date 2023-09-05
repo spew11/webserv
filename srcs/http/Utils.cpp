@@ -15,6 +15,11 @@ vector<string> Utils::split(const string &s, const string &delim)
 	vector<string> result;
 	size_t start = 0;
 	size_t end = s.find(delim);
+	if (end == string::npos)
+	{
+		result.push_back(s);
+		return result;
+	}
 	while (end != string::npos)
 	{
 		result.push_back(s.substr(start, end - start));

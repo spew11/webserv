@@ -30,10 +30,8 @@ private:
 		PUT,
 		HEAD,
 		DELETE,
-		OPTIONS,
-		PATCH,
-		TRACE,
 	};
+	map<string, HttpMethodType> httpMethods;
 	HttpRequestBuilderBuildStep buildStep;
 	HttpMethodType methodType;
 	string method;

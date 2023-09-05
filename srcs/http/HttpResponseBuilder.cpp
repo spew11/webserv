@@ -374,6 +374,7 @@ void HttpResponseBuilder::parseCgiProduct()
     {
         // \n 기준으로 스플릿된 아이들을 모두 헤더임
         string headersLine = responseBody.substr(0, lflf);
+        cout << headersLine << endl;
         vector<string> headers = Utils::split(headersLine, "\n");
         for (size_t i = 0; i < headers.size(); i++) 
         {
@@ -589,7 +590,9 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     }
     // 8. webserv 변수 초기화하기
     initWebservValues();
-    // 9. ResponseBuilder 클래스 플래그들 초기화하기
+    // 9. Content-type 초기화
+    contentType = locationConfig.getType(resourcePath);
+    // 10. ResponseBuilder 클래스 플래그들 초기화하기
     needMoreMessage = requestMessage->getNeedMoreChunked();
     connection = requestMessage->getConnection();
     needCgi = locationConfig.isCgi();
