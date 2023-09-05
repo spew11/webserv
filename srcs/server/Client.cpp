@@ -111,47 +111,38 @@ void Client::communicate()
 	{
 		return ;
 	}
-	if (ret == -1)
+	else if (ret == -1)
 	{
 		hrb->createInvalidResponseMessage();
 		send_buf = hrb->getResponse();
 		return ;
 	}
-	if (ret == 0) {
+	else if (ret == 0)
+	{
 		if (hrb->getNeedMoreMessage() == false)
 		{
-			// httpRequestBuilder->print();
 			hrb->initiate(httpRequestBuilder->createRequestMessage());
-
-			if (hrb->getEnd())
-			{
-				send_buf = hrb->getResponse();
-				return;
-			}
 		}
 		else
 		{
 			hrb->addRequestMessage(httpRequestBuilder->createRequestMessage());
-			if (hrb->getEnd())
-			{
-				send_buf = hrb->getResponse();
-				return ;
-			}
 		}
-		if (hrb->getNeedMoreMessage() == false)
+
+		if (hrb->getNeedMoreMessage() == true)
 		{
-			IMethodExecutor *executor;
-			if (hrb->getNeedCgi() == true)
-			{
-				LocationConfig lc = hrb->getLocationConfig();
-				executor = new CgiMethodExecutor(sh, this, lc.getCgiParams(webVal));
-			}
-			else
-				executor = new DefaultMethodExecutor(sh, this);
-			hrb->setMethodExecutor(executor);
-			isBuildableFlag = true;
+			return ;
 		}
 	}
+	IMethodExecutor *executor;
+	if (hrb->getNeedCgi() == true)
+	{
+		LocationConfig lc = hrb->getLocationConfig();
+		executor = new CgiMethodExecutor(sh, this, lc.getCgiParams(webVal));
+	}
+	else
+		executor = new DefaultMethodExecutor(sh, this);
+	hrb->setMethodExecutor(executor);
+	isBuildableFlag = true;
 }
 
 void Client::makeResponse(const int &exitCode)
