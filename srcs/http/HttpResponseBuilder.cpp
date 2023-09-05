@@ -16,12 +16,13 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues &we
 	requestBody = "";
 	contentType = "";
 	responseBody = "";
-	statusCode = 500;
+	statusCode = -1;
 	needMoreMessage = false;
 	needCgi = false;
 	end = false;
 	connection = true;
 	autoIndex = false;
+    invalidRequest = false;
 
     methodExecutor = NULL;
 }
@@ -68,12 +69,13 @@ void HttpResponseBuilder::clear()
 	requestBody = "";
 	contentType = "";
 	responseBody = "";
-	statusCode = 500;
+	statusCode = -1;
 	needMoreMessage = false;
 	needCgi = false;
 	end = false;
 	connection = true;
 	autoIndex = false;
+    invalidRequest = false;
 
     if (methodExecutor)
     {
@@ -437,10 +439,25 @@ void HttpResponseBuilder::createInvalidResponseMessage()
 
 void HttpResponseBuilder::createResponseMessage()
 {
-    string httpMethod = requestMessage->getHttpMethod();
 
     responseMessage = new HttpResponseMessage();
     ResponseStatusManager responseStatusManager;
+    ResponseHeaderAdder responseHeaderAdder;
+    
+    if (invalidRequest == true)
+    {
+        statusCode = 400;
+        connection = false; // 커넥션 끊기
+        responseBody = responseStatusManager.generateResponseHtml(statusCode);
+        responseMessage->setStatusCode(statusCode);
+        responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
+        responseMessage->setBody(responseBody);
+        responseHeaderAdder.executeAll(*this);
+        return ;
+    }
+    
+    string httpMethod = requestMessage->getHttpMethod();
+
     //커스텀 에러페이지 있는지 체크
     if (locationConfig.isErrCode(statusCode))
     {
@@ -462,7 +479,6 @@ void HttpResponseBuilder::createResponseMessage()
         responseBody = responseStatusManager.generateResponseHtml(statusCode);
     }
     responseMessage->setBody(responseBody);
-    ResponseHeaderAdder responseHeaderAdder;
     responseHeaderAdder.executeAll(*this);
 }
 
@@ -514,6 +530,12 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
 {
     
     clear();
+    if (!requestMessage)
+    {   // isHttp()가 -1을 리턴한 경우
+        invalidRequest = true;
+        return ;
+    }
+
     this->requestMessage = requestMessage;
     this->needMoreMessage = requestMessage->getNeedMoreChunked();
     // 1. uri 구하기
@@ -612,7 +634,10 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
 
 void HttpResponseBuilder::build(const int &exitCode)
 {
-    execute(exitCode);
+    if (invalidRequest == false)
+    {   // 정상적인 요청만 execute를 실행할 것
+        execute(exitCode);
+    }
     if (statusCode == 0)
         return ;
     createResponseMessage();

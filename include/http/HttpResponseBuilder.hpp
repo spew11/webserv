@@ -55,7 +55,8 @@ private:
     bool end;
     bool connection;
     bool autoIndex;
-
+    bool invalidRequest;
+    
     IMethodExecutor *methodExecutor;
 
     void clear();

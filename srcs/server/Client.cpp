@@ -113,8 +113,9 @@ void Client::communicate()
 	}
 	else if (ret == -1)
 	{
-		hrb->createInvalidResponseMessage();
-		send_buf = hrb->getResponse();
+		hrb->initiate(NULL);
+		// hrb->createInvalidResponseMessage();
+		// send_buf = hrb->getResponse();
 		return ;
 	}
 	else if (ret == 0)
