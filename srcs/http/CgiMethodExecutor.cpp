@@ -9,13 +9,17 @@ const int CgiMethodExecutor::STEP_PARENT_READ = 0x10;
 const int CgiMethodExecutor::STEP_CHILD = 0x11;
 
 CgiMethodExecutor::CgiMethodExecutor(ServerHandler *sh, Client *client, char **cgiEnv)
-	: sh(sh), cgiEnv(cgiEnv)
+	: sh(sh), cgiEnv(cgiEnv), write_buf_idx(0)
 {
 	stdin_fd = dup(STDIN_FILENO);
 	stdout_fd = dup(STDOUT_FILENO);
 	step = STEP_FORK_PROC;
 	pid = -1;
 	this->client = reinterpret_cast<void*>(client);
+	parent_to_child_pipe[READ] = -1;
+	parent_to_child_pipe[WRITE] = -1;	
+	child_to_parent_pipe[READ] = -1;	
+	child_to_parent_pipe[WRITE] = -1;	
 }
 
 CgiMethodExecutor::~CgiMethodExecutor()
@@ -179,26 +183,37 @@ int CgiMethodExecutor::read_from_pipe(int &fd, string &body)
 	char buf[1024];
 	bzero(buf, 1024 * sizeof(char));
 
-	ssize_t cnt = read(fd, buf, 1023);
-	if (cnt < 0)
+	ssize_t len = read(fd, buf, 1023);
+	for (int i = 0; i < len; i++)
+		body += buf[i];
+
+	if (len < 0)
 		return 500;
-	else if (cnt != 1023)
+	else if (len < 1023)
 	{
 		close(fd);
-		body += string(buf);
 		return 200;
 	}
-	body += string(buf);
 	return 0;
 }
 
 int CgiMethodExecutor::write_to_pipe(int &fd, const string &body)
 {
-	ssize_t cnt = write(fd, body.c_str(), body.length());
-	close(fd);
+	char buf[1024];
+	bzero(buf, sizeof(char) * 1024);
+	size_t i = 0;
+	for (; i < 1024 && i + write_buf_idx < body.size(); i++)
+		buf[i] = body[i + write_buf_idx];
+
+	ssize_t cnt = write(fd, buf, i);
 	if (cnt != static_cast<ssize_t>(body.length()))
 		return 500;
-	return 200;
+	if (i + write_buf_idx == body.size())
+	{
+		close(fd);
+		return 200;
+	}
+	return 0;
 }
 
 int CgiMethodExecutor::putMethod(const string &resourcePath, const string &request, string &response, const int &exitCode)

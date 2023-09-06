@@ -47,6 +47,8 @@ private:
 	int pid;
 	int exitCode;
 
+	size_t write_buf_idx;
+	
 	int read_from_pipe(int &fd, string &body);
 	int write_to_pipe(int &fd,  const string &body);
 
