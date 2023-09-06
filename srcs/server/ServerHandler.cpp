@@ -123,11 +123,10 @@ void ServerHandler::handleServerEvent(struct kevent &curEvent, Server *server)
 
 void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 {
-	if (curEvent.filter == EVFILT_TIMER || curEvent.flags & EV_EOF)
+	if (curEvent.filter == EVFILT_TIMER || curEvent.flags & (EV_EOF | EV_ERROR))
 	{
-		map<int, Client*>::iterator it = clients.find(client->getSock());
-		delete it->second;
-		clients.erase(it);
+		clients.erase(client->getSock());
+		delete client;
 	}
 	else if (curEvent.filter == EVFILT_READ)
 	{
@@ -170,16 +169,12 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 
 void ServerHandler::handleBuildEvent(struct kevent &curEvent)
 {
-	int exitCode = -1;
-	if (curEvent.filter == EVFILT_PROC)
-		exitCode = curEvent.data;
-	void *tmp = curEvent.udata;
-	Client *client = reinterpret_cast<Client*>(tmp);
+	Client *client = reinterpret_cast<Client*>(curEvent.udata);
+	int exitCode = (curEvent.filter == EVFILT_PROC)? curEvent.data : -1;
+	
 	client->makeResponse(exitCode);
 	if (client->isSendable())
-	{
 		change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-	}
 }
 
 #elif __linux__
