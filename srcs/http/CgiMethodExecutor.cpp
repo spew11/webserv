@@ -192,6 +192,7 @@ int CgiMethodExecutor::read_from_pipe(int &fd, string &body)
 	else if (len < 1023)
 	{
 		close(fd);
+		write_buf_idx = 0;
 		return 200;
 	}
 	return 0;
@@ -211,6 +212,7 @@ int CgiMethodExecutor::write_to_pipe(int &fd, const string &body)
 	if (i + write_buf_idx == body.size())
 	{
 		close(fd);
+		write_buf_idx = 0;
 		return 200;
 	}
 	return 0;
