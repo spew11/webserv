@@ -49,9 +49,9 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	}
 	else if (step == STEP_IO_OPER)
 	{
-		ssize_t cnt = write(fd, resourcePath.c_str(), resourcePath.length());
+		ssize_t cnt = write(fd, request.c_str(), request.length());
 		close(fd);
-		if (cnt != static_cast<ssize_t>(resourcePath.length()))
+		if (cnt != static_cast<ssize_t>(request.length()))
 			return 500;
 		else if (request.length() == 0)
 			return 204;
