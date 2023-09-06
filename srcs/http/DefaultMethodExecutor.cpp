@@ -38,6 +38,7 @@ DefaultMethodExecutor::~DefaultMethodExecutor() {}
 
 int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &request, string &response, const int &exitCode)
 {
+	cout << "POST METHOD IN" << endl;
 	static_cast<void>(response); (void)exitCode;
 	if (step == STEP_OPEN_FILE)
 	{
@@ -49,7 +50,8 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	}
 	else if (step == STEP_IO_OPER)
 	{
-		ssize_t cnt = write(fd, resourcePath.c_str(), resourcePath.length());
+		ssize_t cnt = write(fd, request.c_str(), request.length());
+		cout << "Response: " << request << endl;
 		close(fd);
 		if (cnt != static_cast<ssize_t>(resourcePath.length()))
 			return 500;

@@ -247,7 +247,7 @@ void HttpResponseBuilder::initWebservValues()
 void HttpResponseBuilder::execute(const int &exitCode)
 {
 	string httpMethod = requestMessage->getHttpMethod();
-
+    cout << "HERE" << endl;
 	// 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
 	if (httpMethod == "GET")
 	{
@@ -405,6 +405,7 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage, int previ
 {
     
     clear();
+    cout << "clear 지남" << endl;
     this->previousStatusCode = previousStatusCode;
     this->requestMessage = requestMessage;
     if (!requestMessage)

@@ -551,6 +551,7 @@ HttpRequestMessage *HttpRequestBuilder::createRequestMessage()
 	string method = getMethod(methodType);
 	string requestbody = body;
 	requestMessage = new HttpRequestMessage(method, path, serverProtocol, headers, body, needMoreChunk);
+	print();
 	erase();
 	return requestMessage;
 }
