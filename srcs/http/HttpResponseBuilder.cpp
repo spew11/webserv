@@ -247,7 +247,6 @@ void HttpResponseBuilder::initWebservValues()
 void HttpResponseBuilder::execute(const int &exitCode)
 {
 	string httpMethod = requestMessage->getHttpMethod();
-    cout << "HERE" << endl;
 	// 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
 	if (httpMethod == "GET")
 	{
@@ -522,6 +521,7 @@ void HttpResponseBuilder::build(const int &exitCode)
     else
     {   // 첫 요청이 유효성 검사에 성공한 경우
         execute(exitCode);
+        cout << "STATUS CODE: " << statusCode << endl;
         if (locationConfig.isErrCode(statusCode) && requestMessage->getHeaders().size())
         {
             changeRequestMessage(statusCode);
