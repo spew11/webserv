@@ -9,10 +9,23 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
 	if (step == STEP_OPEN_FILE)
 	{
 		cout << "STEP_OPEN_FILE" << endl;
+
+		// 빈 파일 읽기 시도 처리
+		struct stat statbuf;
+		bzero(&statbuf, sizeof(struct stat));
+		if (stat(resourcePath.c_str(), &statbuf) < 0)
+			return 500;
+		if (statbuf.st_size == 0)
+			return 200;
+
+		// 파일 열기
 		fd = open(resourcePath.c_str(), O_RDONLY);
 		if (fd == -1)
 			return 500;
+
+		//단계 변경
 		step = STEP_IO_OPER;
+		//읽기 이벤트 등록
 		sh->change_events(fd, EVFILT_READ, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
 	}
 	else if (step == STEP_IO_OPER)
