@@ -57,7 +57,14 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	static_cast<void>(response); (void)exitCode;
 	if (step == STEP_OPEN_FILE)
 	{
-		//stat -> 204;
+		// 빈 파일 읽기 시도 처리
+		struct stat statbuf;
+		bzero(&statbuf, sizeof(struct stat));
+		if (stat(resourcePath.c_str(), &statbuf) < 0)
+			return 500;
+		if (statbuf.st_size == 0)
+			return 204;
+
 		fd = open(resourcePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd == -1)
 			return 500;
