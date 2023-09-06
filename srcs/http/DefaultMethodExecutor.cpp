@@ -9,7 +9,7 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
 	if (step == STEP_OPEN_FILE)
 	{
 		cout << "STEP_OPEN_FILE" << endl;
-		fd = open(resourcePath.c_str(), O_RDONLY | O_NONBLOCK);
+		fd = open(resourcePath.c_str(), O_RDONLY);
 		if (fd == -1)
 			return 500;
 		step = STEP_IO_OPER;
@@ -41,7 +41,7 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	static_cast<void>(response); (void)exitCode;
 	if (step == STEP_OPEN_FILE)
 	{
-		fd = open(resourcePath.c_str(), O_WRONLY | O_NONBLOCK | O_CREAT | O_TRUNC, 0666);
+		fd = open(resourcePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd == -1)
 			return 500;
 		step = STEP_IO_OPER;
