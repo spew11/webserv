@@ -26,6 +26,7 @@ private:
 
 	method_step step;
 	int fd;
+	size_t write_buf_idx;
 public:
 	DefaultMethodExecutor(ServerHandler *sh, Client *client);
 	~DefaultMethodExecutor();

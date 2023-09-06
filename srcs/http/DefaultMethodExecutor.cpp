@@ -1,6 +1,6 @@
 #include "DefaultMethodExecutor.hpp"
 
-DefaultMethodExecutor::DefaultMethodExecutor(ServerHandler *sh, Client *client): sh(sh), client(client), step(STEP_OPEN_FILE), fd(-1) {}
+DefaultMethodExecutor::DefaultMethodExecutor(ServerHandler *sh, Client *client): sh(sh), client(client), step(STEP_OPEN_FILE), fd(-1), write_buf_idx(0) {}
 
 int DefaultMethodExecutor::getMethod(const string &resourcePath, string &response, const int &exitCode)
 {
@@ -31,18 +31,21 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
 	else if (step == STEP_IO_OPER)
 	{
 		cout << "STEP_IO_OPER" << endl;
+
 		char buf[1024];
 		bzero(buf, 1024);
+
 		ssize_t len = read(fd, buf, 1023);
 		if (len < 0)
 			return 500;
-		else if (len != 1023)
+
+		for (ssize_t i = 0; i < len; i++)
+			response += buf[i];
+		if (len < 1023)
 		{
 			close(fd);
-			response += string(buf);
 			return 200;
 		}
-		response += string(buf);
 	}
 	return 0;
 }
@@ -54,6 +57,7 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	static_cast<void>(response); (void)exitCode;
 	if (step == STEP_OPEN_FILE)
 	{
+		//stat -> 204;
 		fd = open(resourcePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd == -1)
 			return 500;
@@ -62,13 +66,20 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	}
 	else if (step == STEP_IO_OPER)
 	{
-		ssize_t cnt = write(fd, request.c_str(), request.length());
+		char buf[1024];
+		bzero(buf, sizeof(char) * 1024);
+		size_t i = 0;
+		for (; i < 1024 && i + write_buf_idx < request.size(); i++)
+			buf[i] = request[i + write_buf_idx];
+
+		ssize_t len = write(fd, request.c_str(), request.length());
 		close(fd);
-		if (cnt != static_cast<ssize_t>(request.length()))
+		if (len != static_cast<ssize_t>(request.length()))
 			return 500;
-		else if (request.length() == 0)
-			return 204;
-		return 201;
+		
+		if (i + write_buf_idx == request.size())
+			return 201;
+		write_buf_idx += i;
 	}
 	return 0;
 }

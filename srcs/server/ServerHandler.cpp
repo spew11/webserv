@@ -140,10 +140,9 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 		else if (client->isBuildable())
 		{
 			client->makeResponse(-1);
+			change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 			if (client->isSendable())
 				change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-			else
-				change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 		}
 	}
 	else if (curEvent.filter == EVFILT_WRITE)
@@ -158,9 +157,14 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 				clients.erase(it);
 				return ;
 			}
-			change_events(client->getSock(), EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-			change_events(client->getSock(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+			// client가 소켓에 쓰기를 완료한 경우 이벤트 처리
+			if (!client->isSendable())
+			{
+				change_events(client->getSock(), EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+				change_events(client->getSock(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+			}
 		}
+
 	}
 }
 
