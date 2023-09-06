@@ -58,11 +58,7 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	if (step == STEP_OPEN_FILE)
 	{
 		// 빈 파일 읽기 시도 처리
-		struct stat statbuf;
-		bzero(&statbuf, sizeof(struct stat));
-		if (stat(resourcePath.c_str(), &statbuf) < 0)
-			return 500;
-		if (statbuf.st_size == 0)
+		if (request.empty())
 			return 204;
 
 		fd = open(resourcePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -79,13 +75,14 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 		for (; i < 1024 && i + write_buf_idx < request.size(); i++)
 			buf[i] = request[i + write_buf_idx];
 
-		ssize_t len = write(fd, request.c_str(), request.length());
-		close(fd);
-		if (len != static_cast<ssize_t>(request.length()))
+		ssize_t len = write(fd, buf, i);
+		if (len != static_cast<ssize_t>(i))
 			return 500;
-		
-		if (i + write_buf_idx == request.size())
+		else if (i + write_buf_idx == request.size())
+		{
+			close(fd);
 			return 201;
+		}
 		write_buf_idx += i;
 	}
 	return 0;
