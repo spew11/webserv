@@ -118,53 +118,61 @@ void Client::communicate()
 	{
 		return ;
 	}
-	if (ret == -1)
+	else if (ret == -1)
 	{
-		hrb->createInvalidResponseMessage();
+		hrb->initiate(NULL);
 		send_buf = hrb->getResponse();
 		return ;
 	}
-	if (ret == 0) {
+	else if (ret == 0)
+	{
 		if (hrb->getNeedMoreMessage() == false)
 		{
-			// httpRequestBuilder->print();
 			hrb->initiate(httpRequestBuilder->createRequestMessage());
-
-			if (hrb->getEnd())
-			{
-				send_buf = hrb->getResponse();
-				return;
-			}
 		}
 		else
 		{
 			hrb->addRequestMessage(httpRequestBuilder->createRequestMessage());
-			if (hrb->getEnd())
-			{
-				send_buf = hrb->getResponse();
-				isBuildableFlag = false;
-				return ;
-			}
 		}
-		if (hrb->getNeedMoreMessage() == false)
+
+		if (hrb->getNeedMoreMessage() == true)
 		{
-			IMethodExecutor *executor;
-			if (hrb->getNeedCgi() == true)
-			{
-				LocationConfig lc = hrb->getLocationConfig();
-				executor = new CgiMethodExecutor(sh, this, lc.getCgiParams(webVal));
-			}
-			else
-				executor = new DefaultMethodExecutor(sh, this);
-			hrb->setMethodExecutor(executor);
-			isBuildableFlag = true;
+			return ;
 		}
 	}
+	
+	LocationConfig lc = hrb->getLocationConfig();
+	if (hrb->getEnd())
+	{
+		// 구현되지 않은 요청을 받은 경우에는 requestMessage 객체에 firstLine밖에 안들어있어서 애초에 lc를 확인할 수 없음
+		if (lc.isErrCode(hrb->getStatusCode()) && hrb->getRequestMessage().getHeaders().size())
+		{
+			hrb->changeRequestMessage(hrb->getStatusCode());
+		}
+		else
+		{
+			hrb->createResponseMessage();
+			send_buf = hrb->getResponse();
+			return ;
+		}
+	}
+	
+	IMethodExecutor *executor;
+	if (hrb->getNeedCgi() == true)
+	{
+		lc = hrb->getLocationConfig();
+		executor = new CgiMethodExecutor(sh, this, lc.getCgiParams(webVal));
+	}
+	else
+		executor = new DefaultMethodExecutor(sh, this);
+	hrb->setMethodExecutor(executor);
+	isBuildableFlag = true;
 }
 
 void Client::makeResponse(const int &exitCode)
 {
 	hrb->build(exitCode);
+
 	if (hrb->getEnd())
 	{
 		this->send_buf = hrb->getResponse();

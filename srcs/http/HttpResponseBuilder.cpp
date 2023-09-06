@@ -12,16 +12,19 @@ HttpResponseBuilder::HttpResponseBuilder(const Server *server, WebservValues &we
 	filename = "";
 	args = "";
 	queryString = "";
+    pathInfo = "";
+    redirectUri = "";
 	resourcePath = "";
 	requestBody = "";
 	contentType = "";
 	responseBody = "";
-	statusCode = 500;
+	statusCode = -1;
 	needMoreMessage = false;
 	needCgi = false;
 	end = false;
 	connection = true;
 	autoIndex = false;
+    previousStatusCode = 0;
 
     methodExecutor = NULL;
 }
@@ -61,19 +64,21 @@ void HttpResponseBuilder::clear()
 	requestUri = "";
 	uri = "";
 	filename = "";
-	pathInfo = "";
 	args = "";
 	queryString = "";
+    pathInfo = "";
+    redirectUri = "";
 	resourcePath = "";
 	requestBody = "";
 	contentType = "";
 	responseBody = "";
-	statusCode = 500;
+	statusCode = -1;
 	needMoreMessage = false;
 	needCgi = false;
 	end = false;
 	connection = true;
 	autoIndex = false;
+    previousStatusCode = 0;
 
     if (methodExecutor)
     {
@@ -239,106 +244,6 @@ void HttpResponseBuilder::initWebservValues()
 	webservValues->insert("fastcgi_path_info", pathInfo);
 }
 
-void HttpResponseBuilder::setSpecifiedErrorPage(const int &errorCode)
-{
-    string errorPage = locationConfig.getErrPage(statusCode);
-    ResponseStatusManager responseStatusManager;
-    ServerAutoIndexSimulator serverAutoIndexSimulator;
-    LocationConfig redirectedLocationConfig;
-    redirectedLocationConfig = server->getConfig(requestMessage->getHeader("host")).getLocConf(errorPage);
-    string root = redirectedLocationConfig.getRoot();
-
-    string path = root + errorPage;
-    // 1. 에러페이지 경로 존재 유무 확인
-    if (access(path.c_str(), F_OK) != 0)
-    {
-        // a. 경로가 존재하지 않으면 기본 내장 파일 사용 (but, fall back 에러 페이지가 있다면 그걸 사용)
-        responseBody = responseStatusManager.generateResponseHtml(errorCode);
-        return ;
-    }
-    // 2. 에러페이지 읽기 권한 확인
-    if (access(path.c_str(), R_OK) != 0)
-    {
-        // a. 권한없으면 403 에러 대신 띄움 (but, fall back 에러 페이지가 있다면 그걸 사용)
-        statusCode = 403;
-        if (locationConfig.isErrCode(statusCode) == true)
-        {
-            setSpecifiedErrorPage(statusCode);
-        }
-        return ;
-    }
-    // 여기서 부터 에러페이지가 실존하고 권한도 있는 상태
-    struct stat statbuf;
-    if (stat(path.c_str(), &statbuf) < 0)
-    {
-        statusCode = 500;
-        if (locationConfig.isErrCode(statusCode) == true)
-        {
-            setSpecifiedErrorPage(statusCode);
-        }
-        return ;
-    }
-    // 3. 에러페이지가 폴더다
-    if (S_ISDIR(statbuf.st_mode))
-    {
-        // a. index지시어가 지정되어 있고, index파일이 있다면 그 파일로 대체
-        const vector<string> &indexes = redirectedLocationConfig.getIndexes();
-        bool exist = false;
-        for (size_t i = 0; i < indexes.size(); i++)
-        {
-            string tmpPath = path + indexes.at(i);
-            if (access(tmpPath.c_str(), R_OK) == 0)
-            {
-                exist = true;
-                // reponse body에 저장(GET Method와 동일)
-                ifstream file(tmpPath.c_str());
-                if (file.fail())
-                {
-                    if (redirectedLocationConfig.isErrCode(500) == true)
-                    {
-                        statusCode = 500;
-                        setSpecifiedErrorPage(statusCode);
-                        return;
-                    }
-                }
-                getline(file, responseBody, '\0');
-                file.close();
-                return ;
-            }
-        }
-        // b. index지시어가 없거나 유효한 index.html이 없다.
-        if(exist == false)
-        {
-            if (redirectedLocationConfig.isAutoIndex() == true)
-            {
-                // auto index가 on 이면 폴더의 내용을 나열한다.
-                responseBody = serverAutoIndexSimulator.generateAutoIndexHtml(root, errorPage);
-            }
-            else
-            {
-                // 모두 다 해당하지 않는다면 내장 에러페이지 사용한다.
-                responseBody = responseStatusManager.generateResponseHtml(statusCode);
-            }
-        }
-    }
-    else if(S_ISREG(statbuf.st_mode))
-    {
-        // 4. 에러페이지가 파일이면 바로 저장한다.
-        ifstream file(path.c_str());
-        if (file.fail())
-        {
-            if (redirectedLocationConfig.isErrCode(500) == true)
-            {
-                statusCode = 500;
-                setSpecifiedErrorPage(statusCode);
-                return;
-            }
-        }
-        getline(file, responseBody, '\0');
-        file.close();
-    }
-}
-
 void HttpResponseBuilder::execute(const int &exitCode)
 {
 	string httpMethod = requestMessage->getHttpMethod();
@@ -412,40 +317,27 @@ string HttpResponseBuilder::getResponse() const
     return response;
 }
 
-void HttpResponseBuilder::createInvalidResponseMessage()
-{
-    ResponseStatusManager responseStatusManager;
-    
-    responseMessage = new HttpResponseMessage();
-    ResponseHeaderAdder responseHeaderAdder;
-
-    statusCode = 400;
-    connection = false; // 커넥션 끊기
-    if (locationConfig.isErrCode(statusCode))
-    {
-        setSpecifiedErrorPage(statusCode);
-    }
-    else
-    {
-        responseBody = responseStatusManager.generateResponseHtml(statusCode);
-    }
-    responseMessage->setStatusCode(statusCode);
-    responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
-    responseMessage->setBody(responseBody);
-    responseHeaderAdder.executeAll(*this);
-}
-
 void HttpResponseBuilder::createResponseMessage()
 {
-    string httpMethod = requestMessage->getHttpMethod();
 
     responseMessage = new HttpResponseMessage();
     ResponseStatusManager responseStatusManager;
-    //커스텀 에러페이지 있는지 체크
-    if (locationConfig.isErrCode(statusCode))
+    ResponseHeaderAdder responseHeaderAdder;
+    
+    if (!requestMessage)
     {
-        setSpecifiedErrorPage(statusCode);
+        statusCode = 400;
+        connection = false; // 커넥션 끊기
+        responseMessage->setStatusCode(statusCode);
+        responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
+        responseBody = responseStatusManager.generateResponseHtml(statusCode);
+        responseMessage->setBody(responseBody);
+        responseHeaderAdder.executeAll(*this);
+        return ;
     }
+    
+    string httpMethod = requestMessage->getHttpMethod();
+
     responseMessage->setStatusCode(statusCode);
     responseMessage->setReasonPhrase(responseStatusManager.findReasonPhrase(statusCode));
     if (autoIndex)
@@ -462,7 +354,6 @@ void HttpResponseBuilder::createResponseMessage()
         responseBody = responseStatusManager.generateResponseHtml(statusCode);
     }
     responseMessage->setBody(responseBody);
-    ResponseHeaderAdder responseHeaderAdder;
     responseHeaderAdder.executeAll(*this);
 }
 
@@ -510,30 +401,30 @@ bool HttpResponseBuilder::isRedirectRequest()
     return 0;
 }
 
-void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
+void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage, int previousStatusCode)
 {
     
     clear();
+    this->previousStatusCode = previousStatusCode;
     this->requestMessage = requestMessage;
-    this->needMoreMessage = requestMessage->getNeedMoreChunked();
-    // 1. uri 구하기
-    if ((end = parseRequestUri()) == 1)
-    {
+    if (!requestMessage)
+    {   // isHttp()가 -1을 리턴한 경우
         createResponseMessage();
         return ;
     }
+    this->needMoreMessage = requestMessage->getNeedMoreChunked();
+    // 1. uri 구하기
+    parseRequestUri();
     // 2. uri 바탕으로 locationConfig 구하기
     locationConfig = server->getConfig(requestMessage->getHeader("host")).getLocConf(uri);
     // 3. 리다이렉트 지시문 체크
     if ((end = isRedirectRequest()) == 1)
     {
-        createResponseMessage();
         return ;
     }
     // 4. locationConfig 메서드를 이용해서 accept_method, accepted_method, client_max_body_size 체크
     if ((end = isAllowedRequestMessage()) == 1)
     {
-        createResponseMessage();
         return ;
     }
     // 5. pathinfo parsing
@@ -585,7 +476,6 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage)
     // 7. uri 경로 유효성 검사하기
     if ((end = isValidateResource()) == 1)
     {
-        createResponseMessage();
         return ;
     }
     // 8. webserv 변수 초기화하기
@@ -610,13 +500,46 @@ void HttpResponseBuilder::addRequestMessage(HttpRequestMessage *newRequestMessag
     requestBody.append(newRequestMessage->getBody());
 }
 
+void HttpResponseBuilder::changeRequestMessage(const int &errorCode)
+{
+    string errorPageName = locationConfig.getErrPage(errorCode);
+    map<string, string> headers;
+    headers.insert(make_pair<string, string>("host", requestMessage->getHeader("host")));
+    //response builder 초기화 안해도 됌 initate에서 초기화 해주기 때문에.
+    initiate(new HttpRequestMessage("GET", errorPageName, "HTTP/1.1", headers, "", false), statusCode);
+}
+
 void HttpResponseBuilder::build(const int &exitCode)
 {
-    execute(exitCode);
+    if (previousStatusCode)
+    {   // custom Page를 GET하러 온 경우임
+        if (!end)
+        {   // 유효성 검사 성공
+            execute(exitCode);
+        }
+    }
+    else
+    {   // 첫 요청이 유효성 검사에 성공한 경우
+        execute(exitCode);
+        if (locationConfig.isErrCode(statusCode) && requestMessage->getHeaders().size())
+        {
+            changeRequestMessage(statusCode);
+            build(exitCode);
+        }
+    }
+
     if (statusCode == 0)
+    {
         return ;
+    }
+    else if (previousStatusCode)
+    {
+        statusCode = previousStatusCode;
+    }
+
     createResponseMessage();
     end = true;
+
 	if (methodExecutor)
 	{
 		delete methodExecutor;
@@ -677,6 +600,7 @@ void HttpResponseBuilder::print()
     cout << "end: " << end << endl;
     cout << "connection: " << connection << endl;
     cout << "autoIndex: " << autoIndex << endl;
+    cout << "previousStatusCode: " << previousStatusCode << endl; 
     cout << "***** HttpResponseBuilder print end *****" << endl;
 }
 
@@ -698,4 +622,9 @@ string HttpResponseBuilder::getContentType() const
 void HttpResponseBuilder::setMethodExecutor(IMethodExecutor *methodExecutor)
 {
     this->methodExecutor = methodExecutor;
+}
+
+int HttpResponseBuilder::getStatusCode() const
+{
+    return this->statusCode;
 }
