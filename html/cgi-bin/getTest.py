@@ -6,14 +6,14 @@ import sys
 import os
 
 
+print(os.getenv("REQUEST_METHOD"))
+if (os.getenv("REQUEST_METHOD") != "GET"):
+	print("<h1>body</h1>")
+	print(sys.stdin.read())
+
 print("<h1>env</h1>")
 env = os.environ.items()
 line = []
 for key, value in env:
     line.append("({}, {})".format(key, value))
 print("<br>".join(line))
-
-print(os.getenv("REQUEST_METHOD"))
-if (os.getenv("REQUEST_METHOD") != "GET"):
-	print("<h1>body</h1>")
-	print(sys.stdin.read())
