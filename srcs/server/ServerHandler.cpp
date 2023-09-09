@@ -113,11 +113,18 @@ void ServerHandler::handleServerEvent(struct kevent &curEvent, Server *server)
 {
 	if (curEvent.filter == EVFILT_READ && curEvent.data > 0)
 	{
-		Client *cli = new Client(this, server);
-		clients[cli->getSock()] = cli;
-		change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-		change_events(cli->getSock(), EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-		change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 120, NULL);
+		try
+		{
+			Client *cli = new Client(this, server);
+			clients[cli->getSock()] = cli;
+			change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+			change_events(cli->getSock(), EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+			change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 120, NULL);
+		}
+		catch(const exception& e)
+		{
+			cerr << "Fail to Create Client...: " << endl;
+		}
 	}
 }
 

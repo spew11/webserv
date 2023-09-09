@@ -44,10 +44,10 @@ void Client::send_msg()
 		buf[i] = send_buf[i + send_buf_idx];
 
 	ssize_t len = send(sock, buf, i, MSG_DONTWAIT);
-	if (len != static_cast<ssize_t>(i))
-		throw exception();
+	if (len < 0)
+		return;
 
-	if (i + send_buf_idx == send_buf.size())
+	if (static_cast<size_t>(len) + send_buf_idx == send_buf.size())
 	{
 		cout << "***********send_buf[" << sock << "]***********" << endl;
 		cout << send_buf.substr(0, send_buf.find_first_of("\r\n")) << endl;
@@ -56,7 +56,7 @@ void Client::send_msg()
 		send_buf_idx = 0;
 	}
 	else
-		send_buf_idx += i;	
+		send_buf_idx += static_cast<size_t>(len);
 }
 
 void Client::recv_msg()
