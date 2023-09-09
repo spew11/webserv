@@ -9,7 +9,7 @@ Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), send
 		throw exception();
 
 #ifdef __APPLE__
-	fcntl(sock, F_SETFL, O_NONBLOCK);
+	fcntl(sock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 #elif __linux__
 	int flags = fcntl(sock, F_GETFL, 0);
 	fcntl(sock, F_SETFL, flags | O_NONBLOCK);

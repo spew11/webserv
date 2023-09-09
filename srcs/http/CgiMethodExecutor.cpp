@@ -45,8 +45,8 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response, c
 	{
 		if (pipe(child_to_parent_pipe) == -1)
 			return 500;
-		fcntl(child_to_parent_pipe[READ], F_SETFL, O_NONBLOCK);
-		fcntl(child_to_parent_pipe[WRITE], F_SETFL, O_NONBLOCK);
+		fcntl(child_to_parent_pipe[READ], F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+		fcntl(child_to_parent_pipe[WRITE], F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 
 		pid = fork();
 		if (pid == -1)
@@ -105,10 +105,10 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		if (pipe(child_to_parent_pipe) == -1)
 			return 500;
 
-		fcntl(parent_to_child_pipe[READ], F_SETFL, O_NONBLOCK);
-		fcntl(parent_to_child_pipe[WRITE], F_SETFL, O_NONBLOCK);
-		fcntl(child_to_parent_pipe[READ], F_SETFL, O_NONBLOCK);
-		fcntl(child_to_parent_pipe[WRITE], F_SETFL, O_NONBLOCK);
+		fcntl(parent_to_child_pipe[READ], F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+		fcntl(parent_to_child_pipe[WRITE], F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+		fcntl(child_to_parent_pipe[READ], F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+		fcntl(child_to_parent_pipe[WRITE], F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 
 		pid = fork();
 		if (pid == -1)
