@@ -57,13 +57,15 @@ int DefaultMethodExecutor::postMethod(const string &resourcePath, const string &
 	static_cast<void>(response); (void)exitCode;
 	if (step == STEP_OPEN_FILE)
 	{
-		// 빈 파일 읽기 시도 처리
-		if (request.empty())
-			return 204;
-
 		fd = open(resourcePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd == -1)
 			return 500;
+		// 빈 파일 읽기 시도 처리
+		if (request.empty())
+		{
+			close(fd);
+			return 204;
+		}
 		step = STEP_IO_OPER;
 		sh->change_events(fd, EVFILT_WRITE, EV_ADD, 0, 0, reinterpret_cast<void*>(client));
 	}

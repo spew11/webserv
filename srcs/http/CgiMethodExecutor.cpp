@@ -55,7 +55,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response, c
 		{
 			close(child_to_parent_pipe[WRITE]);
 			step = STEP_PROC_DIE;
-			sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, client);
+			sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT | NOTE_EXITSTATUS, 0, client);
 			return 0;
 		}
 		else
@@ -80,7 +80,8 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response, c
 	if (step == STEP_PROC_DIE)
 	{
 		step = STEP_PARENT_READ;
-		this->exitCode = exitCode;
+		if (exitCode != 0)
+			return 500;
 		sh->change_events(child_to_parent_pipe[READ], EVFILT_READ, EV_ADD, 0, 0, client);
 		return 0;
 	}
@@ -90,9 +91,7 @@ int CgiMethodExecutor::getMethod(const string &resourcePath, string &response, c
 		int ret = read_from_pipe(child_to_parent_pipe[READ], response);
 		if (ret != 200)
 			return ret;
-		if (this->exitCode == 0)
-			return 200;
-		return 500;
+		return 200;
 	}
 	return 0;
 }
@@ -148,14 +147,15 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		if (ret != 200)
 			return ret;
 		step = STEP_PROC_DIE;
-		sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, client);
+		sh->change_events(pid, EVFILT_PROC, EV_ADD, NOTE_EXIT | NOTE_EXITSTATUS, 0, client);
 		return 0;
 	}
 	
 	if (step == STEP_PROC_DIE)
 	{
 		step = STEP_PARENT_READ;
-		this->exitCode = exitCode;
+		if (exitCode != 0)
+			return 500;
 		sh->change_events(child_to_parent_pipe[READ], EVFILT_READ, EV_ADD, 0, 0, client);
 		return 0;
 	}
@@ -165,9 +165,7 @@ int CgiMethodExecutor::postMethod(const string &resourcePath, const string &requ
 		int ret = read_from_pipe(child_to_parent_pipe[READ], response);
 		if (ret != 200)
 			return ret;
-		if (this->exitCode == 0)
-			return 200;
-		return 500;
+		return 200;
 	}
 	return 0;
 }
@@ -207,7 +205,7 @@ int CgiMethodExecutor::write_to_pipe(int &fd, const string &body)
 		buf[i] = body[i + write_buf_idx];
 
 	ssize_t cnt = write(fd, buf, i);
-	if (cnt != static_cast<ssize_t>(body.length()))
+	if (cnt != static_cast<ssize_t>(i))
 		return 500;
 	if (i + write_buf_idx == body.size())
 	{
@@ -215,6 +213,7 @@ int CgiMethodExecutor::write_to_pipe(int &fd, const string &body)
 		write_buf_idx = 0;
 		return 200;
 	}
+	write_buf_idx += i;
 	return 0;
 }
 
