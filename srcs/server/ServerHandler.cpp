@@ -113,21 +113,27 @@ void ServerHandler::handleServerEvent(struct kevent &curEvent, Server *server)
 {
 	if (curEvent.filter == EVFILT_READ && curEvent.data > 0)
 	{
-		Client *cli = new Client(this, server);
-		clients[cli->getSock()] = cli;
-		change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
-		change_events(cli->getSock(), EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-		change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 120, NULL);
+		try
+		{
+			Client *cli = new Client(this, server);
+			clients[cli->getSock()] = cli;
+			change_events(cli->getSock(), EVFILT_READ, EV_ADD, 0, 0, NULL);
+			change_events(cli->getSock(), EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+			change_events(cli->getSock(), EVFILT_TIMER, EV_ADD, NOTE_SECONDS, 120, NULL);
+		}
+		catch(const exception& e)
+		{
+			cerr << "Fail to Create Client...: " << endl;
+		}
 	}
 }
 
 void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 {
-	if (curEvent.filter == EVFILT_TIMER || curEvent.flags & EV_EOF)
+	if (curEvent.filter == EVFILT_TIMER || curEvent.flags & (EV_EOF | EV_ERROR))
 	{
-		map<int, Client*>::iterator it = clients.find(client->getSock());
-		delete it->second;
-		clients.erase(it);
+		clients.erase(client->getSock());
+		delete client;
 	}
 	else if (curEvent.filter == EVFILT_READ)
 	{
@@ -140,10 +146,9 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 		else if (client->isBuildable())
 		{
 			client->makeResponse(-1);
+			change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 			if (client->isSendable())
 				change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-			else
-				change_events(client->getSock(), EVFILT_READ, EV_DISABLE, 0, 0, NULL);
 		}
 	}
 	else if (curEvent.filter == EVFILT_WRITE)
@@ -158,24 +163,25 @@ void ServerHandler::handleClientEvent(struct kevent &curEvent, Client *client)
 				clients.erase(it);
 				return ;
 			}
-			change_events(client->getSock(), EVFILT_READ, EV_ENABLE, 0, 0, NULL);
-			change_events(client->getSock(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+			// client가 소켓에 쓰기를 완료한 경우 이벤트 처리
+			if (!client->isSendable())
+			{
+				change_events(client->getSock(), EVFILT_READ, EV_ENABLE, 0, 0, NULL);
+				change_events(client->getSock(), EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+			}
 		}
+
 	}
 }
 
 void ServerHandler::handleBuildEvent(struct kevent &curEvent)
 {
-	int exitCode = -1;
-	if (curEvent.filter == EVFILT_PROC)
-		exitCode = curEvent.data;
-	void *tmp = curEvent.udata;
-	Client *client = reinterpret_cast<Client*>(tmp);
+	Client *client = reinterpret_cast<Client*>(curEvent.udata);
+	int exitCode = (curEvent.filter == EVFILT_PROC)? curEvent.data : -1;
+	
 	client->makeResponse(exitCode);
 	if (client->isSendable())
-	{
 		change_events(client->getSock(), EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-	}
 }
 
 #elif __linux__

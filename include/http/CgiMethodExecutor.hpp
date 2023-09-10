@@ -45,8 +45,9 @@ private:
 	int child_to_parent_pipe[2];
 
 	int pid;
-	int exitCode;
 
+	size_t write_buf_idx;
+	
 	int read_from_pipe(int &fd, string &body);
 	int write_to_pipe(int &fd,  const string &body);
 
