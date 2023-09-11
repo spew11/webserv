@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), isBuildableFlag(false)
+Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), send_buf_idx(0), isBuildableFlag(false)
 {
 	bzero(&addr, sizeof(addr));
 	socklen_t cli_size = sizeof(addr);
@@ -9,7 +9,7 @@ Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), isBu
 		throw exception();
 
 #ifdef __APPLE__
-	fcntl(sock, F_SETFL, O_NONBLOCK);
+	fcntl(sock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 #elif __linux__
 	int flags = fcntl(sock, F_GETFL, 0);
 	fcntl(sock, F_SETFL, flags | O_NONBLOCK);
@@ -36,32 +36,39 @@ Client::~Client()
 
 void Client::send_msg()
 {
-	cout << "***********send_buf[" << sock << "]***********" << endl;
-	cout << send_buf << endl;
-	cout << "******************************" << endl << endl;
-	const char *tmp = send_buf.c_str();
-	ssize_t len = send(sock, tmp, strlen(tmp), MSG_DONTWAIT);
-	if (len == -1)
-		throw exception();
-	send_buf = "";
-	isBuildableFlag = false;
+
+	char buf[1024];
+	bzero(buf, sizeof(char) * 1024);
+	size_t i = 0;
+	for (; i < 1024 && i + send_buf_idx < send_buf.size(); i++)
+		buf[i] = send_buf[i + send_buf_idx];
+
+	ssize_t len = send(sock, buf, i, MSG_DONTWAIT);
+	if (len < 0)
+		return;
+
+	if (static_cast<size_t>(len) + send_buf_idx == send_buf.size())
+	{
+		cout << "***********send_buf[" << sock << "]***********" << endl;
+		cout << send_buf.substr(0, send_buf.find_first_of("\r\n")) << endl;
+		cout << "******************************" << endl << endl;
+		send_buf = "";
+		send_buf_idx = 0;
+	}
+	else
+		send_buf_idx += static_cast<size_t>(len);
 }
 
 void Client::recv_msg()
 {
-	char tmp[1024];
+	char buf[1024]; 
+	bzero(buf, sizeof(char) * 1024);
 
-	while (true)
-	{
-		bzero(tmp, sizeof(char) * 1024);
-		ssize_t len = recv(sock, tmp, 1023, 0);
-		if (len > 0)
-			recv_buf += string(tmp);
-		else
-			break;
-	}
+	ssize_t len = recv(sock, buf, 1023, 0);
+	for (int i = 0; i < len; i++)
+		recv_buf += buf[i];
+
 	cout << "***************[" << sock << "]recv_buf***************" << endl;
-	// cout << sock << ">> " << recv_buf << endl;
 	cout << recv_buf << endl;
 	cout << "******************************" << endl << endl;
 }
@@ -170,6 +177,6 @@ void Client::makeResponse(const int &exitCode)
 	if (hrb->getEnd())
 	{
 		this->send_buf = hrb->getResponse();
-		// hrb->deleteMethodExecutor();
+		isBuildableFlag = false;
 	}
 }

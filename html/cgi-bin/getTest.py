@@ -5,6 +5,7 @@ print()
 import sys
 import os
 
+
 print(os.getenv("REQUEST_METHOD"))
 if (os.getenv("REQUEST_METHOD") != "GET"):
 	print("<h1>body</h1>")

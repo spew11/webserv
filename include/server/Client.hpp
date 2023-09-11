@@ -31,8 +31,9 @@ private:
 	int sock;
 	struct sockaddr_in addr;
 
-	string send_buf;
 	string recv_buf;
+	string send_buf;
+	size_t send_buf_idx;
 
 	bool isBuildableFlag;
 

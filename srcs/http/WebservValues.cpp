@@ -32,7 +32,7 @@ string WebservValues::convert(const string &input) const
 		size_t endPos = result.find('$', pos + 1);
 
 		if (endPos == string::npos)
-			endPos = result.size() - 1;
+			endPos = result.size();
 
 		string varName = result.substr(pos + 1, endPos - pos - 1);
 		string varValue = getValue(varName);
