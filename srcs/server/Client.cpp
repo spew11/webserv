@@ -128,6 +128,7 @@ void Client::communicate()
 	{
 		if (hrb->getNeedMoreMessage() == false)
 		{
+			cout << "정상적인 요청" << endl;
 			hrb->initiate(httpRequestBuilder->createRequestMessage());
 		}
 		else

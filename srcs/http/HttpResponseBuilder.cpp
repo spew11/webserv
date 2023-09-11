@@ -247,7 +247,6 @@ void HttpResponseBuilder::initWebservValues()
 void HttpResponseBuilder::execute(const int &exitCode)
 {
 	string httpMethod = requestMessage->getHttpMethod();
-
 	// 'if-None-Match', 'if-Match' 와 같은 요청 헤더 지원할 거면 여기서 분기 한번 들어감(선택사항임)
 	if (httpMethod == "GET")
 	{
@@ -362,6 +361,12 @@ bool HttpResponseBuilder::isAllowedRequestMessage()
     const vector<string> &acceptMethods = locationConfig.getAcceptMethods();
     const string &httpMethod = requestMessage->getHttpMethod();
     const string &serverProtocol = requestMessage->getServerProtocol();
+    // not implemented method check
+    if (httpMethod == "NONE")
+    {
+        statusCode = 501;
+        return 1;
+    }
     // protocol version check
     if (serverProtocol != "HTTP/1.1")
     {
@@ -422,7 +427,7 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage, int previ
     {
         return ;
     }
-    // 4. locationConfig 메서드를 이용해서 accept_method, accepted_method, client_max_body_size 체크
+    // 4. locationConfig 메서드를 이용해서 accept_method, client_max_body_size 체크
     if ((end = isAllowedRequestMessage()) == 1)
     {
         return ;
@@ -521,6 +526,7 @@ void HttpResponseBuilder::build(const int &exitCode)
     else
     {   // 첫 요청이 유효성 검사에 성공한 경우
         execute(exitCode);
+        cout << "STATUS CODE: " << statusCode << endl;
         if (locationConfig.isErrCode(statusCode) && requestMessage->getHeaders().size())
         {
             changeRequestMessage(statusCode);

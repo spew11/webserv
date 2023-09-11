@@ -56,7 +56,7 @@ private:
 	void setBody(string body);
 	void appendBody(string body);
 	string getBody(void);
-	bool buildFirstLine(string str, bool checkOnly = false);
+	bool buildFirstLine(string str, bool checkOnly = false, bool formatOnly = false);
 	bool setHeader(string str, bool checkOnly = false);
 	string getHeader(string key);
 	vector<string> split(const string& s, const string& delim);
