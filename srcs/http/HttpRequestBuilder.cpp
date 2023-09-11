@@ -478,7 +478,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 		{
 			body += lines[lines.size()-1];
 
-			if (getContentLength() <= 0)
+			if (getContentLength() < 0)
 			{	// 유효하지 않은 contentLength인 경우
 				erase();  // 기존에 완성하던 request는 버림
 				recvBuf = body;  // 그동안 모았던 body를 모두 잔여물로 취급해 recvBuf에 담음
