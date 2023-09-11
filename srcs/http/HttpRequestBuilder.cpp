@@ -123,7 +123,7 @@ string HttpRequestBuilder::getMethod(const HttpMethodType &methodType) const
 	}
 }
 
-bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly)
+bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly, bool formatOnly)
 {
 	HttpMethodType methodType = METHOD_TYPE_NONE;
 
@@ -162,22 +162,25 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly)
 		}
 	}
 
-	bool exist = false;
-	// method check (none_type은 구현되지 않은 메서드로 간주함)
-	string method = firstLine[0];
-	for (map<string, HttpMethodType>::iterator it = httpMethods.begin(); it != httpMethods.end(); it++)
+	if (formatOnly == false)
 	{
-		if (method.compare(it->first) == 0)
+		bool exist = false;
+		// method check (none_type은 구현되지 않은 메서드로 간주함)
+		string method = firstLine[0];
+		for (map<string, HttpMethodType>::iterator it = httpMethods.begin(); it != httpMethods.end(); it++)
 		{
-			methodType = it->second;
-			exist = true;
-			break;
+			if (method.compare(it->first) == 0)
+			{
+				methodType = it->second;
+				exist = true;
+				break;
+			}
 		}
-	}
 
-	if (exist == false)
-	{
-		return false;
+		if (exist == false)
+		{
+			return false;
+		}
 	}
 
 	if (!checkOnly)
@@ -234,7 +237,7 @@ bool HttpRequestBuilder::setHeader(string str, bool checkOnly)
 	// 때문에 key에 대해서는 first line인지 다시 확인할 필요가 없음, value에 대해서만 다시 한번 확인
 	for (size_t i = 0; i < value.length(); i++)
 	{
-		if (buildFirstLine(value.substr(i, value.length()), true))
+		if (buildFirstLine(value.substr(i, value.length()-i), true, true))
 		{	// cout << "value " << value << " has http first header line." << endl;
 			return false;
 		}
@@ -339,18 +342,24 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 
 		if (linesIndex == -1)
 		{	// first line이 없는 경우
+			// 구현되지 않은 메서드가 온건 아닌지 체크
+			for (size_t i = 0; i < lines.size()-1; i++)
+			{
+				for (size_t j = 0; j < lines[i].length(); j++)
+				{
+					if (buildFirstLine(lines[i].substr(j, lines[i].length()-j), false, true))
+					{
+						// 구현되지 않은 메서드는 바로 return 0
+						recvBuf = Utils::stringJoin(lines, "\r\n", linesIndex+1);
+						cout << "[RETURN 0] not implemented method" << endl;
+						return 0;
+					}
+				}
+				
+			}
 			recvBuf = lines[lines.size()-1]; // \r\n으로 끝나는 모든 line들 (lines[:-1])은 이미 first line 포맷이 아님을 확인했기에 배제, 마지막 line(lines[-1])만 recvBuf에 남김
 			cout << "[RETURN 1] first line doesn't exist." << endl;
 			return 1;
-		}
-		else
-		{	// 구현되지 않은 메서드는 바로 return 0
-			if (methodType == METHOD_TYPE_NONE)
-			{
-				recvBuf = Utils::stringJoin(lines, "\r\n", linesIndex+1);
-				cout << "[RETURN 0] not implemented method" << endl;
-				return 0;
-			}
 		}
 	}
 	else
