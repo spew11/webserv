@@ -162,6 +162,7 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly)
 		}
 	}
 
+	bool exist = false;
 	// method check (none_type은 구현되지 않은 메서드로 간주함)
 	string method = firstLine[0];
 	for (map<string, HttpMethodType>::iterator it = httpMethods.begin(); it != httpMethods.end(); it++)
@@ -169,8 +170,14 @@ bool HttpRequestBuilder::buildFirstLine(string str, bool checkOnly)
 		if (method.compare(it->first) == 0)
 		{
 			methodType = it->second;
+			exist = true;
 			break;
 		}
+	}
+
+	if (exist == false)
+	{
+		return false;
 	}
 
 	if (!checkOnly)
@@ -322,7 +329,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 		{
 			for (size_t j = 0; j < lines[i].length(); j++)
 			{	// 쓰레기 byte가 first line의 앞에 있는 경우를 고려해 이를 skip
-				if (buildFirstLine(lines[i].substr(j, lines[i].length())))
+				if (buildFirstLine(lines[i].substr(j, lines[i].length()-j)))
 				{
 					linesIndex = i + 1;
 					break;
