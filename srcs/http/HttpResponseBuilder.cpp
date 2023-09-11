@@ -361,6 +361,12 @@ bool HttpResponseBuilder::isAllowedRequestMessage()
     const vector<string> &acceptMethods = locationConfig.getAcceptMethods();
     const string &httpMethod = requestMessage->getHttpMethod();
     const string &serverProtocol = requestMessage->getServerProtocol();
+    // not implemented method check
+    if (httpMethod == "NONE")
+    {
+        statusCode = 501;
+        return 1;
+    }
     // protocol version check
     if (serverProtocol != "HTTP/1.1")
     {
@@ -404,7 +410,6 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage, int previ
 {
     
     clear();
-    cout << "clear 지남" << endl;
     this->previousStatusCode = previousStatusCode;
     this->requestMessage = requestMessage;
     if (!requestMessage)
@@ -422,7 +427,7 @@ void HttpResponseBuilder::initiate(HttpRequestMessage *requestMessage, int previ
     {
         return ;
     }
-    // 4. locationConfig 메서드를 이용해서 accept_method, accepted_method, client_max_body_size 체크
+    // 4. locationConfig 메서드를 이용해서 accept_method, client_max_body_size 체크
     if ((end = isAllowedRequestMessage()) == 1)
     {
         return ;
