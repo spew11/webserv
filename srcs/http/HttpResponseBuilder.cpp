@@ -211,6 +211,35 @@ bool HttpResponseBuilder::isValidateResource()
                 return 1;
             }
         }
+        else
+        { // 존재하지 않는 경로
+            // 존재하지않는상위디렉터리/new_file.txt 인 경우 400을 리턴하도록 추가
+            size_t slashPos = uri.find_last_of('/');
+            if (slashPos != string::npos)
+            {   // 상위디렉터리/정규파일 형식인 것임
+                // 상위디렉터리까지만 잘라서 존재하는지 체크
+                string tmpPath2 = locationConfig.getRoot() + uri.substr(0, slashPos);
+                if (access(tmpPath2.c_str(), F_OK) == 0)
+                {
+                    if (stat(tmpPath2.c_str(), &statbuf) < 0)
+                    {
+                        statusCode = 500;
+                        return 1;
+                    }
+                    if (!S_ISDIR(statbuf.st_mode))
+                    {
+                        statusCode = 400;
+                        return 1;
+                    }
+                }
+                else
+                {
+                    statusCode = 400;
+                    return 1;
+                }
+
+            }
+        }
         resourcePath = tmpPath;
     }
     else if (httpMethod == "DELETE")
