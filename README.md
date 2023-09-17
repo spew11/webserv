@@ -11,7 +11,7 @@ HTTP 요청을 수신하여 해당 요청에 대한 적절한 HTTP 응답을 생
   - 서버에 필수적인 directives를 지원할 것
 - IO multi-plexing 기반의 서버 구현
   - 모든 소켓에 대한 non-blocking 처리할 것
-  - 스트레스 test에서 가용성 99.5% 확보할 것
+  - 성능 테스트에서 가용성 99.5% 확보할 것
   - 서버가 다운되지 않을 것
 - HTTP/1.1 버전 프로토콜 구현
   - chunked request 지원
@@ -71,7 +71,7 @@ git clone https://github.com/spew11/webserv.git
       index index.html;
       accept_method GET;
       autoindex on;
-    }
+   }
    ```
 - 'root' : 웹 서버의 루트 디렉토리를 지정합니다.
    ```nginx
@@ -83,11 +83,11 @@ git clone https://github.com/spew11/webserv.git
    ```
 - 'accept_method' : 특정 HTTP 메서드를 허용합니다. accep_method에 해당하지 않는 메서드는 모두 제한됩니다.
   ```nginx
-      location / {
-        index index.html;
-        accept_method GET;
-        autoindex on;
-    }
+  location / {
+      index index.html;
+      accept_method GET;
+      autoindex on;
+  }
   ```
 - 'error_page' : 특정 HTTP 상태 코드가 반환될 때 사용자에게 보여줄 페이지를 설정합니다.
    ```nginx
@@ -110,7 +110,13 @@ git clone https://github.com/spew11/webserv.git
   ```nginx
   location /cgi-bin/ {
         cgi py;
-    }
+  }
+  ```
+- 'return' : 특정 URL로 들어오는 요청을 다른 URL로 전달합니다.
+  ```nginx
+  location /old-location {
+    return 301 /new-location;
+  }
   ```
 - 'types' : 파일 확장자와 해당 파일이 어떤 MIME 타입으로 처리될 것인지를 지정합니다.  
     이 설정은 HTTP 응답 헤더의 'Content-Type' 필드 값을 결정하는 데 사용됩니다.
@@ -123,10 +129,10 @@ git clone https://github.com/spew11/webserv.git
   ```
 - 'cgi-params' : CGI스크립트가 동작할 때 필요한 정보들을 제공합니다.
   ```nginx
-    cgi_params {
+  cgi_params {
         PARAM_NAME   $variable_name;
         ...
-    }
+  }
   ```
 #### 기본으로 제공되는 설정 파일인 'tester.conf'의 예시
 ```nginx
