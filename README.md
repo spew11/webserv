@@ -1,20 +1,39 @@
 # HTTP Web Server
+## Index
+- [Introduction](#Introduction)
+  - [Why We Built This](#Why-We-Buit-This)
+  - [Role](#Role)
+  - [Objective](#Objective)
+- [Features](#Features)
+- [Requirements](#Requirements)
+- [Installation & Setup](#Installation-&-Setup)
+- [Usage](#Usage)
+  - [Tests](#Tests)
+  - [Set Configuration](#Set-Configuration)
+    - [Config file name convention](#Config-file-name-convention)
+    - [Config file directives](#Config-file-directives)
+    - [Example of the default configuration file 'tester.conf'](#Example-of-the-default-configuration-file 'tester.conf')
+- [What I Learned](#What-I-Learned)
+  
 ## Introduction
 Server는 설정 파일에 명시된 파라미터를 기반으로 초기화됩니다.  
 HTTP 요청을 수신하여 해당 요청에 대한 적절한 HTTP 응답을 생성하고 반환합니다.
+
 ### Why We Built This
 웹 개발을 목표를 하면서, 웹 서버의 동작 방식 및 HTTP프로토콜을 이론으로만 학습하고 넘어가기에는 아쉬움이 있었기에,  
 웹 서버를 직접 구현하면서 원리를 정확히 이해해 보고자 했습니다.
-### Purpose and premis
-총 팀원 세명이서 server configuration 파싱, server socket programming 구현, HTTP 프로토콜 구현 이렇게 3파트로 나눠 진행하였습니다.  
-- nginx를 차용한 configuration 구현
-  - 서버에 필수적인 directives를 지원할 것
+
+### Role
+- @izone00: Server configuration 파싱
+- @ssoyeong-lee: Server socket programming 구현
+- @spew11: HTTP protocol 구현
+
+### Objective
+- nginx를 차용한 configuration 파싱
 - IO multi-plexing 기반의 서버 구현
-  - 모든 소켓에 대한 non-blocking 처리할 것
   - 성능 테스트에서 가용성 99.5% 확보할 것
-  - 서버가 다운되지 않을 것
 - HTTP/1.1 버전 프로토콜 구현
-  - chunked request 지원
+
 ## Features
 - 5가지 HTTP 메서드를 제공합니다.
   - GET : 서버에서 클라이언트로 지정한 리소스를 보냅니다.
@@ -26,19 +45,29 @@ HTTP 요청을 수신하여 해당 요청에 대한 적절한 HTTP 응답을 생
   - python 지원
 
 ## Requirements
-- 언어 : c++
-- Libraried : c++98 standard library
-- OS: MAC
+- Language : c++
+- Libraries : c++98 standard library
+- OS: MAC OS
+  
 ## Installation & Setup
 ```
 git clone https://github.com/spew11/webserv.git
 && make
 ```
+
 ## Usage
+
+### Tests
+```bash
+./webserve tester.conf
+```
+
 ### Set Configuration
-#### 설정 파일 이름 형식
-'[이름].conf'의 형식으로 구성됩니다.
-#### 설정 파일 양식
+
+#### Config file name convention
+`[이름].conf`
+
+#### Config file directives
 아래의 디렉티브(directives)를 이용해 웹 서버의 동작을 제어할 수 있습니다.
 - 'server' : 서버에서 하나의 서버 블록을 정의합니다.  
      이 블록 내에는 해당 서버에 대한 여러 설정과 지시어들이 위치하게 됩니다.
@@ -134,7 +163,8 @@ git clone https://github.com/spew11/webserv.git
         ...
   }
   ```
-#### 기본으로 제공되는 설정 파일인 'tester.conf'의 예시
+  
+#### Example of the default configuration file 'tester.conf'
 ```nginx
 server  
 {
@@ -255,11 +285,7 @@ server
     	  }
 }
 ```
-### Tests
-```bash
-./webserv [configuration.conf]
-```
 ## What I Learned
-웹 서버를 위해 사용되었던  socket IPC, IO multiplexing 기술의 이론학습 뿐만 아니라, 실제 동작 원리를 익힐 수 있었습니다.
+웹 서버를 위해 사용되었던 socket IPC, IO multi-plexing 기술의 이론학습 뿐만 아니라, 실제 동작 원리를 익힐 수 있었습니다.
 특히 HTTP request 파싱, HTTP 헤더 구현, HTTP 응답 메시지 생성, server configuration directives 구현등을 통해서    
-HTTP 프로토콜이 구체적으로 와닿게되는 계기가 되었습니다. 
+HTTP 프로토콜이 구체적으로 와닿는 계기가 되었습니다. 
