@@ -1,18 +1,18 @@
 # HTTP Web Server
 ## Index
 - [Introduction](#Introduction)
-  - [Why We Built This](#Why-We-Buit-This)
+  - [Why We Built This](#Why-We-Built-This)
   - [Role](#Role)
   - [Objective](#Objective)
 - [Features](#Features)
 - [Requirements](#Requirements)
-- [Installation & Setup](#Installation-&-Setup)
+- [Installation & Setup](#Installation--Setup)
 - [Usage](#Usage)
   - [Tests](#Tests)
   - [Set Configuration](#Set-Configuration)
     - [Config file name convention](#Config-file-name-convention)
     - [Config file directives](#Config-file-directives)
-    - [Example of the default configuration file 'tester.conf'](#Example-of-the-default-configuration-file 'tester.conf')
+    - [Example of the default configuration file 'tester.conf'](#Example-of-the-default-configuration-file-testerconf)
 - [What I Learned](#What-I-Learned)
   
 ## Introduction
