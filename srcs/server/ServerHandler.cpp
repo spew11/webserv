@@ -70,7 +70,7 @@ void ServerHandler::loop()
 			throw exception();
 		else if (new_events == 0)
 		{
-			cout << "timeout" << endl;
+			// cout << "timeout" << endl;
 			continue;
 		}
 

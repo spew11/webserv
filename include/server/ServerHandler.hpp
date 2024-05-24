@@ -27,7 +27,7 @@ private:
 	// kqueue(), kevent() 관련 변수
 	int kq_fd;
 	vector<struct kevent> changeList; // kqueue 변동 이벤트 (추가 삭제 등)
-	struct kevent eventList[8];			   // kevent()에서 발생한 이벤트 리턴
+	struct kevent eventList[100];	// kevent()에서 발생한 이벤트 리턴
 
 	void handleServerEvent(struct kevent &curEvent, Server *server);
 	void handleClientEvent(struct kevent &curEvent, Client *client);

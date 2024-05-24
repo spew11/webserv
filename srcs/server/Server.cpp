@@ -6,6 +6,19 @@ Server::Server(const ServerConfig &config)
 	if (sock == -1)
 		throw exception();
 #ifdef __APPLE__
+	int opt = 1;
+	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+		close(sock);
+		throw exception();
+    }
+	struct linger sl;
+	sl.l_onoff = 1; // 활성화
+	sl.l_linger = 10; // 10초 동안 대기
+	if (setsockopt(sock, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl)) == -1) {
+		close(sock);
+		throw exception();
+	}
+
 	fcntl(sock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 #elif __linux__
 	int flags = fcntl(sock, F_GETFL, 0);
