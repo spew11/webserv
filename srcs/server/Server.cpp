@@ -39,7 +39,7 @@ Server::Server(const ServerConfig &config)
 		throw exception();
 
 	configs.push_back(config);
-	cout << "create Server:" << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << endl;
+	// cout << "create Server:" << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << endl;
 }
 
 bool Server::isSame(const uint32_t &ip, const uint16_t &port)

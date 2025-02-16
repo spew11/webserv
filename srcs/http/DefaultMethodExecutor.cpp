@@ -8,7 +8,7 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
 
 	if (step == STEP_OPEN_FILE)
 	{
-		cout << "STEP_OPEN_FILE" << endl;
+		// cout << "STEP_OPEN_FILE" << endl;
 
 		// 빈 파일 읽기 시도 처리
 		struct stat statbuf;
@@ -30,7 +30,7 @@ int DefaultMethodExecutor::getMethod(const string &resourcePath, string &respons
 	}
 	else if (step == STEP_IO_OPER)
 	{
-		cout << "STEP_IO_OPER" << endl;
+		// cout << "STEP_IO_OPER" << endl;
 
 		char buf[1024];
 		bzero(buf, 1024);

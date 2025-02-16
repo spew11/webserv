@@ -79,7 +79,7 @@ void ServerHandler::loop()
 		{
 			struct kevent curEvent = eventList[i];
 
-			cout << "EVENT OCCUR = " << curEvent.ident << endl;
+			// cout << "EVENT OCCUR = " << curEvent.ident << endl;
 			if (curEvent.udata != NULL)
 			{
 				handleBuildEvent(curEvent);

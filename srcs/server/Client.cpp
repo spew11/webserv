@@ -15,8 +15,8 @@ Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), send
 	fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 #endif
 
-	cout << "Connect: Client" << sock << endl;
-	cout << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << endl;
+	// cout << "Connect: Client" << sock << endl;
+	// cout << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << endl;
 	webVal.insert("server_addr", server->getIP());
 	webVal.insert("server_port", server->getPort());
 	webVal.insert("remote_addr", inet_ntoa(addr.sin_addr));
@@ -28,7 +28,7 @@ Client::Client(ServerHandler *sh, Server *server) : sh(sh), server(server), send
 
 Client::~Client()
 {
-	cout << "Connection Close: " << sock << endl;
+	// cout << "Connection Close: " << sock << endl;
 	close(sock);
 	delete hrb;
 	delete httpRequestBuilder;
@@ -49,9 +49,9 @@ void Client::send_msg()
 
 	if (static_cast<size_t>(len) + send_buf_idx == send_buf.size())
 	{
-		cout << "***********send_buf[" << sock << "]***********" << endl;
-		cout << send_buf.substr(0, send_buf.find_first_of("\r\n")) << endl;
-		cout << "******************************" << endl << endl;
+		// cout << "***********send_buf[" << sock << "]***********" << endl;
+		// cout << send_buf.substr(0, send_buf.find_first_of("\r\n")) << endl;
+		// cout << "******************************" << endl << endl;
 		send_buf = "";
 		send_buf_idx = 0;
 	}
@@ -68,9 +68,9 @@ void Client::recv_msg()
 	for (int i = 0; i < len; i++)
 		recv_buf += buf[i];
 
-	cout << "***************[" << sock << "]recv_buf***************" << endl;
-	cout << recv_buf << endl;
-	cout << "******************************" << endl << endl;
+	// cout << "***************[" << sock << "]recv_buf***************" << endl;
+	// cout << recv_buf << endl;
+	// cout << "******************************" << endl << endl;
 }
 
 int Client::getSock() const
@@ -128,7 +128,7 @@ void Client::communicate()
 	{
 		if (hrb->getNeedMoreMessage() == false)
 		{
-			cout << "정상적인 요청" << endl;
+			// cout << "정상적인 요청" << endl;
 			hrb->initiate(httpRequestBuilder->createRequestMessage());
 		}
 		else

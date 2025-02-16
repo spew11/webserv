@@ -351,14 +351,14 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 					{
 						// 구현되지 않은 메서드는 바로 return 0
 						recvBuf = Utils::stringJoin(lines, "\r\n", linesIndex+1);
-						cout << "[RETURN 0] not implemented method" << endl;
+						// cout << "[RETURN 0] not implemented method" << endl;
 						return 0;
 					}
 				}
 				
 			}
 			recvBuf = lines[lines.size()-1]; // \r\n으로 끝나는 모든 line들 (lines[:-1])은 이미 first line 포맷이 아님을 확인했기에 배제, 마지막 line(lines[-1])만 recvBuf에 남김
-			cout << "[RETURN 1] first line doesn't exist." << endl;
+			// cout << "[RETURN 1] first line doesn't exist." << endl;
 			return 1;
 		}
 	}
@@ -366,7 +366,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 	{
 		linesIndex = 0;
 	}
-	cout << "START_LINE: " << linesIndex << endl;
+	// cout << "START_LINE: " << linesIndex << endl;
 
 	HttpMethodType methodType = getMethodType();
 
@@ -377,11 +377,11 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 	{
 		if (lines[i].length() == 0)
 		{	// empty line //size -1 까지만 보기 때문에 \r\n으로 끝난놈과 \r\n\r\n으로 끝난 놈을 구별할 필요X 무조건 \r\n\r\n으로 끝난 놈임
-			cout << "EMPTY LINE" << i << endl;
+			// cout << "EMPTY LINE" << i << endl;
 			if (headers.find("host") == headers.end())
 			{
 				recvBuf = Utils::stringJoin(lines, "\r\n", i+1);
-				cout << "[RETURN -1] request must be include host header." << endl;
+				// cout << "[RETURN -1] request must be include host header." << endl;
 				return -1;
 			}
 			if (getBuildStep() == BUILD_HEADER && bodyRequired)
@@ -397,7 +397,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 					needMoreChunk = true;
 					appendBody(body);
 					recvBuf = Utils::stringJoin(lines, "\r\n", i);
-					cout << "[RETURN 0] chunked body success" << endl;
+					// cout << "[RETURN 0] chunked body success" << endl;
 					return 0;
 				}
 				else
@@ -408,7 +408,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 			else if (!bodyRequired)
 			{	// body가 필요없는 method인 경우
 				recvBuf = Utils::stringJoin(lines, "\r\n", i+1);  // recvBuf에 다음 line부터 추가
-				cout << "[RETURN 0] header is finished. (body is not required.)" << endl;
+				// cout << "[RETURN 0] header is finished. (body is not required.)" << endl;
 				return 0;  // 온전한 request 완성 (body 없는 method)
 			}
 		}
@@ -427,7 +427,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 							needMoreChunk = false;
 							appendBody(body);
 							recvBuf = Utils::stringJoin(lines, "\r\n", i+1);
-							cout << "[RETURN 0] chunked body success" << endl;
+							// cout << "[RETURN 0] chunked body success" << endl;
 							return 0;
 						}
 					}
@@ -436,7 +436,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 						needMoreChunk = true;
 						appendBody(body);
 						recvBuf = Utils::stringJoin(lines, "\r\n", i);
-						cout << "[RETURN 0] chunked body success" << endl;
+						// cout << "[RETURN 0] chunked body success" << endl;
 						return 0;
 					}
 				}
@@ -446,7 +446,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 					{	// chunked 5번(chucked 숫자에 맞지 않는 길이의 문자열이 올 경우)
 						erase(); // 기존에 완성하던 request는 버림
 						recvBuf = Utils::stringJoin(lines, "\r\n", i);  // recvBuf에 현재 line부터 추가
-						cout << "[RETURN -1] chunked length mismatch: " << chunkedNumber << " vs " << lines[i].length() << endl;
+						// cout << "[RETURN -1] chunked length mismatch: " << chunkedNumber << " vs " << lines[i].length() << endl;
 						return -1;
 					}
 					else
@@ -467,7 +467,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 			{	// header 차례인데 유효하지 않은 header가 나온 경우
 				erase();  // 기존에 완성하던 request는 버림
 				recvBuf = Utils::stringJoin(lines, "\r\n", i);  // recvBuf에 현재 line부터 추가
-				cout << "[RETURN -1]  invalid header." << endl;
+				// cout << "[RETURN -1]  invalid header." << endl;
 				return -1;
 			}
 		}
@@ -487,7 +487,7 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 				recvBuf += ss.str() + "\r\n";
 			}
 			recvBuf += lines[lines.size()-1];
-			cout << "[RETURN 1] chunked is not finished." << endl;
+			// cout << "[RETURN 1] chunked is not finished." << endl;
 			return 1;
 		}
 		else
@@ -498,20 +498,20 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 			{	// 유효하지 않은 contentLength인 경우
 				erase();  // 기존에 완성하던 request는 버림
 				recvBuf = body;  // 그동안 모았던 body를 모두 잔여물로 취급해 recvBuf에 담음
-				cout << "[RETURN -1] invalid contentLength: " << endl;
+				// cout << "[RETURN -1] invalid contentLength: " << endl;
 				return -1;
 			}
 			else if (body.length() < getContentLength())
 			{	// content-length까지 body가 완성되지 않은 경우
 				recvBuf = body;  // recvBuf를 body로 덮어씌움
-				cout << "[RETURN 1] body is not sufficient." << endl;
+				// cout << "[RETURN 1] body is not sufficient." << endl;
 				return 1;
 			}
 			else
 			{	// body가 충분히 모인 경우
 				setBody(body.substr(0, getContentLength()));  // 완성된 body를 content-length만큼 slicing해 body에 추가
 				recvBuf = body.substr(getContentLength(), body.length()-getContentLength());  // 잔여물 body는 recvBuf에 덮어씌움
-				cout << "[RETURN 0] body is sufficient." << endl;
+				// cout << "[RETURN 0] body is sufficient." << endl;
 				return 0;
 			}
 		}
@@ -519,11 +519,11 @@ int HttpRequestBuilder::isHttp(string &recvBuf)
 	else
 	{	// 마지막 line (\r\n으로 끝나지 않음)은 잔여물로 취급해 recvBuf에 저장
 		recvBuf = lines[lines.size()-1];
-		cout << "[RETURN 1] header is not finished." << endl;
+		// cout << "[RETURN 1] header is not finished." << endl;
 		return 1;
 	}
 
-	cout << "[RETURN 0] last return." << endl;
+	// cout << "[RETURN 0] last return." << endl;
 	return 0;
 }
 
@@ -567,7 +567,7 @@ HttpRequestMessage *HttpRequestBuilder::createRequestMessage()
 	string method = getMethod(methodType);
 	string requestbody = body;
 	requestMessage = new HttpRequestMessage(method, path, serverProtocol, headers, body, needMoreChunk);
-	print();
+	// print();
 	erase();
 	return requestMessage;
 }

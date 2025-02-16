@@ -307,7 +307,7 @@ void HttpResponseBuilder::parseCgiProduct()
     {
         // \n 기준으로 스플릿된 아이들을 모두 헤더임
         string headersLine = responseBody.substr(0, lflf);
-        cout << headersLine << endl;
+        // cout << headersLine << endl;
         vector<string> headers = Utils::split(headersLine, "\n");
         for (size_t i = 0; i < headers.size(); i++) 
         {
@@ -555,7 +555,7 @@ void HttpResponseBuilder::build(const int &exitCode)
     else
     {   // 첫 요청이 유효성 검사에 성공한 경우
         execute(exitCode);
-        cout << "STATUS CODE: " << statusCode << endl;
+        // cout << "STATUS CODE: " << statusCode << endl;
         if (locationConfig.isErrCode(statusCode) && requestMessage->getHeaders().size())
         {
             changeRequestMessage(statusCode);
