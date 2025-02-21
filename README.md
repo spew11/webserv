@@ -32,8 +32,8 @@
 ### IO multi-plexing (Nginx)
 <img width="1099" alt="스크린샷 2025-02-21 오후 8 39 32" src="https://github.com/user-attachments/assets/1dfa4ab8-4cb6-4137-960e-f40bd6fd20c4" />
 
-- ${\textcolor{#ff0000}{1개의\ thread}}$**가 event queue를 watch하며 event가 발생하면 대응합니다. **${\textcolor{#ff0000}{(event-driven)}}$
--** 한 client와의 connection에 묶여 다음 요청을 wait 하지 않고, 다른 client의 요청들을 수행합니다** ${\textcolor{#ff0000}{(non-blocking)}}$
+- ${\textcolor{#ff0000}{1개의\ thread}}$**가 event queue를 watch하며 event가 발생하면 대응합니다.** ${\textcolor{#ff0000}{(event-driven)}}$
+- **한 client와의 connection에 묶여 다음 요청을 wait 하지 않고, 다른 client의 요청들을 수행합니다** ${\textcolor{#ff0000}{(non-blocking)}}$
 - ${\textcolor{#ff0000}{1개의\ thread로\ 수많은\ client의\ 요청을\ 대응할\ 수\ 있다}}$**는 점에서 효율적입니다.**
 - **단일 thread이므로 내부에서** ${\textcolor{#ff0000}{context-switching이\ 발생하지\ 않는다}}$**는 점에서 효율적입니다.**
 
