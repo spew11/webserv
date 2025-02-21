@@ -3,6 +3,12 @@
 ## 🌟 소개
 ✨ **IO multi-plexing 기반 HTTP Web Server를 구현한 프로젝트입니다.** ✨  
 
+## 🍰 제공 기능
+- 🍭 **nginx 스타일의 설정 파일 및 디렉티브 지원**
+- 📡 **HTTP/1.1 지원 및 5가지 HTTP 메서드 지원 (GET, PUT, DELETE, POST, HEAD)** 📨  
+- 🐍 **Python 기반 동적 웹페이지 처리 지원**
+- 🎈 **99.7%의 가용성 보장**
+
 ## 📊 성능 비교 (webserv vs nginx vs apache)
   
   |requests| relative throughput|
@@ -97,12 +103,6 @@
     </td>
   </tr>
 </table>
-
-## 🍰 제공 기능
-- 🍭 **nginx 스타일의 설정 파일 및 디렉티브 지원**
-- 📡 **HTTP/1.1 지원 및 5가지 HTTP 메서드 지원 (GET, PUT, DELETE, POST, HEAD)** 📨  
-- 🐍 **Python 기반 동적 웹페이지 처리 지원**
-- 🎈 **99.7%의 가용성 보장**
 
 ## 🛠️ 환경 
 - 📌 **Language:** C++  
